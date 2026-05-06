@@ -301,10 +301,6 @@ variable "gcp_cloud_vm_clusters_configuration" {
     exadata_infrastructure     = optional(string)
     exadata_infrastructure_key = optional(string)
 
-    network            = optional(string)
-    cidr               = optional(string)
-    backup_subnet_cidr = optional(string)
-
     odb_network           = optional(string)
     odb_network_key       = optional(string)
     odb_subnet            = optional(string)
@@ -361,44 +357,16 @@ variable "gcp_cloud_vm_clusters_configuration" {
   validation {
     condition = alltrue([
       for cluster in var.gcp_cloud_vm_clusters_configuration :
-      (
-        (
-          cluster.network != null &&
-          cluster.cidr != null &&
-          cluster.backup_subnet_cidr != null &&
-          cluster.odb_network == null &&
-          cluster.odb_network_key == null &&
-          cluster.odb_subnet == null &&
-          cluster.odb_subnet_key == null &&
-          cluster.backup_odb_subnet == null &&
-          cluster.backup_odb_subnet_key == null
-        ) ||
-        (
-          cluster.network == null &&
-          cluster.cidr == null &&
-          cluster.backup_subnet_cidr == null &&
-          (cluster.odb_network != null ? 1 : 0) + (cluster.odb_network_key != null ? 1 : 0) <= 1 &&
-          (cluster.odb_subnet != null ? 1 : 0) + (cluster.odb_subnet_key != null ? 1 : 0) == 1 &&
-          (cluster.backup_odb_subnet != null ? 1 : 0) + (cluster.backup_odb_subnet_key != null ? 1 : 0) == 1
-        )
-      )
+      (cluster.odb_network != null ? 1 : 0) + (cluster.odb_network_key != null ? 1 : 0) == 1 &&
+      (cluster.odb_subnet != null ? 1 : 0) + (cluster.odb_subnet_key != null ? 1 : 0) == 1 &&
+      (cluster.backup_odb_subnet != null ? 1 : 0) + (cluster.backup_odb_subnet_key != null ? 1 : 0) == 1
     ])
-    error_message = "Each Cloud VM cluster must use exactly one networking mode: either network/cidr/backup_subnet_cidr, or ODB subnet references."
+    error_message = "Each Cloud VM cluster must set exactly one ODB network reference, one client ODB subnet reference, and one backup ODB subnet reference."
   }
 
   validation {
     condition = alltrue([
       for cluster in var.gcp_cloud_vm_clusters_configuration :
-      (cluster.cidr == null ? true : can(cidrnetmask(cluster.cidr))) &&
-      (cluster.backup_subnet_cidr == null ? true : can(cidrnetmask(cluster.backup_subnet_cidr)))
-    ])
-    error_message = "Cloud VM cluster cidr and backup_subnet_cidr values must be valid CIDR blocks when set."
-  }
-
-  validation {
-    condition = alltrue([
-      for cluster in var.gcp_cloud_vm_clusters_configuration :
-      (cluster.network == null ? true : can(regex("^projects/[^/]+/global/networks/[^/]+$", cluster.network))) &&
       (cluster.exadata_infrastructure == null ? true : can(regex("^projects/[^/]+/locations/[^/]+/cloudExadataInfrastructures/[^/]+$", cluster.exadata_infrastructure))) &&
       (cluster.odb_network == null ? true : can(regex("^projects/[^/]+/locations/[^/]+/odbNetworks/[^/]+$", cluster.odb_network))) &&
       (cluster.odb_subnet == null ? true : can(regex("^projects/[^/]+/locations/[^/]+/odbNetworks/[^/]+/odbSubnets/[^/]+$", cluster.odb_subnet))) &&

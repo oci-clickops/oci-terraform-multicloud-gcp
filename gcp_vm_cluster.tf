@@ -11,10 +11,6 @@ resource "google_oracle_database_cloud_vm_cluster" "these" {
 
   exadata_infrastructure = each.value.exadata_infrastructure != null ? each.value.exadata_infrastructure : (each.value.exadata_infrastructure_key != null ? google_oracle_database_cloud_exadata_infrastructure.these[each.value.exadata_infrastructure_key].id : null)
 
-  network            = each.value.network
-  cidr               = each.value.cidr
-  backup_subnet_cidr = each.value.backup_subnet_cidr
-
   odb_network       = each.value.odb_network != null ? each.value.odb_network : (each.value.odb_network_key != null ? google_oracle_database_odb_network.these[each.value.odb_network_key].id : null)
   odb_subnet        = each.value.odb_subnet != null ? each.value.odb_subnet : (each.value.odb_subnet_key != null ? google_oracle_database_odb_subnet.these[each.value.odb_subnet_key].id : null)
   backup_odb_subnet = each.value.backup_odb_subnet != null ? each.value.backup_odb_subnet : (each.value.backup_odb_subnet_key != null ? google_oracle_database_odb_subnet.these[each.value.backup_odb_subnet_key].id : null)
@@ -101,27 +97,11 @@ resource "google_oracle_database_cloud_vm_cluster" "these" {
 
     precondition {
       condition = (
-        (
-          each.value.network != null &&
-          each.value.cidr != null &&
-          each.value.backup_subnet_cidr != null &&
-          each.value.odb_network == null &&
-          each.value.odb_network_key == null &&
-          each.value.odb_subnet == null &&
-          each.value.odb_subnet_key == null &&
-          each.value.backup_odb_subnet == null &&
-          each.value.backup_odb_subnet_key == null
-        ) ||
-        (
-          each.value.network == null &&
-          each.value.cidr == null &&
-          each.value.backup_subnet_cidr == null &&
-          (each.value.odb_network != null ? 1 : 0) + (each.value.odb_network_key != null ? 1 : 0) <= 1 &&
-          (each.value.odb_subnet != null ? 1 : 0) + (each.value.odb_subnet_key != null ? 1 : 0) == 1 &&
-          (each.value.backup_odb_subnet != null ? 1 : 0) + (each.value.backup_odb_subnet_key != null ? 1 : 0) == 1
-        )
+        (each.value.odb_network != null ? 1 : 0) + (each.value.odb_network_key != null ? 1 : 0) == 1 &&
+        (each.value.odb_subnet != null ? 1 : 0) + (each.value.odb_subnet_key != null ? 1 : 0) == 1 &&
+        (each.value.backup_odb_subnet != null ? 1 : 0) + (each.value.backup_odb_subnet_key != null ? 1 : 0) == 1
       )
-      error_message = "Each Cloud VM cluster must set exactly one networking mode: either network/cidr/backup_subnet_cidr or ODB subnet references."
+      error_message = "Each Cloud VM cluster must set exactly one ODB network reference, one client ODB subnet reference, and one backup ODB subnet reference."
     }
 
     precondition {

@@ -144,9 +144,6 @@ Each map value has these attributes:
 * `timeouts`: Optional. Provider timeout overrides for `create`, `update`, and `delete`.
 * `exadata_infrastructure`: Optional. The Exadata infrastructure full resource name in `projects/{project}/locations/{region}/cloudExadataInfrastructures/{cloud_exadata_infrastructure}` format.
 * `exadata_infrastructure_key`: Optional. Key of an Exadata infrastructure created by this module.
-* `network`: Optional. The Google Cloud VPC network resource name in `projects/{project}/global/networks/{network}` format.
-* `cidr`: Optional. Client subnet CIDR when using VPC CIDR arguments.
-* `backup_subnet_cidr`: Optional. Backup subnet CIDR when using VPC CIDR arguments.
 * `odb_network`: Optional. The ODB network full resource name in `projects/{project}/locations/{location}/odbNetworks/{odb_network}` format.
 * `odb_network_key`: Optional. Key of an ODB network created by this module.
 * `odb_subnet`: Optional. Client ODB subnet full resource name in `projects/{project}/locations/{location}/odbNetworks/{odb_network}/odbSubnets/{odb_subnet}` format.
@@ -155,7 +152,7 @@ Each map value has these attributes:
 * `backup_odb_subnet_key`: Optional. Key of a backup ODB subnet created by this module.
 * `properties`: Required. VM cluster properties.
 
-Each VM cluster must set exactly one Exadata reference: `exadata_infrastructure` or `exadata_infrastructure_key`. It must also use exactly one networking mode: either `network`, `cidr`, and `backup_subnet_cidr`, or client and backup ODB subnet references through direct values or module keys. When using module keys, `odb_subnet_key` must point to a subnet with purpose `CLIENT_SUBNET`, and `backup_odb_subnet_key` must point to a subnet with purpose `BACKUP_SUBNET`. When `odb_network_key` is set, both subnet keys must belong to the selected ODB network.
+Each VM cluster must set exactly one Exadata reference: `exadata_infrastructure` or `exadata_infrastructure_key`. It must also set exactly one ODB network reference, one client ODB subnet reference, and one backup ODB subnet reference through direct values or module keys. This module intentionally exposes only ODB subnet mode for new environments. When using module keys, `odb_subnet_key` must point to a subnet with purpose `CLIENT_SUBNET`, and `backup_odb_subnet_key` must point to a subnet with purpose `BACKUP_SUBNET`. When `odb_network_key` is set, both subnet keys must belong to the selected ODB network.
 
 The module intentionally ignores Terraform drift for selected VM cluster fields that can change during Oracle-managed maintenance or during operations performed through the OCI control plane in dual control-plane deployments. This prevents a later Google provider plan from trying to roll back patch, shape, capacity, storage, backup, or database server placement changes made outside this module.
 

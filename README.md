@@ -60,10 +60,7 @@ Related resources can be wired in two ways:
 
 For example, a VM cluster can use `exadata_infrastructure_key` to select an Exadata infrastructure from `gcp_cloud_exadata_infrastructures_configuration`, and `odb_subnet_key` or `backup_odb_subnet_key` to select subnets from `gcp_odb_subnets_configuration`.
 
-VM clusters support two networking modes:
-
-* Google VPC CIDR mode with `network`, `cidr`, and `backup_subnet_cidr`.
-* ODB subnet mode with client and backup ODB subnet references, either passed directly or selected through module keys.
+VM clusters use ODB subnet mode with client and backup ODB subnet references, either passed directly or selected through module keys. This module intentionally exposes only ODB subnet mode for new environments.
 
 When using ODB subnet module keys, the client key must point to a `CLIENT_SUBNET`, the backup key must point to a `BACKUP_SUBNET`, and both subnet keys must belong to the ODB network selected by `odb_network_key` when that key is set.
 
@@ -85,7 +82,6 @@ Available examples:
 
 * [examples/quickstart](./examples/quickstart): recommended first deployment path with a `terraform.tfvars.example` template.
 * [examples/basic](./examples/basic): compact module-key resource graph.
-* [examples/vpc-cidr](./examples/vpc-cidr): VM Cluster using Google VPC CIDR arguments.
 * [examples/existing-odb-subnets](./examples/existing-odb-subnets): VM Cluster using existing ODB network and subnet resource names.
 
 ## Module Outputs
