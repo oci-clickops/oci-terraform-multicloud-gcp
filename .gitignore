@@ -10,6 +10,7 @@
 **/terraform_*.tfvars
 **/vars_*.tfvars
 test/**
+tests/static_checks.sh
 *.csv
 *.xlsx
 *.html

@@ -2,5 +2,6 @@
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl.
 
 locals {
-  default_labels = var.default_labels == null ? {} : var.default_labels
+  default_labels                = var.default_labels == null ? {} : var.default_labels
+  valid_gcp_resource_id_pattern = "^[a-z]([a-z0-9-]{0,61}[a-z0-9])?$"
 }

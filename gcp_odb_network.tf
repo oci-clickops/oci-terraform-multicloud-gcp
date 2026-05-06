@@ -6,10 +6,27 @@ resource "google_oracle_database_odb_network" "these" {
 
   odb_network_id = each.value.odb_network_id
   network        = each.value.network
-  location       = try(coalesce(each.value.location, var.default_location), null)
-  project        = try(coalesce(each.value.project_id, var.default_project_id), null)
+  location       = each.value.location != null ? each.value.location : var.default_location
+  project        = each.value.project_id != null ? each.value.project_id : var.default_project_id
 
-  gcp_oracle_zone     = try(coalesce(each.value.gcp_oracle_zone, var.default_gcp_oracle_zone), null)
+  gcp_oracle_zone     = each.value.gcp_oracle_zone != null ? each.value.gcp_oracle_zone : var.default_gcp_oracle_zone
   labels              = merge(local.default_labels, each.value.labels)
-  deletion_protection = try(coalesce(each.value.deletion_protection, var.default_deletion_protection), null)
+  deletion_protection = each.value.deletion_protection != null ? each.value.deletion_protection : var.default_deletion_protection
+
+  dynamic "timeouts" {
+    for_each = each.value.timeouts == null ? [] : [each.value.timeouts]
+
+    content {
+      create = timeouts.value.create
+      update = timeouts.value.update
+      delete = timeouts.value.delete
+    }
+  }
+
+  lifecycle {
+    precondition {
+      condition     = each.value.location != null || var.default_location != null
+      error_message = "Each ODB network must set location or default_location."
+    }
+  }
 }

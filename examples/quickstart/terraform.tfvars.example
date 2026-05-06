@@ -1,0 +1,13 @@
+# Copy this file to terraform.tfvars and replace the placeholder values.
+
+project_id      = "my-gcp-project"
+location        = "us-east4"
+gcp_oracle_zone = "us-east4-a"
+
+network = "projects/my-gcp-project/global/networks/database-vpc"
+
+customer_contact_email = "dba@example.com"
+
+ssh_public_keys = [
+  "ssh-rsa AAAA... user@example.com"
+]

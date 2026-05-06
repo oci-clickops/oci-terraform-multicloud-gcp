@@ -6,11 +6,11 @@ resource "google_oracle_database_cloud_exadata_infrastructure" "these" {
 
   cloud_exadata_infrastructure_id = each.value.cloud_exadata_infrastructure_id
   display_name                    = each.value.display_name
-  location                        = try(coalesce(each.value.location, var.default_location), null)
-  project                         = try(coalesce(each.value.project_id, var.default_project_id), null)
-  gcp_oracle_zone                 = try(coalesce(each.value.gcp_oracle_zone, var.default_gcp_oracle_zone), null)
+  location                        = each.value.location != null ? each.value.location : var.default_location
+  project                         = each.value.project_id != null ? each.value.project_id : var.default_project_id
+  gcp_oracle_zone                 = each.value.gcp_oracle_zone != null ? each.value.gcp_oracle_zone : var.default_gcp_oracle_zone
   labels                          = merge(local.default_labels, each.value.labels)
-  deletion_protection             = try(coalesce(each.value.deletion_protection, var.default_deletion_protection), null)
+  deletion_protection             = each.value.deletion_protection != null ? each.value.deletion_protection : var.default_deletion_protection
 
   properties {
     shape                 = each.value.properties.shape
@@ -19,7 +19,7 @@ resource "google_oracle_database_cloud_exadata_infrastructure" "these" {
     total_storage_size_gb = each.value.properties.total_storage_size_gb
 
     dynamic "customer_contacts" {
-      for_each = each.value.properties.customer_contacts
+      for_each = each.value.properties.customer_contacts == null ? [] : each.value.properties.customer_contacts
 
       content {
         email = customer_contacts.value.email
@@ -27,7 +27,7 @@ resource "google_oracle_database_cloud_exadata_infrastructure" "these" {
     }
 
     dynamic "maintenance_window" {
-      for_each = each.value.properties.maintenance_window == null ? [] : [each.value.properties.maintenance_window]
+      for_each = each.value.properties.maintenance_window != null ? [each.value.properties.maintenance_window] : (var.default_cloud_exadata_maintenance_window == null ? [] : [var.default_cloud_exadata_maintenance_window])
 
       content {
         preference                       = maintenance_window.value.preference
@@ -40,6 +40,29 @@ resource "google_oracle_database_cloud_exadata_infrastructure" "these" {
         custom_action_timeout_mins       = maintenance_window.value.custom_action_timeout_mins
         is_custom_action_timeout_enabled = maintenance_window.value.is_custom_action_timeout_enabled
       }
+    }
+  }
+
+  dynamic "timeouts" {
+    for_each = each.value.timeouts == null ? [] : [each.value.timeouts]
+
+    content {
+      create = timeouts.value.create
+      update = timeouts.value.update
+      delete = timeouts.value.delete
+    }
+  }
+
+  lifecycle {
+    ignore_changes = [
+      properties[0].compute_count,
+      properties[0].storage_count,
+      properties[0].total_storage_size_gb,
+    ]
+
+    precondition {
+      condition     = each.value.location != null || var.default_location != null
+      error_message = "Each Cloud Exadata Infrastructure must set location or default_location."
     }
   }
 }

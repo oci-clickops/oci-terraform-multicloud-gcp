@@ -3,69 +3,29 @@
 ## Table of Contents
 
 1. Overview
-2. Pre-requisites
+2. Compatibility
 3. Module Inputs
 4. ODB Networks
 5. ODB Subnets
 6. Cloud Exadata Infrastructures
 7. Cloud VM Clusters
 8. Module Outputs
-9. OCI Landing Zones Modules Collection
-10. Contributing
-11. License
-12. Known Issues
 
 ## Overview
 
-This repository contains a Terraform module for Oracle Database@Google Cloud resources managed through the HashiCorp Google provider.
+This document is the technical contract for the module. Use it when you need exact input shapes, reference rules, lifecycle behavior, or output names.
 
-The following resources are available:
+The README covers deployment guidance and examples. This specification focuses on the Terraform interface: keyed resource maps, module-key references, input validation behavior, lifecycle drift policy, and outputs.
 
-* ODB Network
-* ODB Subnet
-* Cloud Exadata Infrastructure
-* Cloud VM Cluster
+## Compatibility
 
-This module follows the OCI Landing Zones module style. Callers provide keyed configuration maps, Terraform creates resources with `for_each`, and outputs are returned with the same keys so downstream stacks can consume created resource identifiers without copying generated values by hand.
+This module requires Terraform `>= 1.3.0` and HashiCorp Google provider `>= 7.0.0, < 8.0.0`. The schema was validated against Google provider `7.31.0` on May 6, 2026.
 
-The module supports two reference patterns for related resources:
-
-* A literal provider resource name or ID can be passed directly.
-* A key can be passed to reference another resource created by this module.
-
-For example, a VM cluster can use `exadata_infrastructure_key` to reference an Exadata infrastructure created in `gcp_cloud_exadata_infrastructures_configuration`, and `odb_subnet_key` or `backup_odb_subnet_key` to reference subnets created in `gcp_odb_subnets_configuration`.
-
-## Pre-requisites
-
-Before deploying Oracle Database@Google Cloud resources, ensure the following prerequisites are met:
-
-* Google Cloud project
-
-  A Google Cloud project must exist and must be enabled for Oracle Database@Google Cloud.
-
-* IAM permissions
-
-  The caller must have permissions to create and manage Oracle Database@Google Cloud resources and to reference the target VPC network.
-
-* Google provider authentication
-
-  Google Cloud credentials must be configured for Terraform through one of the supported Google provider authentication methods.
-
-* VPC network
-
-  An existing Google Cloud VPC network is required for ODB network creation.
-
-* ODB network and subnets
-
-  VM clusters can use either Google VPC CIDR arguments or ODB network/subnet resource names. When using ODB subnets, provide both a client subnet and a backup subnet.
-
-* Oracle Database@Google Cloud entitlement
-
-  The target project and region must have the required Oracle Database@Google Cloud entitlement.
+Google Cloud project enablement, Oracle Database@Google Cloud entitlement, IAM permissions, provider authentication, and VPC networking are external prerequisites. The module validates the Terraform-side input contract, but it cannot validate service entitlement or regional capacity before the provider calls the Google API.
 
 ## Module Inputs
 
-The module accepts the following input variables.
+The module accepts these input variables.
 
 ### General
 
@@ -76,46 +36,49 @@ The module accepts the following input variables.
 * `default_gcp_oracle_zone`: Default GCP Oracle zone used by resources that support it.
 * `default_labels`: Default labels merged into all resources. Resource-specific labels win on key collisions.
 * `default_deletion_protection`: Default deletion protection value for resources that support `deletion_protection`. Defaults to `true`.
+* `default_cloud_exadata_maintenance_window`: Default Cloud Exadata Infrastructure maintenance window used when a resource does not set `properties.maintenance_window`.
 
 ### ODB Networks
 
-* `gcp_odb_networks_configuration`: ODB network configuration. This is a map of ODB network configurations.
+* `gcp_odb_networks_configuration`: Map of ODB networks to create.
 
-Each ODB network configuration object has the following attributes:
+Each map value has these attributes:
 
 * `odb_network_id`: Required. The ODB network ID.
-* `network`: Required. The Google Cloud VPC network resource name.
+* `network`: Required. The Google Cloud VPC network resource name in `projects/{project}/global/networks/{network}` format.
 * `location`: Optional. The Google Cloud region. Overrides `default_location`.
 * `project_id`: Optional. The Google Cloud project ID. Overrides `default_project_id`.
 * `gcp_oracle_zone`: Optional. The GCP Oracle zone. Overrides `default_gcp_oracle_zone`.
 * `labels`: Optional. Labels for the ODB network.
 * `deletion_protection`: Optional. Whether deletion protection is enabled. Overrides `default_deletion_protection`.
+* `timeouts`: Optional. Provider timeout overrides for `create`, `update`, and `delete`.
 
-For more details on this resource, please see Google Terraform provider documentation for `google_oracle_database_odb_network`.
+Provider resource: `google_oracle_database_odb_network`.
 
 ### ODB Subnets
 
-* `gcp_odb_subnets_configuration`: ODB subnet configuration. This is a map of ODB subnet configurations.
+* `gcp_odb_subnets_configuration`: Map of ODB subnets to create.
 
-Each ODB subnet configuration object has the following attributes:
+Each map value has these attributes:
 
 * `odb_subnet_id`: Required. The ODB subnet ID.
 * `cidr_range`: Required. The CIDR range for the ODB subnet.
 * `purpose`: Required. The subnet purpose. Accepted values are `CLIENT_SUBNET` and `BACKUP_SUBNET`.
-* `odbnetwork`: Optional. The ODB network name or ID.
-* `odb_network_key`: Optional. Key of an ODB network created by this module.
+* `odbnetwork`: Optional. The ODB network ID segment, for example `my-odb-network`. Mutually exclusive with `odb_network_key`.
+* `odb_network_key`: Optional. Key of an ODB network created by this module. Mutually exclusive with `odbnetwork`.
 * `location`: Optional. The Google Cloud region. Overrides `default_location`.
 * `project_id`: Optional. The Google Cloud project ID. Overrides `default_project_id`.
 * `labels`: Optional. Labels for the ODB subnet.
 * `deletion_protection`: Optional. Whether deletion protection is enabled. Overrides `default_deletion_protection`.
+* `timeouts`: Optional. Provider timeout overrides for `create`, `update`, and `delete`.
 
-For more details on this resource, please see Google Terraform provider documentation for `google_oracle_database_odb_subnet`.
+Provider resource: `google_oracle_database_odb_subnet`.
 
 ### Cloud Exadata Infrastructures
 
-* `gcp_cloud_exadata_infrastructures_configuration`: Exadata infrastructure configuration. This is a map of Exadata infrastructure configurations.
+* `gcp_cloud_exadata_infrastructures_configuration`: Map of Cloud Exadata Infrastructures to create.
 
-Each Cloud Exadata Infrastructure configuration object has the following attributes:
+Each map value has these attributes:
 
 * `cloud_exadata_infrastructure_id`: Required. The Cloud Exadata Infrastructure ID.
 * `display_name`: Optional. Display name of the Exadata infrastructure.
@@ -124,9 +87,10 @@ Each Cloud Exadata Infrastructure configuration object has the following attribu
 * `gcp_oracle_zone`: Optional. The GCP Oracle zone. Overrides `default_gcp_oracle_zone`.
 * `labels`: Optional. Labels for the Exadata infrastructure.
 * `deletion_protection`: Optional. Whether deletion protection is enabled. Overrides `default_deletion_protection`.
+* `timeouts`: Optional. Provider timeout overrides for `create`, `update`, and `delete`.
 * `properties`: Required. Exadata infrastructure properties.
 
-The `properties` object has the following attributes:
+The `properties` object has these attributes:
 
 * `shape`: Required. Shape of the Exadata infrastructure.
 * `compute_count`: Optional. Compute count of the Exadata infrastructure.
@@ -135,11 +99,13 @@ The `properties` object has the following attributes:
 * `customer_contacts`: Optional. Customer contact information.
 * `maintenance_window`: Optional. Maintenance window configuration.
 
-Each `customer_contacts` object has the following attributes:
+If `maintenance_window` is not set, the module uses `default_cloud_exadata_maintenance_window` when provided.
+
+Each `customer_contacts` object has these attributes:
 
 * `email`: Required. Customer contact email address.
 
-The `maintenance_window` object has the following attributes:
+The `maintenance_window` object has these attributes:
 
 * `preference`: Optional. Maintenance window preference.
 * `months`: Optional. Maintenance months.
@@ -151,13 +117,23 @@ The `maintenance_window` object has the following attributes:
 * `custom_action_timeout_mins`: Optional. Custom action timeout in minutes.
 * `is_custom_action_timeout_enabled`: Optional. Whether custom action timeout is enabled.
 
-For more details on this resource, please see Google Terraform provider documentation for `google_oracle_database_cloud_exadata_infrastructure`.
+The module intentionally ignores Terraform drift for selected Cloud Exadata Infrastructure capacity fields. These values can change after Oracle-managed maintenance or after operations performed through the OCI control plane in dual control-plane deployments. Ignoring them prevents a later Google provider plan from rolling back capacity or storage changes made outside this module.
+
+Ignored Cloud Exadata Infrastructure fields:
+
+* `properties[0].compute_count`
+* `properties[0].storage_count`
+* `properties[0].total_storage_size_gb`
+
+The policy is deliberately limited to capacity and storage fields that are likely to drift when Google and OCI control planes are both used. Maintenance windows, customer contacts, labels, and computed-only version/status fields remain visible to Terraform.
+
+Provider resource: `google_oracle_database_cloud_exadata_infrastructure`.
 
 ### Cloud VM Clusters
 
-* `gcp_cloud_vm_clusters_configuration`: Cloud VM cluster configuration. This is a map of VM cluster configurations.
+* `gcp_cloud_vm_clusters_configuration`: Map of Cloud VM Clusters to create.
 
-Each Cloud VM cluster configuration object has the following attributes:
+Each map value has these attributes:
 
 * `cloud_vm_cluster_id`: Required. The Cloud VM Cluster ID.
 * `display_name`: Optional. Display name of the VM cluster.
@@ -165,20 +141,41 @@ Each Cloud VM cluster configuration object has the following attributes:
 * `project_id`: Optional. The Google Cloud project ID. Overrides `default_project_id`.
 * `labels`: Optional. Labels for the VM cluster.
 * `deletion_protection`: Optional. Whether deletion protection is enabled. Overrides `default_deletion_protection`.
-* `exadata_infrastructure`: Optional. The Exadata infrastructure resource name or ID.
+* `timeouts`: Optional. Provider timeout overrides for `create`, `update`, and `delete`.
+* `exadata_infrastructure`: Optional. The Exadata infrastructure full resource name in `projects/{project}/locations/{region}/cloudExadataInfrastructures/{cloud_exadata_infrastructure}` format.
 * `exadata_infrastructure_key`: Optional. Key of an Exadata infrastructure created by this module.
-* `network`: Optional. The Google Cloud VPC network resource name.
+* `network`: Optional. The Google Cloud VPC network resource name in `projects/{project}/global/networks/{network}` format.
 * `cidr`: Optional. Client subnet CIDR when using VPC CIDR arguments.
 * `backup_subnet_cidr`: Optional. Backup subnet CIDR when using VPC CIDR arguments.
-* `odb_network`: Optional. The ODB network resource name or ID.
+* `odb_network`: Optional. The ODB network full resource name in `projects/{project}/locations/{location}/odbNetworks/{odb_network}` format.
 * `odb_network_key`: Optional. Key of an ODB network created by this module.
-* `odb_subnet`: Optional. Client ODB subnet resource name or ID.
+* `odb_subnet`: Optional. Client ODB subnet full resource name in `projects/{project}/locations/{location}/odbNetworks/{odb_network}/odbSubnets/{odb_subnet}` format.
 * `odb_subnet_key`: Optional. Key of a client ODB subnet created by this module.
-* `backup_odb_subnet`: Optional. Backup ODB subnet resource name or ID.
+* `backup_odb_subnet`: Optional. Backup ODB subnet full resource name in `projects/{project}/locations/{location}/odbNetworks/{odb_network}/odbSubnets/{odb_subnet}` format.
 * `backup_odb_subnet_key`: Optional. Key of a backup ODB subnet created by this module.
 * `properties`: Required. VM cluster properties.
 
-The `properties` object has the following attributes:
+Each VM cluster must set exactly one Exadata reference: `exadata_infrastructure` or `exadata_infrastructure_key`. It must also use exactly one networking mode: either `network`, `cidr`, and `backup_subnet_cidr`, or client and backup ODB subnet references through direct values or module keys. When using module keys, `odb_subnet_key` must point to a subnet with purpose `CLIENT_SUBNET`, and `backup_odb_subnet_key` must point to a subnet with purpose `BACKUP_SUBNET`.
+
+The module intentionally ignores Terraform drift for selected VM cluster fields that can change during Oracle-managed maintenance or during operations performed through the OCI control plane in dual control-plane deployments. This prevents a later Google provider plan from trying to roll back patch, shape, capacity, storage, backup, or database server placement changes made outside this module.
+
+Ignored VM cluster fields:
+
+* `properties[0].gi_version`
+* `properties[0].db_server_ocids`
+* `properties[0].cpu_core_count`
+* `properties[0].node_count`
+* `properties[0].ocpu_count`
+* `properties[0].memory_size_gb`
+* `properties[0].db_node_storage_size_gb`
+* `properties[0].data_storage_size_tb`
+* `properties[0].local_backup_enabled`
+* `properties[0].sparse_diskgroup_enabled`
+* `properties[0].disk_redundancy`
+
+The policy is deliberately limited to operational fields that are likely to drift when Google and OCI control planes are both used. Labels remain managed by Terraform. Computed-only system attributes such as `system_version`, `scan_listener_port_tcp`, and `scan_listener_port_tcp_ssl` are also not ignored because they are not Terraform inputs.
+
+The `properties` object has these attributes:
 
 * `license_type`: Required. License type of the VM cluster.
 * `cpu_core_count`: Required. CPU core count of the VM cluster.
@@ -195,27 +192,25 @@ The `properties` object has the following attributes:
 * `hostname_prefix`: Optional. Hostname prefix.
 * `db_server_ocids`: Optional. Database server OCIDs.
 * `cluster_name`: Optional. Cluster name.
-* `scan_listener_port_tcp`: Optional. SCAN listener TCP port.
-* `scan_listener_port_tcp_ssl`: Optional. SCAN listener TCP SSL port.
 * `time_zone`: Optional. Time zone configuration.
 * `diagnostics_data_collection_options`: Optional. Diagnostics data collection options.
 
-The `time_zone` object has the following attributes:
+The `time_zone` object has these attributes:
 
 * `id`: Optional. Time zone ID.
 * `version`: Optional. Time zone version.
 
-The `diagnostics_data_collection_options` object has the following attributes:
+The `diagnostics_data_collection_options` object has these attributes:
 
 * `diagnostics_events_enabled`: Optional. Whether diagnostic events collection is enabled.
 * `health_monitoring_enabled`: Optional. Whether health monitoring is enabled.
 * `incident_logs_enabled`: Optional. Whether incident log collection is enabled.
 
-For more details on this resource, please see Google Terraform provider documentation for `google_oracle_database_cloud_vm_cluster`.
+Provider resource: `google_oracle_database_cloud_vm_cluster`.
 
 ## Module Outputs
 
-The module provides the following outputs:
+The module returns these outputs:
 
 * `module_name`: The module instance name.
 * `gcp_odb_networks`: Created ODB networks, keyed by input key.
@@ -224,32 +219,3 @@ The module provides the following outputs:
 * `gcp_cloud_vm_clusters`: Created Exadata VM clusters, keyed by input key.
 
 Each resource output includes stable identifiers and selected computed attributes exported by the Google provider. Outputs are disabled when `enable_output` is set to `false`.
-
-## OCI Landing Zones Modules Collection
-
-This module follows the conventions used by OCI Landing Zones modules:
-
-* Resource configuration is expressed as typed Terraform objects.
-* Repeated resources are declared as maps and created with `for_each`.
-* Resource outputs are keyed by the same logical keys provided in the input maps.
-* Downstream stacks can consume module outputs instead of copying generated resource identifiers.
-
-The same pattern can be used to compose Oracle Database@Google Cloud resources with other independently managed infrastructure stacks.
-
-## Contributing
-
-See `CONTRIBUTING.md` if present in this repository.
-
-## License
-
-Copyright (c) 2026, Oracle and/or its affiliates.
-
-Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl.
-
-See `LICENSE` for more details if present in this repository.
-
-## Known Issues
-
-1. Oracle Database@Google Cloud resources can take a long time to provision. If `terraform apply` is interrupted, run `terraform apply` again and Terraform will continue from the current state.
-2. VM cluster creation requires valid networking inputs. When using ODB subnets, provide both client and backup subnet references through direct values or module keys.
-3. Some resource attributes are service-managed and become available only after provisioning completes. Downstream stacks should consume outputs after the producing stack has completed successfully.

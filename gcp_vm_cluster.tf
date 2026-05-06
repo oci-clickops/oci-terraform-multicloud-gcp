@@ -6,52 +6,38 @@ resource "google_oracle_database_cloud_vm_cluster" "these" {
 
   cloud_vm_cluster_id = each.value.cloud_vm_cluster_id
   display_name        = each.value.display_name
-  location            = try(coalesce(each.value.location, var.default_location), null)
-  project             = try(coalesce(each.value.project_id, var.default_project_id), null)
+  location            = each.value.location != null ? each.value.location : var.default_location
+  project             = each.value.project_id != null ? each.value.project_id : var.default_project_id
 
-  exadata_infrastructure = try(coalesce(
-    each.value.exadata_infrastructure,
-    each.value.exadata_infrastructure_key == null ? null : google_oracle_database_cloud_exadata_infrastructure.these[each.value.exadata_infrastructure_key].id
-  ), null)
+  exadata_infrastructure = each.value.exadata_infrastructure != null ? each.value.exadata_infrastructure : (each.value.exadata_infrastructure_key != null ? google_oracle_database_cloud_exadata_infrastructure.these[each.value.exadata_infrastructure_key].id : null)
 
   network            = each.value.network
   cidr               = each.value.cidr
   backup_subnet_cidr = each.value.backup_subnet_cidr
 
-  odb_network = try(coalesce(
-    each.value.odb_network,
-    each.value.odb_network_key == null ? null : google_oracle_database_odb_network.these[each.value.odb_network_key].id
-  ), null)
-  odb_subnet = try(coalesce(
-    each.value.odb_subnet,
-    each.value.odb_subnet_key == null ? null : google_oracle_database_odb_subnet.these[each.value.odb_subnet_key].id
-  ), null)
-  backup_odb_subnet = try(coalesce(
-    each.value.backup_odb_subnet,
-    each.value.backup_odb_subnet_key == null ? null : google_oracle_database_odb_subnet.these[each.value.backup_odb_subnet_key].id
-  ), null)
+  odb_network       = each.value.odb_network != null ? each.value.odb_network : (each.value.odb_network_key != null ? google_oracle_database_odb_network.these[each.value.odb_network_key].id : null)
+  odb_subnet        = each.value.odb_subnet != null ? each.value.odb_subnet : (each.value.odb_subnet_key != null ? google_oracle_database_odb_subnet.these[each.value.odb_subnet_key].id : null)
+  backup_odb_subnet = each.value.backup_odb_subnet != null ? each.value.backup_odb_subnet : (each.value.backup_odb_subnet_key != null ? google_oracle_database_odb_subnet.these[each.value.backup_odb_subnet_key].id : null)
 
   labels              = merge(local.default_labels, each.value.labels)
-  deletion_protection = try(coalesce(each.value.deletion_protection, var.default_deletion_protection), null)
+  deletion_protection = each.value.deletion_protection != null ? each.value.deletion_protection : var.default_deletion_protection
 
   properties {
-    license_type               = each.value.properties.license_type
-    gi_version                 = each.value.properties.gi_version
-    ssh_public_keys            = each.value.properties.ssh_public_keys
-    node_count                 = each.value.properties.node_count
-    ocpu_count                 = each.value.properties.ocpu_count
-    memory_size_gb             = each.value.properties.memory_size_gb
-    db_node_storage_size_gb    = each.value.properties.db_node_storage_size_gb
-    data_storage_size_tb       = each.value.properties.data_storage_size_tb
-    disk_redundancy            = each.value.properties.disk_redundancy
-    sparse_diskgroup_enabled   = each.value.properties.sparse_diskgroup_enabled
-    local_backup_enabled       = each.value.properties.local_backup_enabled
-    hostname_prefix            = each.value.properties.hostname_prefix
-    cpu_core_count             = each.value.properties.cpu_core_count
-    db_server_ocids            = each.value.properties.db_server_ocids
-    cluster_name               = each.value.properties.cluster_name
-    scan_listener_port_tcp     = each.value.properties.scan_listener_port_tcp
-    scan_listener_port_tcp_ssl = each.value.properties.scan_listener_port_tcp_ssl
+    license_type             = each.value.properties.license_type
+    gi_version               = each.value.properties.gi_version
+    ssh_public_keys          = each.value.properties.ssh_public_keys
+    node_count               = each.value.properties.node_count
+    ocpu_count               = each.value.properties.ocpu_count
+    memory_size_gb           = each.value.properties.memory_size_gb
+    db_node_storage_size_gb  = each.value.properties.db_node_storage_size_gb
+    data_storage_size_tb     = each.value.properties.data_storage_size_tb
+    disk_redundancy          = each.value.properties.disk_redundancy
+    sparse_diskgroup_enabled = each.value.properties.sparse_diskgroup_enabled
+    local_backup_enabled     = each.value.properties.local_backup_enabled
+    hostname_prefix          = each.value.properties.hostname_prefix
+    cpu_core_count           = each.value.properties.cpu_core_count
+    db_server_ocids          = each.value.properties.db_server_ocids
+    cluster_name             = each.value.properties.cluster_name
 
     dynamic "time_zone" {
       for_each = each.value.properties.time_zone == null ? [] : [each.value.properties.time_zone]
@@ -70,6 +56,97 @@ resource "google_oracle_database_cloud_vm_cluster" "these" {
         health_monitoring_enabled  = diagnostics_data_collection_options.value.health_monitoring_enabled
         incident_logs_enabled      = diagnostics_data_collection_options.value.incident_logs_enabled
       }
+    }
+  }
+
+  dynamic "timeouts" {
+    for_each = each.value.timeouts == null ? [] : [each.value.timeouts]
+
+    content {
+      create = timeouts.value.create
+      update = timeouts.value.update
+      delete = timeouts.value.delete
+    }
+  }
+
+  lifecycle {
+    ignore_changes = [
+      properties[0].cpu_core_count,
+      properties[0].data_storage_size_tb,
+      properties[0].db_node_storage_size_gb,
+      properties[0].db_server_ocids,
+      properties[0].disk_redundancy,
+      properties[0].gi_version,
+      properties[0].local_backup_enabled,
+      properties[0].memory_size_gb,
+      properties[0].node_count,
+      properties[0].ocpu_count,
+      properties[0].sparse_diskgroup_enabled,
+    ]
+
+    precondition {
+      condition     = each.value.location != null || var.default_location != null
+      error_message = "Each Cloud VM cluster must set location or default_location."
+    }
+
+    precondition {
+      condition     = (each.value.exadata_infrastructure != null ? 1 : 0) + (each.value.exadata_infrastructure_key != null ? 1 : 0) == 1
+      error_message = "Each Cloud VM cluster must set exactly one Exadata infrastructure reference: exadata_infrastructure or exadata_infrastructure_key."
+    }
+
+    precondition {
+      condition     = each.value.exadata_infrastructure_key == null || contains(keys(var.gcp_cloud_exadata_infrastructures_configuration), each.value.exadata_infrastructure_key)
+      error_message = "Each Cloud VM cluster exadata_infrastructure_key must reference a key in gcp_cloud_exadata_infrastructures_configuration."
+    }
+
+    precondition {
+      condition = (
+        (
+          each.value.network != null &&
+          each.value.cidr != null &&
+          each.value.backup_subnet_cidr != null &&
+          each.value.odb_network == null &&
+          each.value.odb_network_key == null &&
+          each.value.odb_subnet == null &&
+          each.value.odb_subnet_key == null &&
+          each.value.backup_odb_subnet == null &&
+          each.value.backup_odb_subnet_key == null
+        ) ||
+        (
+          each.value.network == null &&
+          each.value.cidr == null &&
+          each.value.backup_subnet_cidr == null &&
+          (each.value.odb_network != null ? 1 : 0) + (each.value.odb_network_key != null ? 1 : 0) <= 1 &&
+          (each.value.odb_subnet != null ? 1 : 0) + (each.value.odb_subnet_key != null ? 1 : 0) == 1 &&
+          (each.value.backup_odb_subnet != null ? 1 : 0) + (each.value.backup_odb_subnet_key != null ? 1 : 0) == 1
+        )
+      )
+      error_message = "Each Cloud VM cluster must set exactly one networking mode: either network/cidr/backup_subnet_cidr or ODB subnet references."
+    }
+
+    precondition {
+      condition     = each.value.odb_network_key == null || contains(keys(var.gcp_odb_networks_configuration), each.value.odb_network_key)
+      error_message = "Each Cloud VM cluster odb_network_key must reference a key in gcp_odb_networks_configuration."
+    }
+
+    precondition {
+      condition     = each.value.odb_subnet_key == null || contains(keys(var.gcp_odb_subnets_configuration), each.value.odb_subnet_key)
+      error_message = "Each Cloud VM cluster odb_subnet_key must reference a key in gcp_odb_subnets_configuration."
+    }
+
+    precondition {
+      condition     = each.value.backup_odb_subnet_key == null || contains(keys(var.gcp_odb_subnets_configuration), each.value.backup_odb_subnet_key)
+      error_message = "Each Cloud VM cluster backup_odb_subnet_key must reference a key in gcp_odb_subnets_configuration."
+    }
+
+    precondition {
+      condition     = each.value.odb_subnet_key == null ? true : (contains(keys(var.gcp_odb_subnets_configuration), each.value.odb_subnet_key) ? var.gcp_odb_subnets_configuration[each.value.odb_subnet_key].purpose == "CLIENT_SUBNET" : true)
+      error_message = "Each Cloud VM cluster odb_subnet_key must reference an ODB subnet with purpose CLIENT_SUBNET."
+    }
+
+    precondition {
+      condition     = each.value.backup_odb_subnet_key == null ? true : (contains(keys(var.gcp_odb_subnets_configuration), each.value.backup_odb_subnet_key) ? var.gcp_odb_subnets_configuration[each.value.backup_odb_subnet_key].purpose == "BACKUP_SUBNET" : true)
+      error_message = "Each Cloud VM cluster backup_odb_subnet_key must reference an ODB subnet with purpose BACKUP_SUBNET."
     }
   }
 }
