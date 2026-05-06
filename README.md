@@ -65,7 +65,7 @@ VM clusters support two networking modes:
 * Google VPC CIDR mode with `network`, `cidr`, and `backup_subnet_cidr`.
 * ODB subnet mode with client and backup ODB subnet references, either passed directly or selected through module keys.
 
-When using ODB subnet module keys, the client key must point to a `CLIENT_SUBNET` and the backup key must point to a `BACKUP_SUBNET`.
+When using ODB subnet module keys, the client key must point to a `CLIENT_SUBNET`, the backup key must point to a `BACKUP_SUBNET`, and both subnet keys must belong to the ODB network selected by `odb_network_key` when that key is set.
 
 Common defaults such as project, location, GCP Oracle zone, labels, deletion protection, Exadata maintenance windows, and operation timeouts are handled by module-level inputs. Resource-specific values override the defaults.
 

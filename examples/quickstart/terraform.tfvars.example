@@ -2,7 +2,7 @@
 
 project_id      = "my-gcp-project"
 location        = "us-east4"
-gcp_oracle_zone = "us-east4-a"
+gcp_oracle_zone = "us-east4-a-r2"
 
 network = "projects/my-gcp-project/global/networks/database-vpc"
 

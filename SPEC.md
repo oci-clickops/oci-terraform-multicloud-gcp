@@ -155,7 +155,7 @@ Each map value has these attributes:
 * `backup_odb_subnet_key`: Optional. Key of a backup ODB subnet created by this module.
 * `properties`: Required. VM cluster properties.
 
-Each VM cluster must set exactly one Exadata reference: `exadata_infrastructure` or `exadata_infrastructure_key`. It must also use exactly one networking mode: either `network`, `cidr`, and `backup_subnet_cidr`, or client and backup ODB subnet references through direct values or module keys. When using module keys, `odb_subnet_key` must point to a subnet with purpose `CLIENT_SUBNET`, and `backup_odb_subnet_key` must point to a subnet with purpose `BACKUP_SUBNET`.
+Each VM cluster must set exactly one Exadata reference: `exadata_infrastructure` or `exadata_infrastructure_key`. It must also use exactly one networking mode: either `network`, `cidr`, and `backup_subnet_cidr`, or client and backup ODB subnet references through direct values or module keys. When using module keys, `odb_subnet_key` must point to a subnet with purpose `CLIENT_SUBNET`, and `backup_odb_subnet_key` must point to a subnet with purpose `BACKUP_SUBNET`. When `odb_network_key` is set, both subnet keys must belong to the selected ODB network.
 
 The module intentionally ignores Terraform drift for selected VM cluster fields that can change during Oracle-managed maintenance or during operations performed through the OCI control plane in dual control-plane deployments. This prevents a later Google provider plan from trying to roll back patch, shape, capacity, storage, backup, or database server placement changes made outside this module.
 

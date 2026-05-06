@@ -140,6 +140,34 @@ resource "google_oracle_database_cloud_vm_cluster" "these" {
     }
 
     precondition {
+      condition = each.value.odb_network_key == null ? true : (
+        each.value.odb_subnet_key == null ? true : (
+          contains(keys(var.gcp_odb_networks_configuration), each.value.odb_network_key) ? (
+            contains(keys(var.gcp_odb_subnets_configuration), each.value.odb_subnet_key) ? (
+              var.gcp_odb_subnets_configuration[each.value.odb_subnet_key].odb_network_key == each.value.odb_network_key ||
+              var.gcp_odb_subnets_configuration[each.value.odb_subnet_key].odbnetwork == var.gcp_odb_networks_configuration[each.value.odb_network_key].odb_network_id
+            ) : true
+          ) : true
+        )
+      )
+      error_message = "Each Cloud VM cluster odb_subnet_key must belong to the ODB network selected by odb_network_key."
+    }
+
+    precondition {
+      condition = each.value.odb_network_key == null ? true : (
+        each.value.backup_odb_subnet_key == null ? true : (
+          contains(keys(var.gcp_odb_networks_configuration), each.value.odb_network_key) ? (
+            contains(keys(var.gcp_odb_subnets_configuration), each.value.backup_odb_subnet_key) ? (
+              var.gcp_odb_subnets_configuration[each.value.backup_odb_subnet_key].odb_network_key == each.value.odb_network_key ||
+              var.gcp_odb_subnets_configuration[each.value.backup_odb_subnet_key].odbnetwork == var.gcp_odb_networks_configuration[each.value.odb_network_key].odb_network_id
+            ) : true
+          ) : true
+        )
+      )
+      error_message = "Each Cloud VM cluster backup_odb_subnet_key must belong to the ODB network selected by odb_network_key."
+    }
+
+    precondition {
       condition     = each.value.odb_subnet_key == null ? true : (contains(keys(var.gcp_odb_subnets_configuration), each.value.odb_subnet_key) ? var.gcp_odb_subnets_configuration[each.value.odb_subnet_key].purpose == "CLIENT_SUBNET" : true)
       error_message = "Each Cloud VM cluster odb_subnet_key must reference an ODB subnet with purpose CLIENT_SUBNET."
     }
