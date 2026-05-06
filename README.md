@@ -82,7 +82,8 @@ Available examples:
 
 * [examples/quickstart](./examples/quickstart): recommended first deployment path with a `terraform.tfvars.example` template.
 * [examples/basic](./examples/basic): compact module-key resource graph.
-* [examples/existing-odb-subnets](./examples/existing-odb-subnets): VM Cluster using existing ODB network and subnet resource names.
+* [examples/existing-odb-subnets](./examples/existing-odb-subnets): creates a Cloud Exadata Infrastructure and a VM Cluster using existing ODB network and subnet resource names.
+* [examples/existing-infrastructure-vm-cluster](./examples/existing-infrastructure-vm-cluster): creates only a VM Cluster using an existing Cloud Exadata Infrastructure, ODB network, client ODB subnet, and backup ODB subnet.
 
 ## Module Outputs
 

@@ -1,0 +1,22 @@
+# Copy this file to terraform.tfvars and replace the placeholder values.
+# terraform.tfvars is ignored by this repository and should not be committed.
+
+project_id      = "my-gcp-project"
+location        = "europe-west2"
+
+cloud_vm_cluster_id = "my-vm-cluster"
+
+exadata_infrastructure = "projects/my-gcp-project/locations/europe-west2/cloudExadataInfrastructures/my-existing-exadata"
+
+odb_network       = "projects/my-gcp-project/locations/europe-west2/odbNetworks/my-odb-network"
+odb_subnet        = "projects/my-gcp-project/locations/europe-west2/odbNetworks/my-odb-network/odbSubnets/my-client-subnet"
+backup_odb_subnet = "projects/my-gcp-project/locations/europe-west2/odbNetworks/my-odb-network/odbSubnets/my-backup-subnet"
+
+license_type    = "BRING_YOUR_OWN_LICENSE"
+cpu_core_count  = 2
+gi_version      = "19.0.0.0"
+hostname_prefix = "exa"
+
+ssh_public_keys = [
+  "ssh-ed25519 AAAA... user@example.com"
+]
