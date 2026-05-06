@@ -35,8 +35,4 @@ terraform validate
 terraform plan
 ```
 
-The plan should create only `google_oracle_database_cloud_vm_cluster.these["primary"]`. Review the plan carefully before applying.
-
-```sh
-terraform apply
-```
+The plan should create only `google_oracle_database_cloud_vm_cluster.these["primary"]`. Review the plan carefully and stop there unless you are intentionally executing a real deployment.

@@ -34,8 +34,4 @@ terraform validate
 terraform plan
 ```
 
-Review the plan carefully before applying. Pay particular attention to the Exadata Infrastructure and VM Cluster properties because those operations can take a long time and may involve service-side capacity checks.
-
-```sh
-terraform apply
-```
+Review the plan carefully and stop there unless you are intentionally executing a real deployment. Pay particular attention to the Exadata Infrastructure and VM Cluster properties because those operations can take a long time and may involve service-side capacity checks.

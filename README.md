@@ -15,7 +15,7 @@
 
 ## Early Preview Disclaimer
 
-This module is still an early implementation for Oracle Database@Google Cloud. Use normal production change control: pin provider versions, review every plan, and avoid applying changes until the expected service-side behavior is clear.
+This module is still an early implementation for Oracle Database@Google Cloud. Use normal production change control: pin provider versions, review every plan, and avoid write operations until the expected service-side behavior is clear.
 
 ## Overview
 
@@ -34,7 +34,7 @@ Use this README for deployment guidance. Use [SPEC.md](./SPEC.md) for the full i
 
 ## Pre-requisites
 
-Before running `terraform apply`, make sure these pieces are already in place:
+Before running Terraform against real infrastructure, make sure these pieces are already in place:
 
 * A Google Cloud project enabled for Oracle Database@Google Cloud.
 * Google provider authentication for the Terraform caller.
@@ -104,6 +104,6 @@ Licensed under the Universal Permissive License v 1.0 as shown at https://oss.or
 
 ## Known Issues
 
-1. Oracle Database@Google Cloud resources can take a long time to provision. If `terraform apply` is interrupted, run it again so Terraform can continue from the current state.
+1. Oracle Database@Google Cloud resources can take a long time to provision. If a creation or update operation is interrupted, rerun Terraform from the same working directory so it can continue from the current state.
 2. VM cluster creation requires valid networking inputs. When using ODB subnets, provide both client and backup subnet references through direct values or module keys.
 3. Some resource attributes are service-managed and appear only after provisioning completes. Downstream stacks should consume outputs only after the producing stack has completed successfully.
