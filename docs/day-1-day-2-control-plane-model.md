@@ -1,12 +1,12 @@
-# Day-1 and Day-2 Operating Model for Oracle Database@Google Cloud
+# Day-1 and Day-2 Control Plane Model for Oracle Database@Google Cloud
 
-This operating model applies when Oracle Database@Google Cloud Exadata Infrastructure and VM Clusters are deployed from Google Cloud and operated from OCI. It works for a single deployment and for multiple deployments operated at scale.
+This control plane model applies when Oracle Database@Google Cloud Exadata Infrastructure and VM Clusters are deployed from Google Cloud and operated from OCI. It works for a single deployment and for multiple deployments operated at scale.
 
 ## Recommendation
 
 Use **Google Terraform for Day-1 provisioning** and **OCI-native tooling for Day-2 operations**.
 
-The operating rule is simple:
+The ownership rule is simple:
 
 * The Terraform module in this repository creates or references the Google-side deployment resources and remains the Day-1 owner.
 * OCI tooling operates the VM Cluster and database layer after creation.
@@ -16,7 +16,7 @@ The operating rule is simple:
 
 ## Recommended Terraform Modules
 
-Use this repository's module as the standard Google Terraform interface for Day-1 provisioning. It captures the ODB Network, ODB Subnet, Cloud Exadata Infrastructure, and Cloud VM Cluster resource graph, along with module-key references, defaults, outputs, operation timeouts, and the dual control-plane drift policy described by this operating model.
+Use this repository's module as the standard Google Terraform interface for Day-1 provisioning. It captures the ODB Network, ODB Subnet, Cloud Exadata Infrastructure, and Cloud VM Cluster resource graph, along with module-key references, defaults, outputs, operation timeouts, and the dual control-plane drift policy described by this control plane model.
 
 For OCI-side declarative database-layer automation, use the OCI Landing Zones Exadata Database module when it fits the customer lifecycle. In this model, it is a good fit for DB Homes, container databases, and pluggable databases that consume the VM Cluster OCID produced by the Google stack.
 
