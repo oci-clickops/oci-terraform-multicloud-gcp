@@ -170,6 +170,91 @@ run "dependency_odb_subnet_parent_is_derived_from_id" {
   ]
 }
 
+run "vm_cluster_rejects_direct_subnet_parent_with_same_network_segment_but_different_project_location" {
+  command = plan
+
+  variables {
+    default_project_id          = "project-a"
+    default_location            = "us-east4"
+    default_deletion_protection = false
+
+    gcp_cloud_vm_clusters_configuration = {
+      primary = {
+        cloud_vm_cluster_id    = "primary-vm-cluster"
+        exadata_infrastructure = "projects/project-a/locations/us-east4/cloudExadataInfrastructures/primary-exadata"
+        odb_network            = "projects/project-a/locations/us-east4/odbNetworks/shared"
+        odb_subnet             = "projects/project-b/locations/europe-west2/odbNetworks/shared/odbSubnets/client-subnet"
+        backup_odb_subnet      = "projects/project-b/locations/europe-west2/odbNetworks/shared/odbSubnets/backup-subnet"
+
+        properties = {
+          license_type    = "BRING_YOUR_OWN_LICENSE"
+          cpu_core_count  = 4
+          node_count      = 2
+          ssh_public_keys = ["ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCexample user@example.com"]
+        }
+      }
+    }
+  }
+
+  expect_failures = [
+    google_oracle_database_cloud_vm_cluster.these["primary"],
+  ]
+}
+
+run "vm_cluster_rejects_dependency_subnet_parent_with_same_network_segment_but_different_project_location" {
+  command = plan
+
+  variables {
+    default_project_id          = "project-a"
+    default_location            = "us-east4"
+    default_deletion_protection = false
+
+    gcp_odb_networks_dependency = {
+      primary = {
+        id = "projects/project-a/locations/us-east4/odbNetworks/shared"
+      }
+    }
+
+    gcp_odb_subnets_dependency = {
+      client = {
+        id      = "projects/project-b/locations/europe-west2/odbNetworks/shared/odbSubnets/client-subnet"
+        purpose = "CLIENT_SUBNET"
+      }
+      backup = {
+        id      = "projects/project-b/locations/europe-west2/odbNetworks/shared/odbSubnets/backup-subnet"
+        purpose = "BACKUP_SUBNET"
+      }
+    }
+
+    gcp_cloud_exadata_infrastructures_dependency = {
+      primary = {
+        id = "projects/project-a/locations/us-east4/cloudExadataInfrastructures/primary-exadata"
+      }
+    }
+
+    gcp_cloud_vm_clusters_configuration = {
+      primary = {
+        cloud_vm_cluster_id        = "primary-vm-cluster"
+        exadata_infrastructure_key = "primary"
+        odb_network_key            = "primary"
+        odb_subnet_key             = "client"
+        backup_odb_subnet_key      = "backup"
+
+        properties = {
+          license_type    = "BRING_YOUR_OWN_LICENSE"
+          cpu_core_count  = 4
+          node_count      = 2
+          ssh_public_keys = ["ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCexample user@example.com"]
+        }
+      }
+    }
+  }
+
+  expect_failures = [
+    google_oracle_database_cloud_vm_cluster.these["primary"],
+  ]
+}
+
 run "dependency_json_files_drive_vm_cluster_handoff" {
   command = plan
 
