@@ -101,7 +101,7 @@ Available examples:
 * [examples/existing-odb-subnets](./examples/existing-odb-subnets): creates a Cloud Exadata Infrastructure and a VM Cluster using existing ODB network and subnet resource names, with a complete `terraform.tfvars.example` template.
 * [examples/existing-infrastructure-vm-cluster](./examples/existing-infrastructure-vm-cluster): creates only a VM Cluster using an existing Cloud Exadata Infrastructure, ODB network, client ODB subnet, and backup ODB subnet, with a complete `terraform.tfvars.example` template.
 
-The examples deliberately do not declare a Terraform backend so they can be initialized offline with `terraform init -backend=false` for review and validation. For real deployments, configure a remote backend such as Google Cloud Storage, Terraform Cloud, or any other supported backend in your own copy of the example or wrapper stack. Keep state for networking, Exadata infrastructure, and VM cluster stacks separate when adopting the multi-state handoff pattern.
+The examples deliberately do not declare a Terraform backend so they can be initialized offline with `terraform init -backend=false` for review and validation. For real deployments, configure a remote backend such as Google Cloud Storage, an OCI Object Storage bucket, Terraform Cloud, or any other supported backend in your own copy of the example or wrapper stack. Keep state for networking, Exadata infrastructure, and VM cluster stacks separate when adopting the multi-state handoff pattern.
 
 ## Module Outputs
 
