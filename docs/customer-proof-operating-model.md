@@ -44,8 +44,8 @@ config:
   handDrawnSeed: 7
 ---
 flowchart LR
-  subgraph GCP["Google Cloud - Day-1"]
-    GTF["Terraform Google"]
+  subgraph GCP["od@aws/gcp/azure - Day-1"]
+    GTF["Terraform aws/gcp/azure provider"]
     ODB["ODB Network + ODB Subnets"]
     EXA["Cloud Exadata Infrastructure"]
     VM["Cloud VM Cluster"]
