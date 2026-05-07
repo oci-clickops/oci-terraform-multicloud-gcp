@@ -16,7 +16,7 @@ Before running it, confirm that:
 
 * The Google Cloud project is enabled for Oracle Database@Google Cloud.
 * The target region has the required entitlement and capacity.
-* The VPC network already exists.
+* The VPC network already exists. In production, this is usually supplied by the Google Cloud landing zone or platform networking stack, often as a Shared VPC.
 * Google provider authentication is configured.
 * The caller has permissions to manage Oracle Database@Google Cloud resources and reference the VPC network.
 

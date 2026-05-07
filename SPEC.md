@@ -23,6 +23,8 @@ This module requires Terraform `>= 1.3.0` and HashiCorp Google provider `>= 7.0.
 
 Google Cloud project enablement, Oracle Database@Google Cloud entitlement, IAM permissions, provider authentication, and VPC networking are external prerequisites. The module validates the Terraform-side input contract, but it cannot validate service entitlement or regional capacity before the provider calls the Google API.
 
+The module intentionally does not create Google Cloud VPC networks. VPCs are expected to be provided by the platform foundation or Google Cloud landing zone, commonly through a Shared VPC or centrally governed networking stack. The module consumes the existing VPC resource name in `gcp_odb_networks_configuration[*].network` and owns the Oracle Database@Google Cloud resources layered on top of it.
+
 ## Module Inputs
 
 The module accepts these input variables.
@@ -45,7 +47,7 @@ The module accepts these input variables.
 Each map value has these attributes:
 
 * `odb_network_id`: Required. The ODB network ID.
-* `network`: Required. The Google Cloud VPC network resource name in `projects/{project}/global/networks/{network}` format.
+* `network`: Required. The existing Google Cloud VPC network resource name in `projects/{project}/global/networks/{network}` format. The VPC itself is not created by this module.
 * `location`: Optional. The Google Cloud region. Overrides `default_location`.
 * `project_id`: Optional. The Google Cloud project ID. Overrides `default_project_id`.
 * `gcp_oracle_zone`: Optional. The GCP Oracle zone. Overrides `default_gcp_oracle_zone`.

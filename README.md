@@ -46,6 +46,8 @@ Before running Terraform against real infrastructure, make sure these pieces are
 * Oracle Database@Google Cloud entitlement and capacity in the target project and region.
 * RSA SSH public keys for VM Cluster access. Ed25519 keys are rejected by the Oracle Database@Google Cloud VM Cluster API.
 
+The VPC network is intentionally a prerequisite rather than a resource created by this module. In enterprise Google Cloud environments, the VPC is usually owned by the platform foundation or landing zone, often as a Shared VPC with centralized controls for routes, firewall rules, DNS, hybrid connectivity, and subnet delegation. This module references that existing VPC when creating the Oracle Database@Google Cloud ODB Network, then manages the Oracle-specific ODB subnets, Exadata Infrastructure, and VM Clusters.
+
 The schema was validated against Google provider `7.31.0` on May 6, 2026.
 
 ## Getting Started
@@ -66,6 +68,8 @@ For example, a VM cluster can use `exadata_infrastructure_key` to select an Exad
 VM clusters use ODB subnet mode with client and backup ODB subnet references, either passed directly or selected through module keys. This module intentionally exposes only ODB subnet mode for new environments.
 
 When using ODB subnet module keys, the client key must point to a `CLIENT_SUBNET`, the backup key must point to a `BACKUP_SUBNET`, and both subnet keys must belong to the ODB network selected by `odb_network_key` when that key is set.
+
+VPC creation stays outside this module boundary. If a deployment needs a new VPC for a proof of concept, create it in a separate landing-zone or networking stack and pass its resource name through the ODB Network `network` input.
 
 Common defaults such as project, location, GCP Oracle zone, labels, deletion protection, Exadata maintenance windows, and operation timeouts are handled by module-level inputs. Resource-specific values override the defaults.
 
