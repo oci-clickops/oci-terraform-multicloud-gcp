@@ -1,4 +1,4 @@
-# Recommended Operating Model for Oracle Database@Google Cloud
+# Day-1 and Day-2 Operating Model for Oracle Database@Google Cloud
 
 This operating model applies when Oracle Database@Google Cloud Exadata Infrastructure and VM Clusters are deployed from Google Cloud and operated from OCI. It works for a single deployment and for multiple deployments operated at scale.
 
