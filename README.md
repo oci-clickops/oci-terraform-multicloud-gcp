@@ -103,6 +103,8 @@ The module returns created resources with the same keys used in the input maps:
 
 Each output includes stable identifiers and selected computed attributes exported by the Google provider. Set `enable_output = false` to suppress outputs.
 
+The Exadata Infrastructure and VM Cluster outputs include operational fields such as server versions, capacity, Grid Infrastructure version, DB server placement, SCAN details, and OCI URLs. These are intended for validation, handoff to downstream stacks, and troubleshooting after long-running create operations complete.
+
 ## License
 
 Copyright (c) 2026, Oracle and/or its affiliates.
@@ -113,4 +115,5 @@ Licensed under the Universal Permissive License v 1.0 as shown at https://oss.or
 
 1. Oracle Database@Google Cloud resources can take a long time to provision. If a creation or update operation is interrupted, rerun Terraform from the same working directory so it can continue from the current state.
 2. VM cluster creation requires valid networking inputs. When using ODB subnets, provide both client and backup subnet references through direct values or module keys.
-3. Some resource attributes are service-managed and appear only after provisioning completes. Downstream stacks should consume outputs only after the producing stack has completed successfully.
+3. Some VM cluster configurations require explicit DB server placement. Use `db_server_ocids` directly, or use the existing-infrastructure VM cluster example to discover available DB servers from the target Exadata Infrastructure.
+4. Some resource attributes are service-managed and appear only after provisioning completes. Downstream stacks should consume outputs only after the producing stack has completed successfully.

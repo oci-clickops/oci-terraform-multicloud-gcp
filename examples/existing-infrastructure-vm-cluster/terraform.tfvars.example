@@ -44,10 +44,10 @@ time_zone_id               = "UTC"
 time_zone_version          = null
 gi_version      = "23.0.0.0"
 hostname_prefix = "exa"
-db_server_ocids = [
-  "ocid1.dbserver.oc1.region.exampleuniqueid1",
-  "ocid1.dbserver.oc1.region.exampleuniqueid2",
-]
+
+# Leave null to discover AVAILABLE DB servers from the existing Exadata Infrastructure.
+# For controlled placement, set one explicit DB server OCID per VM.
+db_server_ocids = null
 
 ssh_public_keys = [
   "ssh-rsa AAAA... user@example.com"

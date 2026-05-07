@@ -238,15 +238,15 @@ variable "ssh_public_keys" {
 }
 
 variable "db_server_ocids" {
-  description = "Database server OCIDs for explicit VM placement. Provide one DB server OCID per VM; this example uses two DB servers for the minimum two-node cluster."
+  description = "Database server OCIDs for explicit VM placement. Set null to discover AVAILABLE DB servers from the existing Exadata Infrastructure and select one per VM."
   type        = list(string)
-  nullable    = false
+  default     = null
 
   validation {
-    condition = length(var.db_server_ocids) >= 2 && alltrue([
+    condition = var.db_server_ocids == null ? true : length(var.db_server_ocids) >= 2 && alltrue([
       for ocid in var.db_server_ocids :
       can(regex("^ocid1[.]dbserver[.]", trimspace(ocid)))
     ])
-    error_message = "db_server_ocids must contain at least two valid DB server OCIDs, for example ocid1.dbserver.oc1.<region>.<id>."
+    error_message = "db_server_ocids must be null or contain at least two valid DB server OCIDs, for example ocid1.dbserver.oc1.<region>.<id>."
   }
 }

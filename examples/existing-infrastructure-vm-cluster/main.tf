@@ -6,6 +6,28 @@ provider "google" {
   region  = var.location
 }
 
+data "google_oracle_database_db_servers" "available" {
+  count = var.db_server_ocids == null ? 1 : 0
+
+  project                      = var.project_id
+  location                     = var.location
+  cloud_exadata_infrastructure = basename(var.exadata_infrastructure)
+}
+
+locals {
+  discovered_db_server_ocids = var.db_server_ocids == null ? [
+    for server in data.google_oracle_database_db_servers.available[0].db_servers :
+    server.properties[0].ocid
+    if try(server.properties[0].state, null) == "AVAILABLE"
+  ] : []
+
+  resolved_db_server_ocids = var.db_server_ocids != null ? var.db_server_ocids : slice(
+    local.discovered_db_server_ocids,
+    0,
+    min(length(local.discovered_db_server_ocids), var.node_count)
+  )
+}
+
 module "oracle_database_at_gcp" {
   source = "../.."
 
@@ -45,7 +67,7 @@ module "oracle_database_at_gcp" {
         gi_version               = var.gi_version
         hostname_prefix          = var.hostname_prefix
         ssh_public_keys          = var.ssh_public_keys
-        db_server_ocids          = var.db_server_ocids
+        db_server_ocids          = local.resolved_db_server_ocids
 
         time_zone = var.time_zone_id == null ? null : {
           id      = var.time_zone_id

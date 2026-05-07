@@ -27,6 +27,8 @@ cp terraform.tfvars.example terraform.tfvars
 
 Edit `terraform.tfvars` with your project, region, existing resource names, license type, CPU core count, Grid Infrastructure version, hostname prefix, and SSH public key.
 
+By default, `db_server_ocids = null` makes the example read DB servers from the existing Cloud Exadata Infrastructure and pass the first `node_count` servers in `AVAILABLE` state to the module. Set `db_server_ocids` explicitly when you need controlled placement or want to reuse a previously validated server list.
+
 The VM Cluster GCP Oracle zone is derived from the existing Cloud Exadata Infrastructure by the service, so this example does not set it as an input.
 
 ```sh

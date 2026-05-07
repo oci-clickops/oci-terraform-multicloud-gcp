@@ -217,4 +217,4 @@ The module returns these outputs:
 * `gcp_cloud_exadata_infrastructures`: Created Exadata infrastructures, keyed by input key.
 * `gcp_cloud_vm_clusters`: Created Exadata VM clusters, keyed by input key.
 
-Each resource output includes stable identifiers and selected computed attributes exported by the Google provider. Outputs are disabled when `enable_output` is set to `false`.
+Each resource output includes stable identifiers and selected computed attributes exported by the Google provider. Exadata Infrastructure outputs include server versions and storage activation counts. VM Cluster outputs include Grid Infrastructure version, cluster identity, placement, capacity, SCAN details, backup and disk redundancy settings, OCI metadata, and lifecycle state. Outputs are disabled when `enable_output` is set to `false`.
