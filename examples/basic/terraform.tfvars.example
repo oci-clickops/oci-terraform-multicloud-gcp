@@ -8,16 +8,16 @@ network = "projects/my-gcp-project/global/networks/database-vpc"
 
 labels = {
   terraform = "true"
-  example   = "quickstart"
+  example   = "basic"
 }
 
 deletion_protection = false
 
-odb_network_id               = "quickstart-odb-network"
-odb_network_location         = null
-odb_network_project_id       = null
-odb_network_gcp_oracle_zone  = null
-odb_network_labels           = {}
+odb_network_id                  = "primary-odb-network"
+odb_network_location            = null
+odb_network_project_id          = null
+odb_network_gcp_oracle_zone     = null
+odb_network_labels              = {}
 odb_network_deletion_protection = false
 odb_network_timeouts = {
   create = "90m"
@@ -25,7 +25,7 @@ odb_network_timeouts = {
   delete = "60m"
 }
 
-client_odb_subnet_id                  = "quickstart-client"
+client_odb_subnet_id                  = "client-subnet"
 client_odb_subnet_cidr_range          = "192.168.1.0/24"
 client_odb_subnet_location            = null
 client_odb_subnet_project_id          = null
@@ -37,7 +37,7 @@ client_odb_subnet_timeouts = {
   delete = "60m"
 }
 
-backup_odb_subnet_id                  = "quickstart-backup"
+backup_odb_subnet_id                  = "backup-subnet"
 backup_odb_subnet_cidr_range          = "192.168.2.0/28"
 backup_odb_subnet_location            = null
 backup_odb_subnet_project_id          = null
@@ -49,8 +49,8 @@ backup_odb_subnet_timeouts = {
   delete = "60m"
 }
 
-cloud_exadata_infrastructure_id                  = "quickstart-exadata"
-cloud_exadata_infrastructure_display_name        = "quickstart-exadata"
+cloud_exadata_infrastructure_id                  = "primary-exadata"
+cloud_exadata_infrastructure_display_name        = "primary-exadata"
 cloud_exadata_infrastructure_location            = null
 cloud_exadata_infrastructure_project_id          = null
 cloud_exadata_infrastructure_gcp_oracle_zone     = null
@@ -71,20 +71,10 @@ customer_contacts = [
     email = "dba@example.com"
   }
 ]
-exadata_maintenance_window = {
-  preference                       = "CUSTOM_PREFERENCE"
-  months                           = null
-  weeks_of_month                   = [1]
-  days_of_week                     = ["SUNDAY"]
-  hours_of_day                     = [4]
-  lead_time_week                   = null
-  patching_mode                    = "ROLLING"
-  custom_action_timeout_mins       = null
-  is_custom_action_timeout_enabled = null
-}
+exadata_maintenance_window = null
 
-cloud_vm_cluster_id = "quickstart-vm-cluster"
-display_name        = "quickstart-vm-cluster"
+cloud_vm_cluster_id = "primary-vm-cluster"
+display_name        = "primary-vm-cluster"
 timeouts = {
   create = "180m"
   update = "90m"
@@ -101,7 +91,7 @@ data_storage_size_tb       = 2
 disk_redundancy            = "HIGH"
 local_backup_enabled       = false
 sparse_diskgroup_enabled   = false
-cluster_name               = "quickstart"
+cluster_name               = "basic"
 diagnostics_events_enabled = true
 health_monitoring_enabled  = true
 incident_logs_enabled      = true

@@ -156,5 +156,13 @@ resource "google_oracle_database_cloud_vm_cluster" "these" {
       condition     = each.value.backup_odb_subnet_key == null ? true : (contains(keys(var.gcp_odb_subnets_configuration), each.value.backup_odb_subnet_key) ? var.gcp_odb_subnets_configuration[each.value.backup_odb_subnet_key].purpose == "BACKUP_SUBNET" : true)
       error_message = "Each Cloud VM cluster backup_odb_subnet_key must reference an ODB subnet with purpose BACKUP_SUBNET."
     }
+
+    precondition {
+      condition = each.value.properties.db_server_ocids == null ? true : (
+        length(each.value.properties.db_server_ocids) > 0 &&
+        (each.value.properties.node_count == null ? true : length(each.value.properties.db_server_ocids) >= each.value.properties.node_count)
+      )
+      error_message = "Each Cloud VM cluster db_server_ocids list must be non-empty and include at least one DB server OCID per requested node_count."
+    }
   }
 }

@@ -32,6 +32,8 @@ The module follows the OCI Landing Zones style. Resources are declared through k
 
 Use this README for deployment guidance. Use [SPEC.md](./SPEC.md) for the full input and output contract.
 
+For the recommended Day-1 and Day-2 operating model, see [docs/customer-proof-operating-model.md](./docs/customer-proof-operating-model.md).
+
 ## Pre-requisites
 
 Before running Terraform against real infrastructure, make sure these pieces are already in place:
@@ -42,6 +44,7 @@ Before running Terraform against real infrastructure, make sure these pieces are
 * Terraform `>= 1.3.0` and HashiCorp Google provider `>= 7.0.0, < 8.0.0`.
 * An existing Google Cloud VPC network.
 * Oracle Database@Google Cloud entitlement and capacity in the target project and region.
+* RSA SSH public keys for VM Cluster access. Ed25519 keys are rejected by the Oracle Database@Google Cloud VM Cluster API.
 
 The schema was validated against Google provider `7.31.0` on May 6, 2026.
 
@@ -80,10 +83,10 @@ The exact ignored fields and rationale are documented in [SPEC.md](./SPEC.md).
 
 Available examples:
 
-* [examples/quickstart](./examples/quickstart): recommended first deployment path with a `terraform.tfvars.example` template.
-* [examples/basic](./examples/basic): compact module-key resource graph.
-* [examples/existing-odb-subnets](./examples/existing-odb-subnets): creates a Cloud Exadata Infrastructure and a VM Cluster using existing ODB network and subnet resource names.
-* [examples/existing-infrastructure-vm-cluster](./examples/existing-infrastructure-vm-cluster): creates only a VM Cluster using an existing Cloud Exadata Infrastructure, ODB network, client ODB subnet, and backup ODB subnet.
+* [examples/quickstart](./examples/quickstart): recommended first deployment path with a complete `terraform.tfvars.example` template.
+* [examples/basic](./examples/basic): compact module-key resource graph with a complete `terraform.tfvars.example` template.
+* [examples/existing-odb-subnets](./examples/existing-odb-subnets): creates a Cloud Exadata Infrastructure and a VM Cluster using existing ODB network and subnet resource names, with a complete `terraform.tfvars.example` template.
+* [examples/existing-infrastructure-vm-cluster](./examples/existing-infrastructure-vm-cluster): creates only a VM Cluster using an existing Cloud Exadata Infrastructure, ODB network, client ODB subnet, and backup ODB subnet, with a complete `terraform.tfvars.example` template.
 
 ## Module Outputs
 

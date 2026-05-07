@@ -175,19 +175,19 @@ The policy is deliberately limited to operational fields that are likely to drif
 The `properties` object has these attributes:
 
 * `license_type`: Required. License type of the VM cluster.
-* `cpu_core_count`: Required. CPU core count of the VM cluster.
+* `cpu_core_count`: Required. CPU core count of the VM cluster. Must be at least 4.
 * `gi_version`: Optional. Grid Infrastructure version.
-* `ssh_public_keys`: Optional. SSH public keys for the VM cluster.
-* `node_count`: Optional. Node count of the VM cluster.
+* `ssh_public_keys`: Optional. RSA SSH public keys for the VM cluster in OpenSSH format, for example `ssh-rsa <base64> user@example.com`.
+* `node_count`: Optional. Node count of the VM cluster. Must be at least 2 when set.
 * `ocpu_count`: Optional. OCPU count of the VM cluster.
-* `memory_size_gb`: Optional. Memory size in GB.
-* `db_node_storage_size_gb`: Optional. DB node storage size in GB.
-* `data_storage_size_tb`: Optional. Data storage size in TB.
+* `memory_size_gb`: Optional. Memory size in GB. Must be at least 60 when set.
+* `db_node_storage_size_gb`: Optional. DB node storage size in GB. Must be at least 120 when set.
+* `data_storage_size_tb`: Optional. Data storage size in TB. Must be at least 2 when set.
 * `disk_redundancy`: Optional. Disk redundancy setting.
 * `sparse_diskgroup_enabled`: Optional. Whether sparse diskgroup is enabled.
 * `local_backup_enabled`: Optional. Whether local backup is enabled.
 * `hostname_prefix`: Optional. Hostname prefix.
-* `db_server_ocids`: Optional. Database server OCIDs.
+* `db_server_ocids`: Optional. Database server OCIDs for explicit VM placement. When set, values must be DB server OCIDs and the list must include at least one OCID per requested `node_count`; some service configurations require this field instead of accepting server-side placement.
 * `cluster_name`: Optional. Cluster name.
 * `time_zone`: Optional. Time zone configuration.
 * `diagnostics_data_collection_options`: Optional. Diagnostics data collection options.

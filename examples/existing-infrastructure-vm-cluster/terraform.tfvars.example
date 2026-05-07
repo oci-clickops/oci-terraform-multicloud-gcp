@@ -5,6 +5,7 @@ project_id      = "my-gcp-project"
 location        = "europe-west2"
 
 cloud_vm_cluster_id = "my-vm-cluster"
+display_name        = "my-vm-cluster"
 
 exadata_infrastructure = "projects/my-gcp-project/locations/europe-west2/cloudExadataInfrastructures/my-existing-exadata"
 
@@ -12,11 +13,42 @@ odb_network       = "projects/my-gcp-project/locations/europe-west2/odbNetworks/
 odb_subnet        = "projects/my-gcp-project/locations/europe-west2/odbNetworks/my-odb-network/odbSubnets/my-client-subnet"
 backup_odb_subnet = "projects/my-gcp-project/locations/europe-west2/odbNetworks/my-odb-network/odbSubnets/my-backup-subnet"
 
+labels = {
+  terraform = "true"
+  example   = "existing-infrastructure-vm-cluster"
+}
+
+deletion_protection = false
+
+timeouts = {
+  create = "180m"
+  update = "90m"
+  delete = "90m"
+}
+
 license_type    = "BRING_YOUR_OWN_LICENSE"
-cpu_core_count  = 2
-gi_version      = "19.0.0.0"
+cpu_core_count  = 4
+node_count      = 2
+ocpu_count      = 2
+memory_size_gb  = 60
+db_node_storage_size_gb  = 120
+data_storage_size_tb     = 2
+disk_redundancy          = "HIGH"
+local_backup_enabled     = false
+sparse_diskgroup_enabled = false
+cluster_name             = "mycluster"
+diagnostics_events_enabled = true
+health_monitoring_enabled  = true
+incident_logs_enabled      = true
+time_zone_id               = "UTC"
+time_zone_version          = null
+gi_version      = "23.0.0.0"
 hostname_prefix = "exa"
+db_server_ocids = [
+  "ocid1.dbserver.oc1.region.exampleuniqueid1",
+  "ocid1.dbserver.oc1.region.exampleuniqueid2",
+]
 
 ssh_public_keys = [
-  "ssh-ed25519 AAAA... user@example.com"
+  "ssh-rsa AAAA... user@example.com"
 ]

@@ -386,14 +386,14 @@ variable "gcp_cloud_vm_clusters_configuration" {
   validation {
     condition = alltrue([
       for cluster in var.gcp_cloud_vm_clusters_configuration :
-      cluster.properties.cpu_core_count > 0 &&
-      (cluster.properties.node_count == null ? true : cluster.properties.node_count > 0) &&
+      cluster.properties.cpu_core_count >= 4 &&
+      (cluster.properties.node_count == null ? true : cluster.properties.node_count >= 2) &&
       (cluster.properties.ocpu_count == null ? true : cluster.properties.ocpu_count >= 0.1) &&
-      (cluster.properties.memory_size_gb == null ? true : cluster.properties.memory_size_gb > 0) &&
-      (cluster.properties.db_node_storage_size_gb == null ? true : cluster.properties.db_node_storage_size_gb > 0) &&
-      (cluster.properties.data_storage_size_tb == null ? true : cluster.properties.data_storage_size_tb > 0)
+      (cluster.properties.memory_size_gb == null ? true : cluster.properties.memory_size_gb >= 60) &&
+      (cluster.properties.db_node_storage_size_gb == null ? true : cluster.properties.db_node_storage_size_gb >= 120) &&
+      (cluster.properties.data_storage_size_tb == null ? true : cluster.properties.data_storage_size_tb >= 2)
     ])
-    error_message = "Cloud VM cluster capacity values must be positive when set; ocpu_count must be at least 0.1."
+    error_message = "Cloud VM cluster capacity values must meet minimums: cpu_core_count >= 4, node_count >= 2 when set, ocpu_count >= 0.1 when set, memory_size_gb >= 60 when set, db_node_storage_size_gb >= 120 when set, and data_storage_size_tb >= 2 when set."
   }
 
   validation {
@@ -415,10 +415,30 @@ variable "gcp_cloud_vm_clusters_configuration" {
   validation {
     condition = alltrue([
       for cluster in var.gcp_cloud_vm_clusters_configuration :
-      cluster.properties.ssh_public_keys == null ? true : alltrue([
-        for key in cluster.properties.ssh_public_keys : length(trimspace(key)) > 0
-      ])
+      cluster.properties.cluster_name == null ? true : can(regex("^[a-zA-Z][a-zA-Z0-9-]{0,10}$", cluster.properties.cluster_name))
     ])
-    error_message = "Cloud VM cluster ssh_public_keys entries must be non-empty strings."
+    error_message = "Cloud VM cluster cluster_name must start with a letter, contain only letters, numbers, and hyphens, and be 1-11 characters long."
+  }
+
+  validation {
+    condition = alltrue(flatten([
+      for cluster in var.gcp_cloud_vm_clusters_configuration :
+      cluster.properties.ssh_public_keys == null ? [true] : [
+        for key in cluster.properties.ssh_public_keys :
+        can(regex("^ssh-rsa[[:space:]]+[A-Za-z0-9+/]+={0,3}([[:space:]]+.+)?$", trimspace(key)))
+      ]
+    ]))
+    error_message = "Cloud VM cluster ssh_public_keys entries must be valid RSA public keys in OpenSSH format: ssh-rsa <base64> [comment]."
+  }
+
+  validation {
+    condition = alltrue(flatten([
+      for cluster in var.gcp_cloud_vm_clusters_configuration :
+      cluster.properties.db_server_ocids == null ? [true] : [
+        for ocid in cluster.properties.db_server_ocids :
+        can(regex("^ocid1[.]dbserver[.]", trimspace(ocid)))
+      ]
+    ]))
+    error_message = "Cloud VM cluster db_server_ocids entries must be valid DB server OCIDs, for example ocid1.dbserver.oc1.<region>.<id>."
   }
 }

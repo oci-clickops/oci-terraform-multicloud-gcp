@@ -26,7 +26,7 @@ Before running it, confirm that:
 cp terraform.tfvars.example terraform.tfvars
 ```
 
-Edit `terraform.tfvars` with your project, region, Oracle zone, VPC network, customer contact email, and SSH public key.
+Edit `terraform.tfvars` with your project, region, Oracle zone, VPC network, customer contacts, and RSA SSH public key.
 
 ```sh
 terraform init -backend=false
