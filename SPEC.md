@@ -19,7 +19,7 @@ The README covers deployment guidance and examples. This specification focuses o
 
 ## Compatibility
 
-This module requires Terraform `>= 1.3.0` and HashiCorp Google provider `>= 7.0.0, < 8.0.0`. The schema was validated against Google provider `7.31.0` on May 6, 2026.
+This module requires Terraform `>= 1.3.0` and HashiCorp Google provider `>= 7.13.0, < 8.0.0`. The schema was validated against Google provider `7.31.0` on May 6, 2026.
 
 Google Cloud project enablement, Oracle Database@Google Cloud entitlement, IAM permissions, provider authentication, and VPC networking are external prerequisites. The module validates the Terraform-side input contract, but it cannot validate service entitlement or regional capacity before the provider calls the Google API.
 

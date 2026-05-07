@@ -41,7 +41,7 @@ Before running Terraform against real infrastructure, make sure these pieces are
 * A Google Cloud project enabled for Oracle Database@Google Cloud.
 * Google provider authentication for the Terraform caller.
 * IAM permissions to manage Oracle Database@Google Cloud resources and reference the target VPC network.
-* Terraform `>= 1.3.0` and HashiCorp Google provider `>= 7.0.0, < 8.0.0`.
+* Terraform `>= 1.3.0` and HashiCorp Google provider `>= 7.13.0, < 8.0.0`.
 * An existing Google Cloud VPC network.
 * Oracle Database@Google Cloud entitlement and capacity in the target project and region.
 * RSA SSH public keys for VM Cluster access. Ed25519 keys are rejected by the Oracle Database@Google Cloud VM Cluster API.

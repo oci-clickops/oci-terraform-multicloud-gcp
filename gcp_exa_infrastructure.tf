@@ -27,18 +27,20 @@ resource "google_oracle_database_cloud_exadata_infrastructure" "these" {
     }
 
     dynamic "maintenance_window" {
-      for_each = each.value.properties.maintenance_window != null ? [each.value.properties.maintenance_window] : (var.default_cloud_exadata_maintenance_window == null ? [] : [var.default_cloud_exadata_maintenance_window])
+      for_each = (
+        each.value.properties.maintenance_window != null || var.default_cloud_exadata_maintenance_window != null
+      ) ? [1] : []
 
       content {
-        preference                       = maintenance_window.value.preference
-        months                           = maintenance_window.value.months
-        weeks_of_month                   = maintenance_window.value.weeks_of_month
-        days_of_week                     = maintenance_window.value.days_of_week
-        hours_of_day                     = maintenance_window.value.hours_of_day
-        lead_time_week                   = maintenance_window.value.lead_time_week
-        patching_mode                    = maintenance_window.value.patching_mode
-        custom_action_timeout_mins       = maintenance_window.value.custom_action_timeout_mins
-        is_custom_action_timeout_enabled = maintenance_window.value.is_custom_action_timeout_enabled
+        preference                       = try(each.value.properties.maintenance_window.preference, null) != null ? each.value.properties.maintenance_window.preference : try(var.default_cloud_exadata_maintenance_window.preference, null)
+        months                           = try(each.value.properties.maintenance_window.months, null) != null ? each.value.properties.maintenance_window.months : try(var.default_cloud_exadata_maintenance_window.months, null)
+        weeks_of_month                   = try(each.value.properties.maintenance_window.weeks_of_month, null) != null ? each.value.properties.maintenance_window.weeks_of_month : try(var.default_cloud_exadata_maintenance_window.weeks_of_month, null)
+        days_of_week                     = try(each.value.properties.maintenance_window.days_of_week, null) != null ? each.value.properties.maintenance_window.days_of_week : try(var.default_cloud_exadata_maintenance_window.days_of_week, null)
+        hours_of_day                     = try(each.value.properties.maintenance_window.hours_of_day, null) != null ? each.value.properties.maintenance_window.hours_of_day : try(var.default_cloud_exadata_maintenance_window.hours_of_day, null)
+        lead_time_week                   = try(each.value.properties.maintenance_window.lead_time_week, null) != null ? each.value.properties.maintenance_window.lead_time_week : try(var.default_cloud_exadata_maintenance_window.lead_time_week, null)
+        patching_mode                    = try(each.value.properties.maintenance_window.patching_mode, null) != null ? each.value.properties.maintenance_window.patching_mode : try(var.default_cloud_exadata_maintenance_window.patching_mode, null)
+        custom_action_timeout_mins       = try(each.value.properties.maintenance_window.custom_action_timeout_mins, null) != null ? each.value.properties.maintenance_window.custom_action_timeout_mins : try(var.default_cloud_exadata_maintenance_window.custom_action_timeout_mins, null)
+        is_custom_action_timeout_enabled = try(each.value.properties.maintenance_window.is_custom_action_timeout_enabled, null) != null ? each.value.properties.maintenance_window.is_custom_action_timeout_enabled : try(var.default_cloud_exadata_maintenance_window.is_custom_action_timeout_enabled, null)
       }
     }
   }

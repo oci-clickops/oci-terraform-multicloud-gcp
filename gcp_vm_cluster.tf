@@ -38,14 +38,52 @@ locals {
     )
   }
 
-  cloud_vm_cluster_odb_subnet_parent_odb_networks = {
-    for key, subnet in local.cloud_vm_cluster_odb_subnets : key =>
-    subnet == null ? null : try(join("/", slice(split("/", subnet), 0, 6)), null)
+  cloud_vm_cluster_selected_odb_network_segments = {
+    for key, cluster in var.gcp_cloud_vm_clusters_configuration : key => (
+      cluster.odb_network != null ? {
+        project  = try(split("/", cluster.odb_network)[1], null)
+        location = try(split("/", cluster.odb_network)[3], null)
+        segment  = try(split("/", cluster.odb_network)[5], null)
+        } : (
+        cluster.odb_network_key == null ? null : {
+          project  = try(local.odb_network_project_ids[cluster.odb_network_key], null)
+          location = try(local.odb_network_locations[cluster.odb_network_key], null)
+          segment  = try(local.odb_network_id_segments[cluster.odb_network_key], null)
+        }
+      )
+    )
   }
 
-  cloud_vm_cluster_backup_odb_subnet_parent_odb_networks = {
-    for key, subnet in local.cloud_vm_cluster_backup_odb_subnets : key =>
-    subnet == null ? null : try(join("/", slice(split("/", subnet), 0, 6)), null)
+  cloud_vm_cluster_client_subnet_parent_segments = {
+    for key, cluster in var.gcp_cloud_vm_clusters_configuration : key => (
+      cluster.odb_subnet != null ? {
+        project  = try(split("/", cluster.odb_subnet)[1], null)
+        location = try(split("/", cluster.odb_subnet)[3], null)
+        segment  = try(split("/", cluster.odb_subnet)[5], null)
+        } : (
+        cluster.odb_subnet_key == null ? null : {
+          project  = try(local.odb_subnet_project_ids[cluster.odb_subnet_key], null)
+          location = try(local.odb_subnet_locations[cluster.odb_subnet_key], null)
+          segment  = try(local.odb_subnet_network_id_segments[cluster.odb_subnet_key], null)
+        }
+      )
+    )
+  }
+
+  cloud_vm_cluster_backup_subnet_parent_segments = {
+    for key, cluster in var.gcp_cloud_vm_clusters_configuration : key => (
+      cluster.backup_odb_subnet != null ? {
+        project  = try(split("/", cluster.backup_odb_subnet)[1], null)
+        location = try(split("/", cluster.backup_odb_subnet)[3], null)
+        segment  = try(split("/", cluster.backup_odb_subnet)[5], null)
+        } : (
+        cluster.backup_odb_subnet_key == null ? null : {
+          project  = try(local.odb_subnet_project_ids[cluster.backup_odb_subnet_key], null)
+          location = try(local.odb_subnet_locations[cluster.backup_odb_subnet_key], null)
+          segment  = try(local.odb_subnet_network_id_segments[cluster.backup_odb_subnet_key], null)
+        }
+      )
+    )
   }
 }
 
@@ -181,18 +219,26 @@ resource "google_oracle_database_cloud_vm_cluster" "these" {
 
     precondition {
       condition = (
-        local.cloud_vm_cluster_odb_networks[each.key] == null ||
-        local.cloud_vm_cluster_odb_subnet_parent_odb_networks[each.key] == null ||
-        local.cloud_vm_cluster_odb_subnet_parent_odb_networks[each.key] == local.cloud_vm_cluster_odb_networks[each.key]
+        local.cloud_vm_cluster_selected_odb_network_segments[each.key] == null ||
+        local.cloud_vm_cluster_client_subnet_parent_segments[each.key] == null ||
+        (
+          local.cloud_vm_cluster_selected_odb_network_segments[each.key].project == local.cloud_vm_cluster_client_subnet_parent_segments[each.key].project &&
+          local.cloud_vm_cluster_selected_odb_network_segments[each.key].location == local.cloud_vm_cluster_client_subnet_parent_segments[each.key].location &&
+          local.cloud_vm_cluster_selected_odb_network_segments[each.key].segment == local.cloud_vm_cluster_client_subnet_parent_segments[each.key].segment
+        )
       )
       error_message = "Each Cloud VM cluster client ODB subnet must belong to the selected ODB network, including project and location."
     }
 
     precondition {
       condition = (
-        local.cloud_vm_cluster_odb_networks[each.key] == null ||
-        local.cloud_vm_cluster_backup_odb_subnet_parent_odb_networks[each.key] == null ||
-        local.cloud_vm_cluster_backup_odb_subnet_parent_odb_networks[each.key] == local.cloud_vm_cluster_odb_networks[each.key]
+        local.cloud_vm_cluster_selected_odb_network_segments[each.key] == null ||
+        local.cloud_vm_cluster_backup_subnet_parent_segments[each.key] == null ||
+        (
+          local.cloud_vm_cluster_selected_odb_network_segments[each.key].project == local.cloud_vm_cluster_backup_subnet_parent_segments[each.key].project &&
+          local.cloud_vm_cluster_selected_odb_network_segments[each.key].location == local.cloud_vm_cluster_backup_subnet_parent_segments[each.key].location &&
+          local.cloud_vm_cluster_selected_odb_network_segments[each.key].segment == local.cloud_vm_cluster_backup_subnet_parent_segments[each.key].segment
+        )
       )
       error_message = "Each Cloud VM cluster backup ODB subnet must belong to the selected ODB network, including project and location."
     }
@@ -229,10 +275,9 @@ resource "google_oracle_database_cloud_vm_cluster" "these" {
 
     precondition {
       condition = each.value.properties.db_server_ocids == null ? true : (
-        length(each.value.properties.db_server_ocids) > 0 &&
-        (each.value.properties.node_count == null ? true : length(each.value.properties.db_server_ocids) >= each.value.properties.node_count)
+        length(each.value.properties.db_server_ocids) >= coalesce(each.value.properties.node_count, 2)
       )
-      error_message = "Each Cloud VM cluster db_server_ocids list must be non-empty and include at least one DB server OCID per requested node_count."
+      error_message = "Each Cloud VM cluster db_server_ocids list must include at least one DB server OCID per node, with a minimum of two when node_count is left unset."
     }
   }
 }

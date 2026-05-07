@@ -65,5 +65,13 @@ resource "google_oracle_database_odb_subnet" "these" {
       )
       error_message = "Each ODB subnet odb_network_key must reference an ODB network in the same location."
     }
+
+    precondition {
+      condition = each.value.odb_network_key == null ? true : (
+        contains(keys(var.gcp_odb_networks_configuration), each.value.odb_network_key) ||
+        try(local.odb_network_id_segments[each.value.odb_network_key], null) != null
+      )
+      error_message = "Each ODB subnet odb_network_key must resolve to a non-null ODB network ID segment."
+    }
   }
 }

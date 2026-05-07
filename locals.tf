@@ -88,13 +88,25 @@ locals {
     }
   )
 
-  odb_subnet_project_ids = {
-    for key, subnet in var.gcp_odb_subnets_configuration : key =>
-    subnet.project_id != null ? subnet.project_id : var.default_project_id
-  }
+  odb_subnet_project_ids = merge(
+    {
+      for key, subnet in local.gcp_odb_subnets_dependency : key =>
+      try(split("/", subnet.id)[1], null)
+    },
+    {
+      for key, subnet in var.gcp_odb_subnets_configuration : key =>
+      subnet.project_id != null ? subnet.project_id : var.default_project_id
+    }
+  )
 
-  odb_subnet_locations = {
-    for key, subnet in var.gcp_odb_subnets_configuration : key =>
-    subnet.location != null ? subnet.location : var.default_location
-  }
+  odb_subnet_locations = merge(
+    {
+      for key, subnet in local.gcp_odb_subnets_dependency : key =>
+      try(split("/", subnet.id)[3], null)
+    },
+    {
+      for key, subnet in var.gcp_odb_subnets_configuration : key =>
+      subnet.location != null ? subnet.location : var.default_location
+    }
+  )
 }

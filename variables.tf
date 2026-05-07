@@ -339,6 +339,16 @@ variable "gcp_odb_subnets_configuration" {
     ])
     error_message = "Direct ODB subnet odbnetwork values must be ODB network ID segments, for example my-odb-network."
   }
+
+  validation {
+    condition = alltrue([
+      for subnet in var.gcp_odb_subnets_configuration : (
+        (subnet.odbnetwork == null || trimspace(subnet.odbnetwork) != "") &&
+        (subnet.odb_network_key == null || trimspace(subnet.odb_network_key) != "")
+      )
+    ])
+    error_message = "ODB subnet odbnetwork and odb_network_key must not be empty when set."
+  }
 }
 
 variable "gcp_cloud_exadata_infrastructures_configuration" {
@@ -528,6 +538,22 @@ variable "gcp_cloud_vm_clusters_configuration" {
       (cluster.backup_odb_subnet == null ? true : can(regex("^projects/[^/]+/locations/[^/]+/odbNetworks/[^/]+/odbSubnets/[^/]+$", cluster.backup_odb_subnet)))
     ])
     error_message = "Direct Cloud VM cluster resource references must use the full resource name formats documented by the Google provider."
+  }
+
+  validation {
+    condition = alltrue([
+      for cluster in var.gcp_cloud_vm_clusters_configuration : (
+        (cluster.exadata_infrastructure == null || trimspace(cluster.exadata_infrastructure) != "") &&
+        (cluster.exadata_infrastructure_key == null || trimspace(cluster.exadata_infrastructure_key) != "") &&
+        (cluster.odb_network == null || trimspace(cluster.odb_network) != "") &&
+        (cluster.odb_network_key == null || trimspace(cluster.odb_network_key) != "") &&
+        (cluster.odb_subnet == null || trimspace(cluster.odb_subnet) != "") &&
+        (cluster.odb_subnet_key == null || trimspace(cluster.odb_subnet_key) != "") &&
+        (cluster.backup_odb_subnet == null || trimspace(cluster.backup_odb_subnet) != "") &&
+        (cluster.backup_odb_subnet_key == null || trimspace(cluster.backup_odb_subnet_key) != "")
+      )
+    ])
+    error_message = "Cloud VM cluster Exadata infrastructure, ODB network, and ODB subnet reference fields must not be empty when set."
   }
 
   validation {
