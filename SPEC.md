@@ -39,6 +39,37 @@ The module accepts these input variables.
 * `default_labels`: Default labels merged into all resources. Resource-specific labels win on key collisions.
 * `default_deletion_protection`: Default deletion protection value for resources that support `deletion_protection`. Defaults to `true`.
 * `default_cloud_exadata_maintenance_window`: Default Cloud Exadata Infrastructure maintenance window used when a resource does not set `properties.maintenance_window`.
+* `output_path`: Optional directory where dependency JSON files are written for downstream stacks.
+* `gcp_odb_networks_dependency`: Externally managed ODB Networks that this module may consume by key. Accepts a map, a map wrapped under `gcp_odb_networks`, or a path to a JSON dependency file.
+* `gcp_odb_subnets_dependency`: Externally managed ODB Subnets that this module may consume by key. Accepts a map, a map wrapped under `gcp_odb_subnets`, or a path to a JSON dependency file.
+* `gcp_cloud_exadata_infrastructures_dependency`: Externally managed Cloud Exadata Infrastructures that this module may consume by key. Accepts a map, a map wrapped under `gcp_cloud_exadata_infrastructures`, or a path to a JSON dependency file.
+
+### Dependency Inputs
+
+Dependency inputs implement the OCI Landing Zones state-handoff pattern for Google resources. A producer stack can set `output_path` to write JSON files, and a consumer stack can pass those file paths or equivalent maps into this module. Remote-state, GCS, GitHub, Terraform Cloud, RMS, or other storage concerns belong outside this reusable module.
+
+The module resolves `*_key` references against resources created in the same module call and against dependency inputs. A consumed key must exist in exactly one place. If the same logical key exists in both the local configuration map and the matching dependency map when it is consumed by a `*_key`, the module fails fast because the reference is ambiguous.
+
+When `output_path` is set, these files are written when matching resources exist:
+
+* `gcp_odb_networks_output.json`
+* `gcp_odb_subnets_output.json`
+* `gcp_cloud_exadata_infrastructures_output.json`
+
+`gcp_odb_networks_dependency` is a map keyed by logical name. Each value has these attributes:
+
+* `id`: Required. ODB Network full resource name in `projects/{project}/locations/{location}/odbNetworks/{odb_network}` format.
+* `odb_network_id`: Optional. ODB Network ID segment. If omitted, the module derives it from `id` when an ODB Subnet needs the parent network segment. If provided, it must match the final ODB Network segment in `id`.
+
+`gcp_odb_subnets_dependency` is a map keyed by logical name. Each value has these attributes:
+
+* `id`: Required. ODB Subnet full resource name in `projects/{project}/locations/{location}/odbNetworks/{odb_network}/odbSubnets/{odb_subnet}` format.
+* `purpose`: Optional. Accepted values are `CLIENT_SUBNET` and `BACKUP_SUBNET`. When provided, VM Cluster keys are validated against it.
+* `odbnetwork`: Optional. Parent ODB Network ID segment. If omitted, the module derives it from `id`. If provided, it must match the parent ODB Network segment in `id`. VM Cluster networking references are validated so client and backup subnets belong to the selected ODB Network.
+
+`gcp_cloud_exadata_infrastructures_dependency` is a map keyed by logical name. Each value has these attributes:
+
+* `id`: Required. Cloud Exadata Infrastructure full resource name in `projects/{project}/locations/{region}/cloudExadataInfrastructures/{cloud_exadata_infrastructure}` format.
 
 ### ODB Networks
 
@@ -67,7 +98,7 @@ Each map value has these attributes:
 * `cidr_range`: Required. The CIDR range for the ODB subnet.
 * `purpose`: Required. The subnet purpose. Accepted values are `CLIENT_SUBNET` and `BACKUP_SUBNET`.
 * `odbnetwork`: Optional. The ODB network ID segment, for example `my-odb-network`. Mutually exclusive with `odb_network_key`.
-* `odb_network_key`: Optional. Key of an ODB network created by this module. Mutually exclusive with `odbnetwork`.
+* `odb_network_key`: Optional. Key of an ODB network created by this module or supplied in `gcp_odb_networks_dependency`. Mutually exclusive with `odbnetwork`.
 * `location`: Optional. The Google Cloud region. Overrides `default_location`.
 * `project_id`: Optional. The Google Cloud project ID. Overrides `default_project_id`.
 * `labels`: Optional. Labels for the ODB subnet.
@@ -145,16 +176,16 @@ Each map value has these attributes:
 * `deletion_protection`: Optional. Whether deletion protection is enabled. Overrides `default_deletion_protection`.
 * `timeouts`: Optional. Provider timeout overrides for `create`, `update`, and `delete`.
 * `exadata_infrastructure`: Optional. The Exadata infrastructure full resource name in `projects/{project}/locations/{region}/cloudExadataInfrastructures/{cloud_exadata_infrastructure}` format.
-* `exadata_infrastructure_key`: Optional. Key of an Exadata infrastructure created by this module.
+* `exadata_infrastructure_key`: Optional. Key of an Exadata infrastructure created by this module or supplied in `gcp_cloud_exadata_infrastructures_dependency`.
 * `odb_network`: Optional. The ODB network full resource name in `projects/{project}/locations/{location}/odbNetworks/{odb_network}` format.
-* `odb_network_key`: Optional. Key of an ODB network created by this module.
+* `odb_network_key`: Optional. Key of an ODB network created by this module or supplied in `gcp_odb_networks_dependency`.
 * `odb_subnet`: Optional. Client ODB subnet full resource name in `projects/{project}/locations/{location}/odbNetworks/{odb_network}/odbSubnets/{odb_subnet}` format.
-* `odb_subnet_key`: Optional. Key of a client ODB subnet created by this module.
+* `odb_subnet_key`: Optional. Key of a client ODB subnet created by this module or supplied in `gcp_odb_subnets_dependency`.
 * `backup_odb_subnet`: Optional. Backup ODB subnet full resource name in `projects/{project}/locations/{location}/odbNetworks/{odb_network}/odbSubnets/{odb_subnet}` format.
-* `backup_odb_subnet_key`: Optional. Key of a backup ODB subnet created by this module.
+* `backup_odb_subnet_key`: Optional. Key of a backup ODB subnet created by this module or supplied in `gcp_odb_subnets_dependency`.
 * `properties`: Required. VM cluster properties.
 
-Each VM cluster must set exactly one Exadata reference: `exadata_infrastructure` or `exadata_infrastructure_key`. It must also set exactly one ODB network reference, one client ODB subnet reference, and one backup ODB subnet reference through direct values or module keys. This module intentionally exposes only ODB subnet mode for new environments. When using module keys, `odb_subnet_key` must point to a subnet with purpose `CLIENT_SUBNET`, and `backup_odb_subnet_key` must point to a subnet with purpose `BACKUP_SUBNET`. When `odb_network_key` is set, both subnet keys must belong to the selected ODB network.
+Each VM cluster must set exactly one Exadata reference: `exadata_infrastructure` or `exadata_infrastructure_key`. It must also set exactly one ODB network reference, one client ODB subnet reference, and one backup ODB subnet reference through direct values or keys. This module intentionally exposes only ODB subnet mode for new environments. When using keys, `odb_subnet_key` must point to a subnet with purpose `CLIENT_SUBNET`, and `backup_odb_subnet_key` must point to a subnet with purpose `BACKUP_SUBNET` when purpose is known. When the parent ODB Network segment is known, both subnet keys must belong to the selected ODB Network.
 
 The module intentionally ignores Terraform drift for selected VM cluster fields that can change during Oracle-managed maintenance or during operations performed through the OCI control plane in dual control-plane deployments. This prevents a later Google provider plan from trying to roll back patch, shape, capacity, storage, backup, or database server placement changes made outside this module.
 

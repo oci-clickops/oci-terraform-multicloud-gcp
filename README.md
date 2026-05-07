@@ -65,6 +65,14 @@ Related resources can be wired in two ways:
 
 For example, a VM cluster can use `exadata_infrastructure_key` to select an Exadata infrastructure from `gcp_cloud_exadata_infrastructures_configuration`, and `odb_subnet_key` or `backup_odb_subnet_key` to select subnets from `gcp_odb_subnets_configuration`.
 
+For multi-state deployments, use OCI-style dependency JSON files. A producer stack can set `output_path` to write handoff files, and a consumer stack can pass those file paths or equivalent maps into dependency inputs:
+
+* `gcp_odb_networks_dependency`
+* `gcp_odb_subnets_dependency`
+* `gcp_cloud_exadata_infrastructures_dependency`
+
+The reusable module stays backend-agnostic. It does not read remote state. A `*_key` can resolve either to a resource created in the same module call or to one of these dependency inputs. If a consumed key exists in both places, the module fails fast because that handoff is ambiguous.
+
 VM clusters use ODB subnet mode with client and backup ODB subnet references, either passed directly or selected through module keys. This module intentionally exposes only ODB subnet mode for new environments.
 
 When using ODB subnet module keys, the client key must point to a `CLIENT_SUBNET`, the backup key must point to a `BACKUP_SUBNET`, and both subnet keys must belong to the ODB network selected by `odb_network_key` when that key is set.
@@ -88,7 +96,8 @@ The exact ignored fields and rationale are documented in [SPEC.md](./SPEC.md).
 Available examples:
 
 * [examples/quickstart](./examples/quickstart): recommended first deployment path with a complete `terraform.tfvars.example` template.
-* [examples/basic](./examples/basic): compact module-key resource graph with a complete `terraform.tfvars.example` template.
+* [examples/basic](./examples/basic): networking-only deployment that creates an ODB Network and client/backup ODB Subnets on an existing VPC, without Exadata Infrastructure or VM Clusters. Use this as a separate state boundary when platform networking should be prepared before database infrastructure.
+* [examples/state-handoff-vm-cluster](./examples/state-handoff-vm-cluster): VM Cluster consumer state that reads ODB Network and ODB Subnet dependency JSON files from a separate networking deployment.
 * [examples/existing-odb-subnets](./examples/existing-odb-subnets): creates a Cloud Exadata Infrastructure and a VM Cluster using existing ODB network and subnet resource names, with a complete `terraform.tfvars.example` template.
 * [examples/existing-infrastructure-vm-cluster](./examples/existing-infrastructure-vm-cluster): creates only a VM Cluster using an existing Cloud Exadata Infrastructure, ODB network, client ODB subnet, and backup ODB subnet, with a complete `terraform.tfvars.example` template.
 
@@ -102,6 +111,12 @@ The module returns created resources with the same keys used in the input maps:
 * `gcp_cloud_vm_clusters`
 
 Each output includes stable identifiers and selected computed attributes exported by the Google provider. Set `enable_output = false` to suppress outputs.
+
+When `output_path` is set, the module also writes dependency files for downstream stacks:
+
+* `gcp_odb_networks_output.json`
+* `gcp_odb_subnets_output.json`
+* `gcp_cloud_exadata_infrastructures_output.json`
 
 The Exadata Infrastructure and VM Cluster outputs include operational fields such as server versions, capacity, Grid Infrastructure version, DB server placement, SCAN details, and OCI URLs. These are intended for validation, handoff to downstream stacks, and troubleshooting after long-running create operations complete.
 

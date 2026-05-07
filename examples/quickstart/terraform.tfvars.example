@@ -112,5 +112,5 @@ hostname_prefix            = "exa"
 db_server_ocids            = null
 
 ssh_public_keys = [
-  "ssh-rsa AAAA... user@example.com"
+  "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCexample user@example.com"
 ]

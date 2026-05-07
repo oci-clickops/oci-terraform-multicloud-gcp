@@ -1,21 +1,24 @@
 # Copy this file to terraform.tfvars and replace the placeholder values.
 # terraform.tfvars is ignored by this repository and should not be committed.
 
-project_id      = "my-gcp-project"
-location        = "europe-west2"
+project_id = "my-gcp-project"
+location   = "europe-west2"
 
-cloud_vm_cluster_id = "my-vm-cluster"
-display_name        = "my-vm-cluster"
+gcp_odb_networks_dependency = "./dependencies/gcp_odb_networks_output.json"
+gcp_odb_subnets_dependency  = "./dependencies/gcp_odb_subnets_output.json"
 
 exadata_infrastructure = "projects/my-gcp-project/locations/europe-west2/cloudExadataInfrastructures/my-existing-exadata"
 
-odb_network       = "projects/my-gcp-project/locations/europe-west2/odbNetworks/my-odb-network"
-odb_subnet        = "projects/my-gcp-project/locations/europe-west2/odbNetworks/my-odb-network/odbSubnets/my-client-subnet"
-backup_odb_subnet = "projects/my-gcp-project/locations/europe-west2/odbNetworks/my-odb-network/odbSubnets/my-backup-subnet"
+odb_network_key       = "primary"
+odb_subnet_key        = "client"
+backup_odb_subnet_key = "backup"
+
+cloud_vm_cluster_id = "handoff-vm-cluster"
+display_name        = "handoff-vm-cluster"
 
 labels = {
   terraform = "true"
-  example   = "existing-infrastructure-vm-cluster"
+  example   = "state-handoff-vm-cluster"
 }
 
 deletion_protection = false
@@ -26,24 +29,24 @@ timeouts = {
   delete = "90m"
 }
 
-license_type    = "BRING_YOUR_OWN_LICENSE"
-cpu_core_count  = 4
-node_count      = 2
-ocpu_count      = 2
-memory_size_gb  = 60
-db_node_storage_size_gb  = 120
-data_storage_size_tb     = 2
-disk_redundancy          = "HIGH"
-local_backup_enabled     = false
-sparse_diskgroup_enabled = false
-cluster_name             = "mycluster"
+license_type               = "BRING_YOUR_OWN_LICENSE"
+cpu_core_count             = 4
+node_count                 = 2
+ocpu_count                 = 2
+memory_size_gb             = 60
+db_node_storage_size_gb    = 120
+data_storage_size_tb       = 2
+disk_redundancy            = "HIGH"
+local_backup_enabled       = false
+sparse_diskgroup_enabled   = false
+cluster_name               = "handoff"
 diagnostics_events_enabled = true
 health_monitoring_enabled  = true
 incident_logs_enabled      = true
 time_zone_id               = "UTC"
 time_zone_version          = null
-gi_version      = "23.0.0.0"
-hostname_prefix = "exa"
+gi_version                 = "23.0.0.0"
+hostname_prefix            = "exa"
 
 # Set one explicit DB server OCID per VM for controlled placement and offline planning.
 # Set null only when the target project/API are real and Terraform may discover AVAILABLE DB servers.

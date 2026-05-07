@@ -1,0 +1,14 @@
+{
+  "gcp_odb_subnets": {
+    "client": {
+      "id": "projects/my-gcp-project/locations/europe-west2/odbNetworks/my-odb-network/odbSubnets/my-client-subnet",
+      "purpose": "CLIENT_SUBNET",
+      "odbnetwork": "my-odb-network"
+    },
+    "backup": {
+      "id": "projects/my-gcp-project/locations/europe-west2/odbNetworks/my-odb-network/odbSubnets/my-backup-subnet",
+      "purpose": "BACKUP_SUBNET",
+      "odbnetwork": "my-odb-network"
+    }
+  }
+}

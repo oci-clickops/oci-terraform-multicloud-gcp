@@ -6,9 +6,8 @@ output "module_name" {
   value       = var.module_name
 }
 
-output "gcp_odb_networks" {
-  description = "Created ODB networks, keyed by input key."
-  value = var.enable_output ? {
+locals {
+  gcp_odb_networks_output = {
     for key, network in google_oracle_database_odb_network.these : key => {
       id             = network.id
       name           = network.name
@@ -18,12 +17,9 @@ output "gcp_odb_networks" {
       state          = network.state
       entitlement_id = network.entitlement_id
     }
-  } : null
-}
+  }
 
-output "gcp_odb_subnets" {
-  description = "Created ODB subnets, keyed by input key."
-  value = var.enable_output ? {
+  gcp_odb_subnets_output = {
     for key, subnet in google_oracle_database_odb_subnet.these : key => {
       id            = subnet.id
       name          = subnet.name
@@ -35,12 +31,9 @@ output "gcp_odb_subnets" {
       project       = subnet.project
       state         = subnet.state
     }
-  } : null
-}
+  }
 
-output "gcp_cloud_exadata_infrastructures" {
-  description = "Created Exadata infrastructures, keyed by input key."
-  value = var.enable_output ? {
+  gcp_cloud_exadata_infrastructures_output = {
     for key, infrastructure in google_oracle_database_cloud_exadata_infrastructure.these : key => {
       id                                 = infrastructure.id
       name                               = infrastructure.name
@@ -71,7 +64,22 @@ output "gcp_cloud_exadata_infrastructures" {
       additional_storage_count           = try(infrastructure.properties[0].additional_storage_count, null)
       oci_url                            = try(infrastructure.properties[0].oci_url, null)
     }
-  } : null
+  }
+}
+
+output "gcp_odb_networks" {
+  description = "Created ODB networks, keyed by input key."
+  value       = var.enable_output ? local.gcp_odb_networks_output : null
+}
+
+output "gcp_odb_subnets" {
+  description = "Created ODB subnets, keyed by input key."
+  value       = var.enable_output ? local.gcp_odb_subnets_output : null
+}
+
+output "gcp_cloud_exadata_infrastructures" {
+  description = "Created Exadata infrastructures, keyed by input key."
+  value       = var.enable_output ? local.gcp_cloud_exadata_infrastructures_output : null
 }
 
 output "gcp_cloud_vm_clusters" {
@@ -115,4 +123,25 @@ output "gcp_cloud_vm_clusters" {
       oci_url                    = try(cluster.properties[0].oci_url, null)
     }
   } : null
+}
+
+resource "local_file" "gcp_odb_networks_output" {
+  count = var.enable_output && var.output_path != null && length(local.gcp_odb_networks_output) > 0 ? 1 : 0
+
+  content  = jsonencode({ gcp_odb_networks = local.gcp_odb_networks_output })
+  filename = "${trimsuffix(var.output_path, "/")}/gcp_odb_networks_output.json"
+}
+
+resource "local_file" "gcp_odb_subnets_output" {
+  count = var.enable_output && var.output_path != null && length(local.gcp_odb_subnets_output) > 0 ? 1 : 0
+
+  content  = jsonencode({ gcp_odb_subnets = local.gcp_odb_subnets_output })
+  filename = "${trimsuffix(var.output_path, "/")}/gcp_odb_subnets_output.json"
+}
+
+resource "local_file" "gcp_cloud_exadata_infrastructures_output" {
+  count = var.enable_output && var.output_path != null && length(local.gcp_cloud_exadata_infrastructures_output) > 0 ? 1 : 0
+
+  content  = jsonencode({ gcp_cloud_exadata_infrastructures = local.gcp_cloud_exadata_infrastructures_output })
+  filename = "${trimsuffix(var.output_path, "/")}/gcp_cloud_exadata_infrastructures_output.json"
 }

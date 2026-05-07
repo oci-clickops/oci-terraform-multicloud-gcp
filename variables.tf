@@ -15,6 +15,17 @@ variable "enable_output" {
   nullable    = false
 }
 
+variable "output_path" {
+  description = "Optional directory where OCI-style dependency JSON files are written for downstream stacks."
+  type        = string
+  default     = null
+
+  validation {
+    condition     = var.output_path == null ? true : trimspace(var.output_path) != ""
+    error_message = "output_path must be null or a non-empty directory path."
+  }
+}
+
 variable "default_project_id" {
   description = "Default Google Cloud project ID used by resources when project_id is not set on the resource."
   type        = string
@@ -86,6 +97,150 @@ variable "default_cloud_exadata_maintenance_window" {
       (var.default_cloud_exadata_maintenance_window.custom_action_timeout_mins == null ? true : var.default_cloud_exadata_maintenance_window.custom_action_timeout_mins >= 15 && var.default_cloud_exadata_maintenance_window.custom_action_timeout_mins <= 120)
     )
     error_message = "default_cloud_exadata_maintenance_window values must use supported Oracle Database@Google Cloud enum values and documented ranges."
+  }
+}
+
+variable "gcp_odb_networks_dependency" {
+  description = "Externally managed ODB networks this module may depend on, keyed by logical name. Accepts a map, a wrapped map under gcp_odb_networks, or a path to a JSON dependency file."
+  type        = any
+  default     = {}
+  nullable    = false
+
+  validation {
+    condition = can(keys(try(
+      var.gcp_odb_networks_dependency.gcp_odb_networks,
+      jsondecode(file(var.gcp_odb_networks_dependency)).gcp_odb_networks,
+      var.gcp_odb_networks_dependency
+    )))
+    error_message = "gcp_odb_networks_dependency must be a map, a map with gcp_odb_networks, or a path to a JSON file with gcp_odb_networks."
+  }
+
+  validation {
+    condition = try(alltrue([
+      for network in try(
+        var.gcp_odb_networks_dependency.gcp_odb_networks,
+        jsondecode(file(var.gcp_odb_networks_dependency)).gcp_odb_networks,
+        var.gcp_odb_networks_dependency
+      ) :
+      can(regex("^projects/[^/]+/locations/[^/]+/odbNetworks/[^/]+$", network.id))
+    ]), false)
+    error_message = "ODB network dependency id values must use projects/{project}/locations/{location}/odbNetworks/{odb_network} format."
+  }
+
+  validation {
+    condition = try(alltrue([
+      for network in try(
+        var.gcp_odb_networks_dependency.gcp_odb_networks,
+        jsondecode(file(var.gcp_odb_networks_dependency)).gcp_odb_networks,
+        var.gcp_odb_networks_dependency
+      ) :
+      try(network.odb_network_id, null) == null ? true : can(regex("^[a-z]([a-z0-9-]{0,61}[a-z0-9])?$", network.odb_network_id))
+    ]), false)
+    error_message = "ODB network dependency odb_network_id values must be ODB network ID segments."
+  }
+
+  validation {
+    condition = try(alltrue([
+      for network in try(
+        var.gcp_odb_networks_dependency.gcp_odb_networks,
+        jsondecode(file(var.gcp_odb_networks_dependency)).gcp_odb_networks,
+        var.gcp_odb_networks_dependency
+      ) :
+      try(network.odb_network_id, null) == null ? true : try(network.odb_network_id == split("/", network.id)[5], false)
+    ]), false)
+    error_message = "ODB network dependency odb_network_id values must match the ODB network segment from id."
+  }
+}
+
+variable "gcp_odb_subnets_dependency" {
+  description = "Externally managed ODB subnets this module may depend on, keyed by logical name. Accepts a map, a wrapped map under gcp_odb_subnets, or a path to a JSON dependency file."
+  type        = any
+  default     = {}
+  nullable    = false
+
+  validation {
+    condition = can(keys(try(
+      var.gcp_odb_subnets_dependency.gcp_odb_subnets,
+      jsondecode(file(var.gcp_odb_subnets_dependency)).gcp_odb_subnets,
+      var.gcp_odb_subnets_dependency
+    )))
+    error_message = "gcp_odb_subnets_dependency must be a map, a map with gcp_odb_subnets, or a path to a JSON file with gcp_odb_subnets."
+  }
+
+  validation {
+    condition = try(alltrue([
+      for subnet in try(
+        var.gcp_odb_subnets_dependency.gcp_odb_subnets,
+        jsondecode(file(var.gcp_odb_subnets_dependency)).gcp_odb_subnets,
+        var.gcp_odb_subnets_dependency
+      ) :
+      can(regex("^projects/[^/]+/locations/[^/]+/odbNetworks/[^/]+/odbSubnets/[^/]+$", subnet.id))
+    ]), false)
+    error_message = "ODB subnet dependency id values must use projects/{project}/locations/{location}/odbNetworks/{odb_network}/odbSubnets/{odb_subnet} format."
+  }
+
+  validation {
+    condition = try(alltrue([
+      for subnet in try(
+        var.gcp_odb_subnets_dependency.gcp_odb_subnets,
+        jsondecode(file(var.gcp_odb_subnets_dependency)).gcp_odb_subnets,
+        var.gcp_odb_subnets_dependency
+      ) :
+      try(subnet.purpose, null) == null ? true : contains(["CLIENT_SUBNET", "BACKUP_SUBNET"], subnet.purpose)
+    ]), false)
+    error_message = "ODB subnet dependency purpose must be CLIENT_SUBNET or BACKUP_SUBNET when set."
+  }
+
+  validation {
+    condition = try(alltrue([
+      for subnet in try(
+        var.gcp_odb_subnets_dependency.gcp_odb_subnets,
+        jsondecode(file(var.gcp_odb_subnets_dependency)).gcp_odb_subnets,
+        var.gcp_odb_subnets_dependency
+      ) :
+      try(subnet.odbnetwork, null) == null ? true : can(regex("^[a-z]([a-z0-9-]{0,61}[a-z0-9])?$", subnet.odbnetwork))
+    ]), false)
+    error_message = "ODB subnet dependency odbnetwork values must be ODB network ID segments when set."
+  }
+
+  validation {
+    condition = try(alltrue([
+      for subnet in try(
+        var.gcp_odb_subnets_dependency.gcp_odb_subnets,
+        jsondecode(file(var.gcp_odb_subnets_dependency)).gcp_odb_subnets,
+        var.gcp_odb_subnets_dependency
+      ) :
+      try(subnet.odbnetwork, null) == null ? true : try(subnet.odbnetwork == split("/", subnet.id)[5], false)
+    ]), false)
+    error_message = "ODB subnet dependency odbnetwork values must match the parent ODB network segment from id."
+  }
+}
+
+variable "gcp_cloud_exadata_infrastructures_dependency" {
+  description = "Externally managed Cloud Exadata Infrastructures this module may depend on, keyed by logical name. Accepts a map, a wrapped map under gcp_cloud_exadata_infrastructures, or a path to a JSON dependency file."
+  type        = any
+  default     = {}
+  nullable    = false
+
+  validation {
+    condition = can(keys(try(
+      var.gcp_cloud_exadata_infrastructures_dependency.gcp_cloud_exadata_infrastructures,
+      jsondecode(file(var.gcp_cloud_exadata_infrastructures_dependency)).gcp_cloud_exadata_infrastructures,
+      var.gcp_cloud_exadata_infrastructures_dependency
+    )))
+    error_message = "gcp_cloud_exadata_infrastructures_dependency must be a map, a map with gcp_cloud_exadata_infrastructures, or a path to a JSON file with gcp_cloud_exadata_infrastructures."
+  }
+
+  validation {
+    condition = try(alltrue([
+      for infrastructure in try(
+        var.gcp_cloud_exadata_infrastructures_dependency.gcp_cloud_exadata_infrastructures,
+        jsondecode(file(var.gcp_cloud_exadata_infrastructures_dependency)).gcp_cloud_exadata_infrastructures,
+        var.gcp_cloud_exadata_infrastructures_dependency
+      ) :
+      can(regex("^projects/[^/]+/locations/[^/]+/cloudExadataInfrastructures/[^/]+$", infrastructure.id))
+    ]), false)
+    error_message = "Cloud Exadata Infrastructure dependency id values must use projects/{project}/locations/{location}/cloudExadataInfrastructures/{infrastructure} format."
   }
 }
 
