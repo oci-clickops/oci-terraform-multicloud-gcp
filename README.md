@@ -32,7 +32,7 @@ The module follows the OCI Landing Zones style. Resources are declared through k
 
 Use this README for deployment guidance. Use [SPEC.md](./SPEC.md) for the full input and output contract.
 
-For the recommended Day-1 and Day-2 control plane model, see [docs/day-1-day-2-control-plane-model.md](./docs/day-1-day-2-control-plane-model.md).
+For the recommended Day-1 and Day-2 control plane model, which is shared across the Oracle Database@AWS, Oracle Database@Google Cloud, and Oracle Database@Azure modules, see the [oci-multicloud-control-plane-model](https://github.com/oci-clickops/oci-multicloud-control-plane-model) repository.
 
 ## Pre-requisites
 
