@@ -186,9 +186,9 @@ variable "gcp_odb_subnets_dependency" {
         jsondecode(file(var.gcp_odb_subnets_dependency)).gcp_odb_subnets,
         var.gcp_odb_subnets_dependency
       ) :
-      try(subnet.purpose, null) == null ? true : contains(["CLIENT_SUBNET", "BACKUP_SUBNET"], subnet.purpose)
+      contains(["CLIENT_SUBNET", "BACKUP_SUBNET"], try(subnet.purpose, ""))
     ]), false)
-    error_message = "ODB subnet dependency purpose must be CLIENT_SUBNET or BACKUP_SUBNET when set."
+    error_message = "ODB subnet dependency purpose must be set to CLIENT_SUBNET or BACKUP_SUBNET on every entry."
   }
 
   validation {

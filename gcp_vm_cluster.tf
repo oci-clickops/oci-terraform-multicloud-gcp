@@ -222,12 +222,14 @@ resource "google_oracle_database_cloud_vm_cluster" "these" {
         local.cloud_vm_cluster_selected_odb_network_segments[each.key] == null ||
         local.cloud_vm_cluster_client_subnet_parent_segments[each.key] == null ||
         (
+          local.cloud_vm_cluster_selected_odb_network_segments[each.key].segment != null &&
+          local.cloud_vm_cluster_client_subnet_parent_segments[each.key].segment != null &&
           local.cloud_vm_cluster_selected_odb_network_segments[each.key].project == local.cloud_vm_cluster_client_subnet_parent_segments[each.key].project &&
           local.cloud_vm_cluster_selected_odb_network_segments[each.key].location == local.cloud_vm_cluster_client_subnet_parent_segments[each.key].location &&
           local.cloud_vm_cluster_selected_odb_network_segments[each.key].segment == local.cloud_vm_cluster_client_subnet_parent_segments[each.key].segment
         )
       )
-      error_message = "Each Cloud VM cluster client ODB subnet must belong to the selected ODB network, including project and location."
+      error_message = "Each Cloud VM cluster client ODB subnet must resolve to a non-null parent ODB network and belong to the selected ODB network, including project and location."
     }
 
     precondition {
@@ -235,12 +237,14 @@ resource "google_oracle_database_cloud_vm_cluster" "these" {
         local.cloud_vm_cluster_selected_odb_network_segments[each.key] == null ||
         local.cloud_vm_cluster_backup_subnet_parent_segments[each.key] == null ||
         (
+          local.cloud_vm_cluster_selected_odb_network_segments[each.key].segment != null &&
+          local.cloud_vm_cluster_backup_subnet_parent_segments[each.key].segment != null &&
           local.cloud_vm_cluster_selected_odb_network_segments[each.key].project == local.cloud_vm_cluster_backup_subnet_parent_segments[each.key].project &&
           local.cloud_vm_cluster_selected_odb_network_segments[each.key].location == local.cloud_vm_cluster_backup_subnet_parent_segments[each.key].location &&
           local.cloud_vm_cluster_selected_odb_network_segments[each.key].segment == local.cloud_vm_cluster_backup_subnet_parent_segments[each.key].segment
         )
       )
-      error_message = "Each Cloud VM cluster backup ODB subnet must belong to the selected ODB network, including project and location."
+      error_message = "Each Cloud VM cluster backup ODB subnet must resolve to a non-null parent ODB network and belong to the selected ODB network, including project and location."
     }
 
     precondition {
@@ -255,22 +259,16 @@ resource "google_oracle_database_cloud_vm_cluster" "these" {
 
     precondition {
       condition = each.value.odb_subnet_key == null ? true : (
-        contains(keys(local.gcp_odb_subnets_dependency), each.value.odb_subnet_key) ? (
-          try(local.gcp_odb_subnets_dependency[each.value.odb_subnet_key].purpose, null) == null ||
-          local.gcp_odb_subnets_dependency[each.value.odb_subnet_key].purpose == "CLIENT_SUBNET"
-        ) : true
+        contains(keys(local.gcp_odb_subnets_dependency), each.value.odb_subnet_key) ? local.gcp_odb_subnets_dependency[each.value.odb_subnet_key].purpose == "CLIENT_SUBNET" : true
       )
-      error_message = "Each Cloud VM cluster external odb_subnet_key dependency must have purpose CLIENT_SUBNET when purpose is provided."
+      error_message = "Each Cloud VM cluster external odb_subnet_key dependency must have purpose CLIENT_SUBNET."
     }
 
     precondition {
       condition = each.value.backup_odb_subnet_key == null ? true : (
-        contains(keys(local.gcp_odb_subnets_dependency), each.value.backup_odb_subnet_key) ? (
-          try(local.gcp_odb_subnets_dependency[each.value.backup_odb_subnet_key].purpose, null) == null ||
-          local.gcp_odb_subnets_dependency[each.value.backup_odb_subnet_key].purpose == "BACKUP_SUBNET"
-        ) : true
+        contains(keys(local.gcp_odb_subnets_dependency), each.value.backup_odb_subnet_key) ? local.gcp_odb_subnets_dependency[each.value.backup_odb_subnet_key].purpose == "BACKUP_SUBNET" : true
       )
-      error_message = "Each Cloud VM cluster external backup_odb_subnet_key dependency must have purpose BACKUP_SUBNET when purpose is provided."
+      error_message = "Each Cloud VM cluster external backup_odb_subnet_key dependency must have purpose BACKUP_SUBNET."
     }
 
     precondition {

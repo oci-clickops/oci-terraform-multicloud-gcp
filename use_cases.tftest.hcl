@@ -615,6 +615,69 @@ run "subnet_project_mismatch_with_local_network_fails" {
   expect_failures = [google_oracle_database_odb_subnet.these["client"]]
 }
 
+run "dependency_subnet_without_purpose_rejected" {
+  command = plan
+
+  variables {
+    gcp_odb_subnets_dependency = {
+      client = {
+        id         = "projects/project-a/locations/us-east4/odbNetworks/primary/odbSubnets/client-subnet"
+        odbnetwork = "primary"
+      }
+    }
+  }
+
+  expect_failures = [var.gcp_odb_subnets_dependency]
+}
+
+run "vm_cluster_with_typoed_dependency_subnet_key_fails_at_plan" {
+  command = plan
+
+  variables {
+    default_project_id          = "project-a"
+    default_location            = "us-east4"
+    default_gcp_oracle_zone     = "us-east4-a-r2"
+    default_deletion_protection = false
+
+    gcp_odb_networks_dependency = {
+      primary = {
+        id = "projects/project-a/locations/us-east4/odbNetworks/primary"
+      }
+    }
+    gcp_odb_subnets_dependency = {
+      client = {
+        id      = "projects/project-a/locations/us-east4/odbNetworks/primary/odbSubnets/client"
+        purpose = "CLIENT_SUBNET"
+      }
+      backup = {
+        id      = "projects/project-a/locations/us-east4/odbNetworks/primary/odbSubnets/backup"
+        purpose = "BACKUP_SUBNET"
+      }
+    }
+    gcp_cloud_exadata_infrastructures_dependency = {
+      primary = {
+        id = "projects/project-a/locations/us-east4/cloudExadataInfrastructures/exa"
+      }
+    }
+
+    gcp_cloud_vm_clusters_configuration = {
+      primary = {
+        cloud_vm_cluster_id        = "primary-vmc"
+        exadata_infrastructure_key = "primary"
+        odb_network_key            = "doesnotexist"
+        odb_subnet_key             = "client"
+        backup_odb_subnet_key      = "backup"
+        properties = {
+          license_type   = "LICENSE_INCLUDED"
+          cpu_core_count = 4
+        }
+      }
+    }
+  }
+
+  expect_failures = [google_oracle_database_cloud_vm_cluster.these["primary"]]
+}
+
 run "disabled_outputs_no_local_files" {
   command = plan
 
