@@ -105,6 +105,8 @@ Each example includes an `input.auto.tfvars.template` file. Rename it to `<proje
 
 The examples deliberately do not declare a Terraform backend. For real deployments, configure a remote backend such as Google Cloud Storage, an OCI Object Storage bucket, Terraform Cloud, or any other supported backend in your own copy of the example or wrapper stack. Keep state for networking, Exadata infrastructure, and VM cluster stacks separate when adopting the multi-state handoff pattern.
 
+For Autonomous Database deployments, see the [ADB module](./modules/adb/README.md) (`modules/adb/`), which follows the same patterns and can consume ODB Network dependency outputs produced by this module.
+
 ## <a name="module-outputs">Module Outputs</a>
 
 The module returns created resources with the same keys used in the input maps:
