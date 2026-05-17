@@ -1,60 +1,87 @@
-# Copy this file to terraform.tfvars and replace the placeholder values.
-# terraform.tfvars is ignored by this repository and should not be committed.
+#-------------------------------------------------------------------------------------------------------------------------------------------
+# 1. Rename this file to <project-name>.auto.tfvars, where <project-name> is a name of your choice.
+# 2. Provide values for "GCP Connectivity Variables".
+# 3. Replace <REPLACE-BY-*> placeholders with actual values.
+# 4. Replace fixture dependency paths with real JSON file paths or equivalent maps from the networking stack.
+#-------------------------------------------------------------------------------------------------------------------------------------------
 
-project_id = "my-gcp-project"
-location   = "europe-west2"
+#---------------------------------------
+# GCP Connectivity Variables
+#---------------------------------------
 
+project_id = "<your GCP project ID>"
+location   = "<your GCP region>"
+
+#---------------------------------------
+# Module defaults
+#---------------------------------------
+
+default_deletion_protection = false
+
+default_labels = {
+  terraform = "true"
+  example   = "external-dependency"
+}
+
+#---------------------------------------
+# Dependencies — ODB Network and ODB Subnets from separate stack
+#---------------------------------------
+
+# Pass a JSON file path produced by examples/basic (with output_path set) or an equivalent map.
 gcp_odb_networks_dependency = "./dependencies/gcp_odb_networks_output.json"
 gcp_odb_subnets_dependency  = "./dependencies/gcp_odb_subnets_output.json"
 
-exadata_infrastructure = "projects/my-gcp-project/locations/europe-west2/cloudExadataInfrastructures/my-existing-exadata"
-
-odb_network_key       = "primary"
-odb_subnet_key        = "client"
-backup_odb_subnet_key = "backup"
-
-cloud_vm_cluster_id = "handoff-vm-cluster"
-display_name        = "handoff-vm-cluster"
-
-labels = {
-  terraform = "true"
-  example   = "state-handoff-vm-cluster"
+# Full resource name of the existing Cloud Exadata Infrastructure.
+gcp_cloud_exadata_infrastructures_dependency = {
+  primary = {
+    id = "<REPLACE-BY-EXADATA-INFRASTRUCTURE-RESOURCE-NAME>"
+  }
 }
 
-deletion_protection = false
+#---------------------------------------
+# Cloud VM Clusters
+#---------------------------------------
 
-timeouts = {
-  create = "180m"
-  update = "90m"
-  delete = "90m"
+gcp_cloud_vm_clusters_configuration = {
+  primary = {
+    cloud_vm_cluster_id        = "ext-dep-vm-cluster"
+    display_name               = "ext-dep-vm-cluster"
+    exadata_infrastructure_key = "primary"
+    odb_network_key            = "primary"
+    odb_subnet_key             = "client"
+    backup_odb_subnet_key      = "backup"
+    timeouts = {
+      create = "180m"
+      update = "90m"
+      delete = "90m"
+    }
+    properties = {
+      license_type             = "BRING_YOUR_OWN_LICENSE"
+      cpu_core_count           = 4
+      node_count               = 2
+      ocpu_count               = 2
+      memory_size_gb           = 60
+      db_node_storage_size_gb  = 120
+      data_storage_size_tb     = 2
+      disk_redundancy          = "HIGH"
+      local_backup_enabled     = false
+      sparse_diskgroup_enabled = false
+      cluster_name             = "extdep"
+      gi_version               = "23.0.0.0"
+      hostname_prefix          = "exa"
+      # Set one explicit DB server OCID per VM for controlled placement and offline planning.
+      # Set null only when the target project/API are real and Terraform may discover AVAILABLE DB servers.
+      ssh_public_keys = ["ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCexample user@example.com"]
+      db_server_ocids = [
+        "ocid1.dbserver.oc1.uk-london-1.example1",
+        "ocid1.dbserver.oc1.uk-london-1.example2"
+      ]
+      time_zone = { id = "UTC" }
+      diagnostics_data_collection_options = {
+        diagnostics_events_enabled = true
+        health_monitoring_enabled  = true
+        incident_logs_enabled      = true
+      }
+    }
+  }
 }
-
-license_type               = "BRING_YOUR_OWN_LICENSE"
-cpu_core_count             = 4
-node_count                 = 2
-ocpu_count                 = 2
-memory_size_gb             = 60
-db_node_storage_size_gb    = 120
-data_storage_size_tb       = 2
-disk_redundancy            = "HIGH"
-local_backup_enabled       = false
-sparse_diskgroup_enabled   = false
-cluster_name               = "handoff"
-diagnostics_events_enabled = true
-health_monitoring_enabled  = true
-incident_logs_enabled      = true
-time_zone_id               = "UTC"
-time_zone_version          = null
-gi_version                 = "23.0.0.0"
-hostname_prefix            = "exa"
-
-# Set one explicit DB server OCID per VM for controlled placement and offline planning.
-# Set null only when the target project/API are real and Terraform may discover AVAILABLE DB servers.
-db_server_ocids = [
-  "ocid1.dbserver.oc1.uk-london-1.example1",
-  "ocid1.dbserver.oc1.uk-london-1.example2"
-]
-
-ssh_public_keys = [
-  "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCexample user@example.com"
-]
