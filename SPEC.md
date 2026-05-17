@@ -2,22 +2,22 @@
 
 ## Table of Contents
 
-1. Overview
-2. Compatibility
-3. Module Inputs
-4. ODB Networks
-5. ODB Subnets
-6. Cloud Exadata Infrastructures
-7. Cloud VM Clusters
-8. Module Outputs
+- [Overview](#overview)
+- [Compatibility](#compatibility)
+- [Module Inputs](#module-inputs)
+- [ODB Networks](#odb-networks)
+- [ODB Subnets](#odb-subnets)
+- [Cloud Exadata Infrastructures](#cloud-exadata-infrastructures)
+- [Cloud VM Clusters](#cloud-vm-clusters)
+- [Module Outputs](#module-outputs)
 
-## Overview
+## <a name="overview">Overview</a>
 
 This document is the technical contract for the module. Use it when you need exact input shapes, reference rules, lifecycle behavior, or output names.
 
 The README covers deployment guidance and examples. This specification focuses on the Terraform interface: keyed resource maps, module-key references, input validation behavior, lifecycle drift policy, and outputs.
 
-## Compatibility
+## <a name="compatibility">Compatibility</a>
 
 This module requires Terraform `>= 1.3.0` and HashiCorp Google provider `>= 7.13.0, < 8.0.0`. The schema was validated against Google provider `7.31.0` on May 6, 2026.
 
@@ -25,7 +25,7 @@ Google Cloud project enablement, Oracle Database@Google Cloud entitlement, IAM p
 
 The module intentionally does not create Google Cloud VPC networks. VPCs are expected to be provided by the platform foundation or Google Cloud landing zone, commonly through a Shared VPC or centrally governed networking stack. The module consumes the existing VPC resource name in `gcp_odb_networks_configuration[*].network` and owns the Oracle Database@Google Cloud resources layered on top of it.
 
-## Module Inputs
+## <a name="module-inputs">Module Inputs</a>
 
 The module accepts these input variables.
 
@@ -71,7 +71,7 @@ When `output_path` is set, these files are written when matching resources exist
 
 * `id`: Required. Cloud Exadata Infrastructure full resource name in `projects/{project}/locations/{region}/cloudExadataInfrastructures/{cloud_exadata_infrastructure}` format.
 
-### ODB Networks
+### <a name="odb-networks">ODB Networks</a>
 
 * `gcp_odb_networks_configuration`: Map of ODB networks to create.
 
@@ -88,7 +88,7 @@ Each map value has these attributes:
 
 Provider resource: `google_oracle_database_odb_network`.
 
-### ODB Subnets
+### <a name="odb-subnets">ODB Subnets</a>
 
 * `gcp_odb_subnets_configuration`: Map of ODB subnets to create.
 
@@ -107,7 +107,7 @@ Each map value has these attributes:
 
 Provider resource: `google_oracle_database_odb_subnet`.
 
-### Cloud Exadata Infrastructures
+### <a name="cloud-exadata-infrastructures">Cloud Exadata Infrastructures</a>
 
 * `gcp_cloud_exadata_infrastructures_configuration`: Map of Cloud Exadata Infrastructures to create.
 
@@ -162,7 +162,7 @@ The policy is deliberately limited to capacity and storage fields that are likel
 
 Provider resource: `google_oracle_database_cloud_exadata_infrastructure`.
 
-### Cloud VM Clusters
+### <a name="cloud-vm-clusters">Cloud VM Clusters</a>
 
 * `gcp_cloud_vm_clusters_configuration`: Map of Cloud VM Clusters to create.
 
@@ -238,7 +238,7 @@ The `diagnostics_data_collection_options` object has these attributes:
 
 Provider resource: `google_oracle_database_cloud_vm_cluster`.
 
-## Module Outputs
+## <a name="module-outputs">Module Outputs</a>
 
 The module returns these outputs:
 
