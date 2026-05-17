@@ -1,52 +1,70 @@
-# Copy this file to terraform.tfvars and replace the placeholder values.
+#-------------------------------------------------------------------------------------------------------------------------------------------
+# 1. Rename this file to <project-name>.auto.tfvars, where <project-name> is a name of your choice.
+# 2. Provide values for "GCP Connectivity Variables".
+# 3. Replace placeholder values in the configuration maps below with your own.
+# 4. Optionally set output_path to write dependency JSON files for downstream Terraform states (examples/external_dependency).
+#-------------------------------------------------------------------------------------------------------------------------------------------
 
-project_id      = "my-gcp-project"
-location        = "us-east4"
-gcp_oracle_zone = "us-east4-a-r2"
+#---------------------------------------
+# GCP Connectivity Variables
+#---------------------------------------
 
-network = "projects/my-gcp-project/global/networks/database-vpc"
+project_id      = "<your GCP project ID>"
+location        = "<your GCP region>"
+gcp_oracle_zone = "<your GCP Oracle zone>"
 
-labels = {
+#---------------------------------------
+# Module defaults
+#---------------------------------------
+
+default_deletion_protection = false
+
+default_labels = {
   terraform = "true"
   example   = "basic"
 }
 
-deletion_protection = false
-
 output_path = "./output"
 
-odb_network_id                  = "primary-odb-network"
-odb_network_location            = null
-odb_network_project_id          = null
-odb_network_gcp_oracle_zone     = null
-odb_network_labels              = {}
-odb_network_deletion_protection = false
-odb_network_timeouts = {
-  create = "90m"
-  update = "60m"
-  delete = "60m"
+#---------------------------------------
+# ODB Networks
+#---------------------------------------
+
+gcp_odb_networks_configuration = {
+  primary = {
+    odb_network_id = "primary-odb-network"
+    network        = "<your VPC network self-link>"  # E.g., projects/<project>/global/networks/<network>.
+    timeouts = {
+      create = "90m"
+      update = "60m"
+      delete = "60m"
+    }
+  }
 }
 
-client_odb_subnet_id                  = "client-subnet"
-client_odb_subnet_cidr_range          = "192.168.1.0/24"
-client_odb_subnet_location            = null
-client_odb_subnet_project_id          = null
-client_odb_subnet_labels              = {}
-client_odb_subnet_deletion_protection = false
-client_odb_subnet_timeouts = {
-  create = "90m"
-  update = "60m"
-  delete = "60m"
-}
+#---------------------------------------
+# ODB Subnets
+#---------------------------------------
 
-backup_odb_subnet_id                  = "backup-subnet"
-backup_odb_subnet_cidr_range          = "192.168.2.0/28"
-backup_odb_subnet_location            = null
-backup_odb_subnet_project_id          = null
-backup_odb_subnet_labels              = {}
-backup_odb_subnet_deletion_protection = false
-backup_odb_subnet_timeouts = {
-  create = "90m"
-  update = "60m"
-  delete = "60m"
+gcp_odb_subnets_configuration = {
+  client = {
+    odb_network_key = "primary"
+    cidr_range      = "192.168.1.0/24"
+    purpose         = "CLIENT_SUBNET"
+    timeouts = {
+      create = "90m"
+      update = "60m"
+      delete = "60m"
+    }
+  }
+  backup = {
+    odb_network_key = "primary"
+    cidr_range      = "192.168.2.0/28"
+    purpose         = "BACKUP_SUBNET"
+    timeouts = {
+      create = "90m"
+      update = "60m"
+      delete = "60m"
+    }
+  }
 }
