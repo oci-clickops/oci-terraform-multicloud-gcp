@@ -1,0 +1,62 @@
+#-------------------------------------------------------------------------------------------------------------------------------------------
+# 1. Rename this file to <project-name>.auto.tfvars, where <project-name> is a name of your choice.
+# 2. Provide values for "GCP Connectivity Variables".
+# 3. Replace placeholder values in the configuration maps below with your own.
+# 4. Provide the admin password via the TF_VAR_gcp_autonomous_databases_admin_passwords environment variable
+#    instead of storing it in this file:
+#      export TF_VAR_gcp_autonomous_databases_admin_passwords='{"primary":"<password>"}'
+#-------------------------------------------------------------------------------------------------------------------------------------------
+
+#---------------------------------------
+# GCP Connectivity Variables
+#---------------------------------------
+
+project_id = "<your GCP project ID>"   # The Google Cloud project enabled for Oracle Database@Google Cloud.
+location   = "<your GCP region>"       # E.g., us-east4, europe-west2.
+
+#---------------------------------------
+# Module defaults
+#---------------------------------------
+
+default_deletion_protection = false
+
+default_labels = {
+  terraform = "true"
+  example   = "vision"
+}
+
+#---------------------------------------
+# Autonomous Databases
+#---------------------------------------
+
+gcp_autonomous_databases_configuration = {
+  primary = {
+    autonomous_database_id = "vision-adb"
+    display_name           = "vision-adb"
+    database               = "visionautdb"
+    network                = "<your VPC network resource name>"  # E.g., projects/<project>/global/networks/<network>.
+    cidr                   = "10.5.0.0/24"
+    timeouts = {
+      create = "240m"
+      update = "120m"
+      delete = "120m"
+    }
+    properties = {
+      db_workload                     = "OLTP"
+      license_type                    = "LICENSE_INCLUDED"
+      compute_count                   = 2
+      data_storage_size_tb            = 1
+      db_version                      = "23ai"
+      is_auto_scaling_enabled         = true
+      is_storage_auto_scaling_enabled = false
+      backup_retention_period_days    = 60
+      character_set                   = "AL32UTF8"
+      n_character_set                 = "AL16UTF16"
+      maintenance_schedule_type       = "REGULAR"
+      mtls_connection_required        = false
+      customer_contacts = [
+        { email = "dba@example.com" }
+      ]
+    }
+  }
+}
