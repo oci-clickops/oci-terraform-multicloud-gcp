@@ -9,8 +9,8 @@
 **/terraform.tfvars
 **/terraform_*.tfvars
 **/vars_*.tfvars
-test/**
-tests/**
+**/test/**
+**/tests/**
 *.csv
 *.xlsx
 *.html
