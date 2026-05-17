@@ -1,6 +1,69 @@
 # Copyright (c) 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl.
 
+locals {
+  gcp_odb_subnets_dependency_raw = try(
+    var.gcp_odb_subnets_dependency.gcp_odb_subnets,
+    jsondecode(file(var.gcp_odb_subnets_dependency)).gcp_odb_subnets,
+    var.gcp_odb_subnets_dependency
+  )
+
+  gcp_odb_subnets_dependency = {
+    for key, subnet in local.gcp_odb_subnets_dependency_raw : key => {
+      id         = subnet.id
+      purpose    = try(subnet.purpose, null)
+      odbnetwork = try(subnet.odbnetwork, null)
+    }
+  }
+
+  odb_subnet_network_id_segments = merge(
+    {
+      for key, subnet in local.gcp_odb_subnets_dependency : key =>
+      subnet.odbnetwork != null ? subnet.odbnetwork : try(split("/", subnet.id)[5], null)
+    },
+    {
+      for key, subnet in var.gcp_odb_subnets_configuration : key =>
+      subnet.odbnetwork != null ? subnet.odbnetwork : try(local.odb_network_id_segments[subnet.odb_network_key], null)
+    }
+  )
+
+  odb_subnet_project_ids = merge(
+    {
+      for key, subnet in local.gcp_odb_subnets_dependency : key =>
+      try(split("/", subnet.id)[1], null)
+    },
+    {
+      for key, subnet in var.gcp_odb_subnets_configuration : key =>
+      subnet.project_id != null ? subnet.project_id : var.default_project_id
+    }
+  )
+
+  odb_subnet_locations = merge(
+    {
+      for key, subnet in local.gcp_odb_subnets_dependency : key =>
+      try(split("/", subnet.id)[3], null)
+    },
+    {
+      for key, subnet in var.gcp_odb_subnets_configuration : key =>
+      subnet.location != null ? subnet.location : var.default_location
+    }
+  )
+
+  gcp_odb_subnets_output = {
+    for key, subnet in google_oracle_database_odb_subnet.these : key => {
+      id            = subnet.id
+      name          = subnet.name
+      odb_subnet_id = subnet.odb_subnet_id
+      odbnetwork    = subnet.odbnetwork
+      cidr_range    = subnet.cidr_range
+      purpose       = subnet.purpose
+      location      = subnet.location
+      project       = subnet.project
+      state         = subnet.state
+    }
+  }
+}
+
 resource "google_oracle_database_odb_subnet" "these" {
   for_each = var.gcp_odb_subnets_configuration
 
@@ -16,7 +79,7 @@ resource "google_oracle_database_odb_subnet" "these" {
     )
   )
 
-  labels              = merge(local.default_labels, each.value.labels)
+  labels              = merge(local.module_tag, local.default_labels, each.value.labels)
   deletion_protection = each.value.deletion_protection != null ? each.value.deletion_protection : var.default_deletion_protection
 
   dynamic "timeouts" {

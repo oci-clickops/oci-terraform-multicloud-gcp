@@ -150,9 +150,9 @@ run "state_handoff_via_json" {
     default_location            = "europe-west2"
     default_deletion_protection = false
 
-    gcp_odb_networks_dependency                  = "examples/state-handoff-vm-cluster/dependencies/gcp_odb_networks_output.json"
-    gcp_odb_subnets_dependency                   = "examples/state-handoff-vm-cluster/dependencies/gcp_odb_subnets_output.json"
-    gcp_cloud_exadata_infrastructures_dependency = "examples/state-handoff-vm-cluster/dependencies/gcp_cloud_exadata_infrastructures_output.json"
+    gcp_odb_networks_dependency                  = "examples/external_dependency/dependencies/gcp_odb_networks_output.json"
+    gcp_odb_subnets_dependency                   = "examples/external_dependency/dependencies/gcp_odb_subnets_output.json"
+    gcp_cloud_exadata_infrastructures_dependency = "examples/external_dependency/dependencies/gcp_cloud_exadata_infrastructures_output.json"
 
     gcp_cloud_vm_clusters_configuration = {
       primary = {

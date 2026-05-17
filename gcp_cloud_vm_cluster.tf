@@ -85,6 +85,46 @@ locals {
       )
     )
   }
+
+  gcp_cloud_vm_clusters_output = {
+    for key, cluster in google_oracle_database_cloud_vm_cluster.these : key => {
+      id                         = cluster.id
+      name                       = cluster.name
+      cloud_vm_cluster_id        = cluster.cloud_vm_cluster_id
+      location                   = cluster.location
+      project                    = cluster.project
+      gcp_oracle_zone            = cluster.gcp_oracle_zone
+      ocid                       = try(cluster.properties[0].ocid, null)
+      state                      = try(cluster.properties[0].state, null)
+      shape                      = try(cluster.properties[0].shape, null)
+      gi_version                 = try(cluster.properties[0].gi_version, null)
+      cluster_name               = try(cluster.properties[0].cluster_name, null)
+      hostname                   = try(cluster.properties[0].hostname, null)
+      hostname_prefix            = try(cluster.properties[0].hostname_prefix, null)
+      domain                     = try(cluster.properties[0].domain, null)
+      scan_dns                   = try(cluster.properties[0].scan_dns, null)
+      scan_ip_ids                = try(cluster.properties[0].scan_ip_ids, null)
+      scan_listener_port_tcp     = try(cluster.properties[0].scan_listener_port_tcp, null)
+      scan_listener_port_tcp_ssl = try(cluster.properties[0].scan_listener_port_tcp_ssl, null)
+      scan_dns_record_id         = try(cluster.properties[0].scan_dns_record_id, null)
+      dns_listener_ip            = try(cluster.properties[0].dns_listener_ip, null)
+      system_version             = try(cluster.properties[0].system_version, null)
+      license_type               = try(cluster.properties[0].license_type, null)
+      cpu_core_count             = try(cluster.properties[0].cpu_core_count, null)
+      ocpu_count                 = try(cluster.properties[0].ocpu_count, null)
+      node_count                 = try(cluster.properties[0].node_count, null)
+      memory_size_gb             = try(cluster.properties[0].memory_size_gb, null)
+      db_node_storage_size_gb    = try(cluster.properties[0].db_node_storage_size_gb, null)
+      data_storage_size_tb       = try(cluster.properties[0].data_storage_size_tb, null)
+      storage_size_gb            = try(cluster.properties[0].storage_size_gb, null)
+      db_server_ocids            = try(cluster.properties[0].db_server_ocids, null)
+      disk_redundancy            = try(cluster.properties[0].disk_redundancy, null)
+      local_backup_enabled       = try(cluster.properties[0].local_backup_enabled, null)
+      sparse_diskgroup_enabled   = try(cluster.properties[0].sparse_diskgroup_enabled, null)
+      compartment_id             = try(cluster.properties[0].compartment_id, null)
+      oci_url                    = try(cluster.properties[0].oci_url, null)
+    }
+  }
 }
 
 resource "google_oracle_database_cloud_vm_cluster" "these" {
@@ -101,7 +141,7 @@ resource "google_oracle_database_cloud_vm_cluster" "these" {
   odb_subnet        = local.cloud_vm_cluster_odb_subnets[each.key]
   backup_odb_subnet = local.cloud_vm_cluster_backup_odb_subnets[each.key]
 
-  labels              = merge(local.default_labels, each.value.labels)
+  labels              = merge(local.module_tag, local.default_labels, each.value.labels)
   deletion_protection = each.value.deletion_protection != null ? each.value.deletion_protection : var.default_deletion_protection
 
   properties {

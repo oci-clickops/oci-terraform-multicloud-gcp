@@ -2,22 +2,22 @@
 
 ## Table of Contents
 
-1. [Early Preview Disclaimer](#early-preview-disclaimer)
-2. [Overview](#overview)
-3. [Pre-requisites](#pre-requisites)
-4. [Getting Started](#getting-started)
-5. [Configuration Model](#configuration-model)
-6. [Operational Drift Policy](#operational-drift-policy)
-7. [Examples](#examples)
-8. [Module Outputs](#module-outputs)
-9. [License](#license)
-10. [Known Issues](#known-issues)
+- [Early Preview Disclaimer](#early-preview-disclaimer)
+- [Overview](#overview)
+- [Pre-requisites](#pre-requisites)
+- [Getting Started](#getting-started)
+- [Configuration Model](#configuration-model)
+- [Operational Drift Policy](#operational-drift-policy)
+- [Examples](#examples)
+- [Module Outputs](#module-outputs)
+- [License](#license)
+- [Known Issues](#known-issues)
 
-## Early Preview Disclaimer
+## <a name="early-preview-disclaimer">Early Preview Disclaimer</a>
 
 This module is still an early implementation for Oracle Database@Google Cloud. Use normal production change control: pin provider versions, review every plan, and avoid write operations until the expected service-side behavior is clear.
 
-## Overview
+## <a name="overview">Overview</a>
 
 This repository provides a Terraform module for Oracle Database@Google Cloud resources managed through the HashiCorp Google provider.
 
@@ -34,7 +34,7 @@ Use this README for deployment guidance. Use [SPEC.md](./SPEC.md) for the full i
 
 For the recommended Day-1 and Day-2 control plane model, which is shared across the Oracle Database@AWS, Oracle Database@Google Cloud, and Oracle Database@Azure modules, see the [oci-multicloud-control-plane-model](https://github.com/oci-clickops/oci-multicloud-control-plane-model) repository.
 
-## Pre-requisites
+## <a name="pre-requisites">Pre-requisites</a>
 
 Before running Terraform against real infrastructure, make sure these pieces are already in place:
 
@@ -50,13 +50,13 @@ The VPC network is intentionally a prerequisite rather than a resource created b
 
 The schema was validated against Google provider `7.31.0` on May 6, 2026.
 
-## Getting Started
+## <a name="getting-started">Getting Started</a>
 
-Start with [examples/quickstart](./examples/quickstart) for a first end-to-end deployment. It creates an ODB network, client and backup ODB subnets, a Cloud Exadata Infrastructure, and a Cloud VM Cluster using module keys.
+Start with [examples/vision](./examples/vision) for a complete end-to-end deployment. It creates an ODB network, client and backup ODB subnets, a Cloud Exadata Infrastructure, and a Cloud VM Cluster using module keys.
 
-After the quickstart works in your environment, use the smaller examples to choose the networking pattern that matches your platform design.
+After the vision example works in your environment, use the smaller examples to choose the networking pattern that matches your platform design.
 
-## Configuration Model
+## <a name="configuration-model">Configuration Model</a>
 
 Related resources can be wired in two ways:
 
@@ -81,7 +81,7 @@ VPC creation stays outside this module boundary. If a deployment needs a new VPC
 
 Common defaults such as project, location, GCP Oracle zone, labels, deletion protection, Exadata maintenance windows, and operation timeouts are handled by module-level inputs. Resource-specific values override the defaults.
 
-## Operational Drift Policy
+## <a name="operational-drift-policy">Operational Drift Policy</a>
 
 Oracle Database@Google Cloud can be operated through both Google and OCI control planes. This dual control-plane model is useful operationally, but it also means some fields can drift outside Terraform. The module uses a narrow `ignore_changes` policy for fields that are expected to drift during Oracle-managed maintenance or OCI-side operations.
 
@@ -91,19 +91,21 @@ The policy is intentionally limited. Labels, maintenance windows, customer conta
 
 The exact ignored fields and rationale are documented in [SPEC.md](./SPEC.md).
 
-## Examples
+## <a name="examples">Examples</a>
 
 Available examples:
 
-* [examples/quickstart](./examples/quickstart): recommended first deployment path with a complete `terraform.tfvars.example` template.
-* [examples/basic](./examples/basic): networking-only deployment that creates an ODB Network and client/backup ODB Subnets on an existing VPC, without Exadata Infrastructure or VM Clusters. Use this as a separate state boundary when platform networking should be prepared before database infrastructure.
-* [examples/state-handoff-vm-cluster](./examples/state-handoff-vm-cluster): VM Cluster consumer state that reads ODB Network and ODB Subnet dependency JSON files from a separate networking deployment.
-* [examples/existing-odb-subnets](./examples/existing-odb-subnets): creates a Cloud Exadata Infrastructure and a VM Cluster using existing ODB network and subnet resource names, with a complete `terraform.tfvars.example` template.
-* [examples/existing-infrastructure-vm-cluster](./examples/existing-infrastructure-vm-cluster): creates only a VM Cluster using an existing Cloud Exadata Infrastructure, ODB network, client ODB subnet, and backup ODB subnet, with a complete `terraform.tfvars.example` template.
+* [examples/vision](./examples/vision): recommended first deployment path — complete end-to-end example with a ready-to-rename `input.auto.tfvars.template`.
+* [examples/external_dependency](./examples/external_dependency): VM Cluster consumer state that reads ODB Network and ODB Subnet dependency JSON files produced by a separate networking stack.
+* [examples/basic](./examples/basic): networking-only deployment that creates an ODB Network and client/backup ODB Subnets on an existing VPC, without Exadata Infrastructure or VM Clusters. Use this as a producer state; set `output_path` to write dependency files for `examples/external_dependency`.
+* [examples/existing-odb-subnets](./examples/existing-odb-subnets): creates a Cloud Exadata Infrastructure and a VM Cluster using existing ODB network and subnet resource names.
+* [examples/existing-infrastructure-vm-cluster](./examples/existing-infrastructure-vm-cluster): creates only a VM Cluster using an existing Cloud Exadata Infrastructure, ODB network, client ODB subnet, and backup ODB subnet.
 
-The examples deliberately do not declare a Terraform backend so they can be initialized offline with `terraform init -backend=false` for review and validation. For real deployments, configure a remote backend such as Google Cloud Storage, an OCI Object Storage bucket, Terraform Cloud, or any other supported backend in your own copy of the example or wrapper stack. Keep state for networking, Exadata infrastructure, and VM cluster stacks separate when adopting the multi-state handoff pattern.
+Each example includes an `input.auto.tfvars.template` file. Rename it to `<project-name>.auto.tfvars` and Terraform will load it automatically — no `terraform.tfvars` copy needed.
 
-## Module Outputs
+The examples deliberately do not declare a Terraform backend. For real deployments, configure a remote backend such as Google Cloud Storage, an OCI Object Storage bucket, Terraform Cloud, or any other supported backend in your own copy of the example or wrapper stack. Keep state for networking, Exadata infrastructure, and VM cluster stacks separate when adopting the multi-state handoff pattern.
+
+## <a name="module-outputs">Module Outputs</a>
 
 The module returns created resources with the same keys used in the input maps:
 
@@ -122,13 +124,13 @@ When `output_path` is set, the module also writes dependency files for downstrea
 
 The Exadata Infrastructure and VM Cluster outputs include operational fields such as server versions, capacity, Grid Infrastructure version, DB server placement, SCAN details, and OCI URLs. These are intended for validation, handoff to downstream stacks, and troubleshooting after long-running create operations complete.
 
-## License
+## <a name="license">License</a>
 
 Copyright (c) 2026, Oracle and/or its affiliates.
 
 Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl.
 
-## Known Issues
+## <a name="known-issues">Known Issues</a>
 
 1. Oracle Database@Google Cloud resources can take a long time to provision. If a creation or update operation is interrupted, rerun Terraform from the same working directory so it can continue from the current state.
 2. VM cluster creation requires valid networking inputs. When using ODB subnets, provide both client and backup subnet references through direct values or module keys.

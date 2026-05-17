@@ -1,6 +1,53 @@
 # Copyright (c) 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl.
 
+locals {
+  gcp_cloud_exadata_infrastructures_dependency_raw = try(
+    var.gcp_cloud_exadata_infrastructures_dependency.gcp_cloud_exadata_infrastructures,
+    jsondecode(file(var.gcp_cloud_exadata_infrastructures_dependency)).gcp_cloud_exadata_infrastructures,
+    var.gcp_cloud_exadata_infrastructures_dependency
+  )
+
+  gcp_cloud_exadata_infrastructures_dependency = {
+    for key, infrastructure in local.gcp_cloud_exadata_infrastructures_dependency_raw : key => {
+      id = infrastructure.id
+    }
+  }
+
+  gcp_cloud_exadata_infrastructures_output = {
+    for key, infrastructure in google_oracle_database_cloud_exadata_infrastructure.these : key => {
+      id                                 = infrastructure.id
+      name                               = infrastructure.name
+      cloud_exadata_infrastructure_id    = infrastructure.cloud_exadata_infrastructure_id
+      location                           = infrastructure.location
+      project                            = infrastructure.project
+      entitlement_id                     = try(infrastructure.entitlement_id, null)
+      ocid                               = try(infrastructure.properties[0].ocid, null)
+      state                              = try(infrastructure.properties[0].state, null)
+      shape                              = try(infrastructure.properties[0].shape, null)
+      available_storage_size_gb          = try(infrastructure.properties[0].available_storage_size_gb, null)
+      cpu_count                          = try(infrastructure.properties[0].cpu_count, null)
+      max_cpu_count                      = try(infrastructure.properties[0].max_cpu_count, null)
+      memory_size_gb                     = try(infrastructure.properties[0].memory_size_gb, null)
+      max_memory_gb                      = try(infrastructure.properties[0].max_memory_gb, null)
+      data_storage_size_tb               = try(infrastructure.properties[0].data_storage_size_tb, null)
+      max_data_storage_tb                = try(infrastructure.properties[0].max_data_storage_tb, null)
+      db_node_storage_size_gb            = try(infrastructure.properties[0].db_node_storage_size_gb, null)
+      max_db_node_storage_size_gb        = try(infrastructure.properties[0].max_db_node_storage_size_gb, null)
+      next_maintenance_run_id            = try(infrastructure.properties[0].next_maintenance_run_id, null)
+      next_maintenance_run_time          = try(infrastructure.properties[0].next_maintenance_run_time, null)
+      next_security_maintenance_run_time = try(infrastructure.properties[0].next_security_maintenance_run_time, null)
+      db_server_version                  = try(infrastructure.properties[0].db_server_version, null)
+      storage_server_version             = try(infrastructure.properties[0].storage_server_version, null)
+      monthly_db_server_version          = try(infrastructure.properties[0].monthly_db_server_version, null)
+      monthly_storage_server_version     = try(infrastructure.properties[0].monthly_storage_server_version, null)
+      activated_storage_count            = try(infrastructure.properties[0].activated_storage_count, null)
+      additional_storage_count           = try(infrastructure.properties[0].additional_storage_count, null)
+      oci_url                            = try(infrastructure.properties[0].oci_url, null)
+    }
+  }
+}
+
 resource "google_oracle_database_cloud_exadata_infrastructure" "these" {
   for_each = var.gcp_cloud_exadata_infrastructures_configuration
 
@@ -9,7 +56,7 @@ resource "google_oracle_database_cloud_exadata_infrastructure" "these" {
   location                        = each.value.location != null ? each.value.location : var.default_location
   project                         = each.value.project_id != null ? each.value.project_id : var.default_project_id
   gcp_oracle_zone                 = each.value.gcp_oracle_zone != null ? each.value.gcp_oracle_zone : var.default_gcp_oracle_zone
-  labels                          = merge(local.default_labels, each.value.labels)
+  labels                          = merge(local.module_tag, local.default_labels, each.value.labels)
   deletion_protection             = each.value.deletion_protection != null ? each.value.deletion_protection : var.default_deletion_protection
 
   properties {

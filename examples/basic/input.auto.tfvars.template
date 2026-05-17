@@ -48,6 +48,7 @@ gcp_odb_networks_configuration = {
 
 gcp_odb_subnets_configuration = {
   client = {
+    odb_subnet_id   = "primary-client-subnet"
     odb_network_key = "primary"
     cidr_range      = "192.168.1.0/24"
     purpose         = "CLIENT_SUBNET"
@@ -58,6 +59,7 @@ gcp_odb_subnets_configuration = {
     }
   }
   backup = {
+    odb_subnet_id   = "primary-backup-subnet"
     odb_network_key = "primary"
     cidr_range      = "192.168.2.0/28"
     purpose         = "BACKUP_SUBNET"

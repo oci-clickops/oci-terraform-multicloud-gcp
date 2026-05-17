@@ -1,6 +1,66 @@
 # Copyright (c) 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl.
 
+locals {
+  gcp_odb_networks_dependency_raw = try(
+    var.gcp_odb_networks_dependency.gcp_odb_networks,
+    jsondecode(file(var.gcp_odb_networks_dependency)).gcp_odb_networks,
+    var.gcp_odb_networks_dependency
+  )
+
+  gcp_odb_networks_dependency = {
+    for key, network in local.gcp_odb_networks_dependency_raw : key => {
+      id             = network.id
+      odb_network_id = try(network.odb_network_id, null)
+    }
+  }
+
+  odb_network_id_segments = merge(
+    {
+      for key, network in local.gcp_odb_networks_dependency : key =>
+      network.odb_network_id != null ? network.odb_network_id : try(split("/", network.id)[5], null)
+    },
+    {
+      for key, network in var.gcp_odb_networks_configuration : key =>
+      network.odb_network_id
+    }
+  )
+
+  odb_network_project_ids = merge(
+    {
+      for key, network in local.gcp_odb_networks_dependency : key =>
+      try(split("/", network.id)[1], null)
+    },
+    {
+      for key, network in var.gcp_odb_networks_configuration : key =>
+      network.project_id != null ? network.project_id : var.default_project_id
+    }
+  )
+
+  odb_network_locations = merge(
+    {
+      for key, network in local.gcp_odb_networks_dependency : key =>
+      try(split("/", network.id)[3], null)
+    },
+    {
+      for key, network in var.gcp_odb_networks_configuration : key =>
+      network.location != null ? network.location : var.default_location
+    }
+  )
+
+  gcp_odb_networks_output = {
+    for key, network in google_oracle_database_odb_network.these : key => {
+      id             = network.id
+      name           = network.name
+      odb_network_id = network.odb_network_id
+      location       = network.location
+      project        = network.project
+      state          = network.state
+      entitlement_id = try(network.entitlement_id, null)
+    }
+  }
+}
+
 resource "google_oracle_database_odb_network" "these" {
   for_each = var.gcp_odb_networks_configuration
 
@@ -10,7 +70,7 @@ resource "google_oracle_database_odb_network" "these" {
   project        = each.value.project_id != null ? each.value.project_id : var.default_project_id
 
   gcp_oracle_zone     = each.value.gcp_oracle_zone != null ? each.value.gcp_oracle_zone : var.default_gcp_oracle_zone
-  labels              = merge(local.default_labels, each.value.labels)
+  labels              = merge(local.module_tag, local.default_labels, each.value.labels)
   deletion_protection = each.value.deletion_protection != null ? each.value.deletion_protection : var.default_deletion_protection
 
   dynamic "timeouts" {
