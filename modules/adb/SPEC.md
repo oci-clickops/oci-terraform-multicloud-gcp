@@ -107,11 +107,13 @@ Ignored Autonomous Database fields:
 * `properties[0].data_storage_size_tb`
 * `properties[0].data_storage_size_gb`
 * `properties[0].db_version`
+* `properties[0].db_edition`
 * `properties[0].is_auto_scaling_enabled`
 * `properties[0].is_storage_auto_scaling_enabled`
+* `properties[0].backup_retention_period_days`
 * `properties[0].operations_insights_state`
 
-The policy covers operational and auto-scaling fields that are likely to drift when Google and OCI control planes are both used, plus `operations_insights_state` which the Google Cloud Oracle Database API marks as output-only — the service controls it and Terraform cannot reliably reconcile it. Labels and all other attributes remain visible to Terraform.
+The policy follows Oracle's published guidance for the dual control-plane model (see [Modify an Autonomous Database](https://docs.oracle.com/en-us/iaas/Content/database-at-gcp/gcpmd-modify-autonomous-ai-database.html)), which recommends ignoring capacity, storage, version, edition, auto-scaling flags, and backup retention fields that change when Day-2 operations are performed through the OCI control plane. `operations_insights_state` is additionally ignored because the Google Cloud Oracle Database REST API marks it as output-only. Labels and all other attributes remain visible to Terraform.
 
 Provider resource: `google_oracle_database_autonomous_database`.
 

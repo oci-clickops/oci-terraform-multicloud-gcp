@@ -123,8 +123,10 @@ resource "google_oracle_database_autonomous_database" "these" {
       properties[0].data_storage_size_tb,
       properties[0].data_storage_size_gb,
       properties[0].db_version,
+      properties[0].db_edition,
       properties[0].is_auto_scaling_enabled,
       properties[0].is_storage_auto_scaling_enabled,
+      properties[0].backup_retention_period_days,
       properties[0].operations_insights_state,
     ]
 
