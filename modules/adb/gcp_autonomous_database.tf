@@ -125,6 +125,7 @@ resource "google_oracle_database_autonomous_database" "these" {
       properties[0].db_version,
       properties[0].is_auto_scaling_enabled,
       properties[0].is_storage_auto_scaling_enabled,
+      properties[0].operations_insights_state,
     ]
 
     precondition {

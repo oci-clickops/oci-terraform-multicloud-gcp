@@ -66,6 +66,7 @@ Oracle Autonomous Database can be operated through both Google and OCI control p
 * `properties[0].data_storage_size_tb` and `properties[0].data_storage_size_gb` — may change through storage auto-scaling.
 * `properties[0].db_version` — may change through Oracle-managed upgrades.
 * `properties[0].is_auto_scaling_enabled` and `properties[0].is_storage_auto_scaling_enabled` — may change through OCI operations.
+* `properties[0].operations_insights_state` — output-only in the Google Cloud Oracle Database API; the service controls it and Terraform cannot reliably reconcile it.
 
 Labels and all other attributes remain visible to Terraform.
 

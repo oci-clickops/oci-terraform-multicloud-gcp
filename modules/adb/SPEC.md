@@ -109,8 +109,9 @@ Ignored Autonomous Database fields:
 * `properties[0].db_version`
 * `properties[0].is_auto_scaling_enabled`
 * `properties[0].is_storage_auto_scaling_enabled`
+* `properties[0].operations_insights_state`
 
-The policy is deliberately limited to operational and auto-scaling fields that are likely to drift when Google and OCI control planes are both used. Labels and all other attributes remain visible to Terraform.
+The policy covers operational and auto-scaling fields that are likely to drift when Google and OCI control planes are both used, plus `operations_insights_state` which the Google Cloud Oracle Database API marks as output-only — the service controls it and Terraform cannot reliably reconcile it. Labels and all other attributes remain visible to Terraform.
 
 Provider resource: `google_oracle_database_autonomous_database`.
 
