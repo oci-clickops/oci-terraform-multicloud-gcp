@@ -64,8 +64,8 @@ resource "google_oracle_database_autonomous_database" "these" {
   database               = each.value.database
   admin_password         = try(var.gcp_autonomous_databases_admin_passwords[each.key], null)
 
-  network = try(each.value.network, null)
-  cidr    = try(each.value.cidr, null)
+  network = each.value.network
+  cidr    = each.value.cidr
 
   odb_network = local.autonomous_database_odb_networks[each.key]
   odb_subnet  = local.autonomous_database_odb_subnets[each.key]
@@ -134,24 +134,24 @@ resource "google_oracle_database_autonomous_database" "these" {
 
     precondition {
       condition = !(
-        (try(each.value.network, null) != null || try(each.value.cidr, null) != null) &&
-        (try(each.value.odb_network, null) != null || try(each.value.odb_network_key, null) != null)
+        (each.value.network != null || each.value.cidr != null) &&
+        (each.value.odb_network != null || each.value.odb_network_key != null)
       )
       error_message = "Autonomous database '${each.key}': set either VPC mode (network + cidr) or ODB Network mode (odb_network/odb_network_key + odb_subnet/odb_subnet_key), not both."
     }
 
     precondition {
-      condition = try(each.value.odb_network_key, null) == null ? true : (
+      condition = each.value.odb_network_key == null ? true : (
         contains(keys(local.gcp_odb_networks_dependency), each.value.odb_network_key)
       )
-      error_message = "Autonomous database '${each.key}' odb_network_key must reference a key in gcp_odb_networks_dependency."
+      error_message = "Autonomous database '${each.key}' odb_network_key '${each.value.odb_network_key}' not found in gcp_odb_networks_dependency. Available keys: ${join(", ", keys(local.gcp_odb_networks_dependency))}."
     }
 
     precondition {
-      condition = try(each.value.odb_subnet_key, null) == null ? true : (
+      condition = each.value.odb_subnet_key == null ? true : (
         contains(keys(local.gcp_odb_subnets_dependency), each.value.odb_subnet_key)
       )
-      error_message = "Autonomous database '${each.key}' odb_subnet_key must reference a key in gcp_odb_subnets_dependency."
+      error_message = "Autonomous database '${each.key}' odb_subnet_key '${each.value.odb_subnet_key}' not found in gcp_odb_subnets_dependency. Available keys: ${join(", ", keys(local.gcp_odb_subnets_dependency))}."
     }
   }
 }
