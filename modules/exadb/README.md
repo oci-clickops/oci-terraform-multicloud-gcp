@@ -2,7 +2,6 @@
 
 ## Table of Contents
 
-- [Early Preview Disclaimer](#early-preview-disclaimer)
 - [Overview](#overview)
 - [Pre-requisites](#pre-requisites)
 - [Getting Started](#getting-started)
@@ -12,10 +11,6 @@
 - [Module Outputs](#module-outputs)
 - [License](#license)
 - [Known Issues](#known-issues)
-
-## <a name="early-preview-disclaimer">Early Preview Disclaimer</a>
-
-This module is still an early implementation for Oracle Database@Google Cloud. Use normal production change control: pin provider versions, review every plan, and avoid write operations until the expected service-side behavior is clear.
 
 ## <a name="overview">Overview</a>
 

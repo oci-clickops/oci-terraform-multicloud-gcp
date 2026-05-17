@@ -10,6 +10,7 @@
 - [Examples](#examples)
 - [Module Outputs](#module-outputs)
 - [License](#license)
+- [Known Issues](#known-issues)
 
 ## <a name="overview">Overview</a>
 
@@ -104,3 +105,10 @@ When `output_path` is set, the module writes:
 Copyright (c) 2026, Oracle and/or its affiliates.
 
 Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl.
+
+## <a name="known-issues">Known Issues</a>
+
+1. Oracle Autonomous Database resources can take a long time to provision. If a creation or update operation is interrupted, rerun Terraform from the same working directory so it can continue from the current state.
+2. The admin password is accepted at creation time but is not read back by the Google provider. Manage password rotation outside Terraform.
+3. Some resource attributes are service-managed and appear only after provisioning completes. Downstream stacks should consume outputs only after the producing stack has completed successfully.
+4. When using ODB Network mode, both `odb_network` and `odb_subnet` references must exist before the Autonomous Database can be created. Provision the networking stack first.
