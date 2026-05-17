@@ -144,14 +144,14 @@ resource "google_oracle_database_autonomous_database" "these" {
       condition = each.value.odb_network_key == null ? true : (
         contains(keys(local.gcp_odb_networks_dependency), each.value.odb_network_key)
       )
-      error_message = "Autonomous database '${each.key}' odb_network_key '${each.value.odb_network_key}' not found in gcp_odb_networks_dependency. Available keys: ${join(", ", keys(local.gcp_odb_networks_dependency))}."
+      error_message = "Autonomous database '${each.key}': odb_network_key not found in gcp_odb_networks_dependency. Available keys: ${join(", ", keys(local.gcp_odb_networks_dependency))}."
     }
 
     precondition {
       condition = each.value.odb_subnet_key == null ? true : (
         contains(keys(local.gcp_odb_subnets_dependency), each.value.odb_subnet_key)
       )
-      error_message = "Autonomous database '${each.key}' odb_subnet_key '${each.value.odb_subnet_key}' not found in gcp_odb_subnets_dependency. Available keys: ${join(", ", keys(local.gcp_odb_subnets_dependency))}."
+      error_message = "Autonomous database '${each.key}': odb_subnet_key not found in gcp_odb_subnets_dependency. Available keys: ${join(", ", keys(local.gcp_odb_subnets_dependency))}."
     }
   }
 }
