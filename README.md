@@ -11,6 +11,22 @@ Both modules follow the OCI Landing Zones style. Resources are declared through 
 
 For the recommended Day-1 and Day-2 control plane model, see the [oci-multicloud-control-plane-model](https://github.com/oci-clickops/oci-multicloud-control-plane-model) repository.
 
+## Requirements
+
+* Terraform `>= 1.3.0`
+* HashiCorp Google provider `>= 7.13.0, < 8.0.0`
+* Google Cloud CLI authenticated for the target project (`gcloud auth application-default login`)
+* OCI CLI configured when operating through the OCI control plane in dual control-plane deployments
+* A Google Cloud project enabled for Oracle Database@Google Cloud with the required entitlement and regional capacity
+
+## Getting Started
+
+For Cloud Exadata Infrastructure and VM Cluster deployments, start with [modules/exadb/examples/vision](./modules/exadb/examples/vision). It creates an ODB network, client and backup ODB subnets, a Cloud Exadata Infrastructure, and a Cloud VM Cluster end to end.
+
+For Autonomous Database deployments, start with [modules/adb/examples/vision](./modules/adb/examples/vision). It creates a single Autonomous Database in VPC networking mode with a full set of properties.
+
+Each example includes an `input.auto.tfvars.template` file. Rename it to `<project-name>.auto.tfvars` and Terraform will load it automatically.
+
 ## License
 
 Copyright (c) 2026, Oracle and/or its affiliates.
