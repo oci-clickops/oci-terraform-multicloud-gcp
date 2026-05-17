@@ -33,13 +33,13 @@ The module accepts these input variables.
 * `default_location`: Default Google Cloud region used by resources when `location` is not set on the resource.
 * `default_labels`: Default labels merged into all resources. Resource-specific labels win on key collisions.
 * `default_deletion_protection`: Default deletion protection value. Defaults to `true`.
-* `gcp_odb_networks_dependency`: Externally managed ODB Networks this module may consume by key. Accepts a map, a map wrapped under `gcp_odb_networks`, or a path to a JSON dependency file produced by the root module.
-* `gcp_odb_subnets_dependency`: Externally managed ODB Subnets this module may consume by key. Accepts a map, a map wrapped under `gcp_odb_subnets`, or a path to a JSON dependency file produced by the root module.
+* `gcp_odb_networks_dependency`: Externally managed ODB Networks this module may consume by key. Accepts a map, a map wrapped under `gcp_odb_networks`, or a path to a JSON dependency file produced by the ExaDB module (`modules/exadb/`).
+* `gcp_odb_subnets_dependency`: Externally managed ODB Subnets this module may consume by key. Accepts a map, a map wrapped under `gcp_odb_subnets`, or a path to a JSON dependency file produced by the ExaDB module (`modules/exadb/`).
 * `gcp_autonomous_databases_admin_passwords`: Admin passwords for Autonomous Databases, keyed by the same keys as `gcp_autonomous_databases_configuration`. Sensitive. Do not store in committed files — use `TF_VAR_gcp_autonomous_databases_admin_passwords` instead.
 
 ### Dependency Inputs
 
-`gcp_odb_networks_dependency` and `gcp_odb_subnets_dependency` implement the OCI Landing Zones state-handoff pattern. A producer stack sets `output_path` on the root module to write JSON files, and a consumer stack passes those file paths into this module.
+`gcp_odb_networks_dependency` and `gcp_odb_subnets_dependency` implement the OCI Landing Zones state-handoff pattern. A producer stack sets `output_path` on the ExaDB module (`modules/exadb/`) to write JSON files, and a consumer stack passes those file paths into this module.
 
 `gcp_odb_networks_dependency` entries:
 
