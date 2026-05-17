@@ -1,0 +1,142 @@
+#-------------------------------------------------------------------------------------------------------------------------------------------
+# 1. Rename this file to <project-name>.auto.tfvars, where <project-name> is a name of your choice.
+# 2. Provide values for "GCP Connectivity Variables".
+# 3. Replace placeholder values in the configuration maps below with your own.
+#-------------------------------------------------------------------------------------------------------------------------------------------
+
+#---------------------------------------
+# GCP Connectivity Variables
+#---------------------------------------
+
+project_id      = "<your GCP project ID>"     # The Google Cloud project enabled for Oracle Database@Google Cloud.
+location        = "<your GCP region>"         # E.g., us-east4, europe-west2.
+gcp_oracle_zone = "<your GCP Oracle zone>"    # E.g., us-east4-a-r2.
+
+#---------------------------------------
+# Module defaults
+#---------------------------------------
+
+default_deletion_protection = false
+
+default_labels = {
+  terraform = "true"
+  example   = "vision"
+}
+
+default_cloud_exadata_maintenance_window = {
+  preference     = "CUSTOM_PREFERENCE"
+  weeks_of_month = [1]
+  days_of_week   = ["SUNDAY"]
+  hours_of_day   = [4]
+  patching_mode  = "ROLLING"
+}
+
+#---------------------------------------
+# ODB Networks
+#---------------------------------------
+
+gcp_odb_networks_configuration = {
+  primary = {
+    odb_network_id = "vision-odb-network"
+    network        = "<your VPC network self-link>"  # E.g., projects/<project>/global/networks/<network>.
+    timeouts = {
+      create = "90m"
+      update = "60m"
+      delete = "60m"
+    }
+  }
+}
+
+#---------------------------------------
+# ODB Subnets
+#---------------------------------------
+
+gcp_odb_subnets_configuration = {
+  client = {
+    odb_network_key = "primary"
+    cidr_range      = "192.168.1.0/24"
+    purpose         = "CLIENT_SUBNET"
+    timeouts = {
+      create = "90m"
+      update = "60m"
+      delete = "60m"
+    }
+  }
+  backup = {
+    odb_network_key = "primary"
+    cidr_range      = "192.168.2.0/28"
+    purpose         = "BACKUP_SUBNET"
+    timeouts = {
+      create = "90m"
+      update = "60m"
+      delete = "60m"
+    }
+  }
+}
+
+#---------------------------------------
+# Cloud Exadata Infrastructures
+#---------------------------------------
+
+gcp_cloud_exadata_infrastructures_configuration = {
+  primary = {
+    cloud_exadata_infrastructure_id = "vision-exadata"
+    display_name                    = "vision-exadata"
+    properties = {
+      shape         = "Exadata.X11M"
+      compute_count = 2
+      storage_count = 3
+      customer_contacts = [
+        { email = "dba@example.com" }
+      ]
+    }
+    timeouts = {
+      create = "300m"
+      update = "180m"
+      delete = "180m"
+    }
+  }
+}
+
+#---------------------------------------
+# Cloud VM Clusters
+#---------------------------------------
+
+gcp_cloud_vm_clusters_configuration = {
+  primary = {
+    cloud_vm_cluster_id        = "vision-vm-cluster"
+    display_name               = "vision-vm-cluster"
+    exadata_infrastructure_key = "primary"
+    odb_network_key            = "primary"
+    odb_subnet_key             = "client"
+    backup_odb_subnet_key      = "backup"
+    timeouts = {
+      create = "180m"
+      update = "90m"
+      delete = "90m"
+    }
+    properties = {
+      license_type             = "BRING_YOUR_OWN_LICENSE"
+      cpu_core_count           = 4
+      node_count               = 2
+      ocpu_count               = 2
+      memory_size_gb           = 60
+      db_node_storage_size_gb  = 120
+      data_storage_size_tb     = 2
+      disk_redundancy          = "HIGH"
+      local_backup_enabled     = false
+      sparse_diskgroup_enabled = false
+      cluster_name             = "vision"
+      gi_version               = "23.0.0.0"
+      hostname_prefix          = "exa"
+      ssh_public_keys          = ["ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCexample user@example.com"]
+      db_server_ocids          = null
+      time_zone                = { id = "UTC" }
+      diagnostics_data_collection_options = {
+        diagnostics_events_enabled = true
+        health_monitoring_enabled  = true
+        incident_logs_enabled      = true
+      }
+    }
+  }
+}
