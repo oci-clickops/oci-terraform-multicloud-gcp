@@ -48,6 +48,7 @@ The module accepts these input variables.
 `gcp_odb_subnets_dependency` entries:
 
 * `id`: Required. Full resource name in `projects/{project}/locations/{location}/odbNetworks/{odb_network}/odbSubnets/{odb_subnet}` format.
+* `purpose`: Optional. `CLIENT_SUBNET` or `BACKUP_SUBNET`. Ignored by this module; preserved so the same map can be reused by the ExaDB module without modification.
 
 ## <a name="autonomous-databases">Autonomous Databases</a>
 

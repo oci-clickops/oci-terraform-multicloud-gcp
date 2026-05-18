@@ -13,7 +13,7 @@ variable "gcp_autonomous_databases_admin_passwords" {
 
 variable "default_labels" {
   type    = any
-  default = null
+  default = {}
 }
 
 variable "default_deletion_protection" {
@@ -33,5 +33,5 @@ variable "gcp_odb_subnets_dependency" {
 
 variable "gcp_autonomous_databases_configuration" {
   type    = any
-  default = null
+  default = {}
 }

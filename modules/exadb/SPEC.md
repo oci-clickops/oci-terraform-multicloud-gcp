@@ -55,15 +55,20 @@ When `output_path` is set, these files are written when matching resources exist
 * `gcp_odb_networks_output.json`
 * `gcp_odb_subnets_output.json`
 * `gcp_cloud_exadata_infrastructures_output.json`
+* `gcp_cloud_vm_clusters_output.json`
 
 `gcp_odb_networks_dependency` is a map keyed by logical name. Each value has these attributes:
 
 * `id`: Required. ODB Network full resource name in `projects/{project}/locations/{location}/odbNetworks/{odb_network}` format. The ODB Network ID segment is always derived from `id`.
 
+The JSON file written by this module also includes informational fields (`name`, `odb_network_id`, `location`, `project`, `state`, `entitlement_id`) for debugging and downstream consumers. These are ignored by this module and need not be supplied when constructing the map manually.
+
 `gcp_odb_subnets_dependency` is a map keyed by logical name. Each value has these attributes:
 
 * `id`: Required. ODB Subnet full resource name in `projects/{project}/locations/{location}/odbNetworks/{odb_network}/odbSubnets/{odb_subnet}` format. The parent ODB Network segment is always derived from `id`.
 * `purpose`: Required. `CLIENT_SUBNET` or `BACKUP_SUBNET`. VM Cluster subnet keys are validated against this value.
+
+The JSON file written by this module also includes informational fields (`name`, `odb_subnet_id`, `odbnetwork`, `cidr_range`, `location`, `project`, `state`) for debugging and downstream consumers. These are ignored by this module and need not be supplied when constructing the map manually.
 
 `gcp_cloud_exadata_infrastructures_dependency` is a map keyed by logical name. Each value has these attributes:
 

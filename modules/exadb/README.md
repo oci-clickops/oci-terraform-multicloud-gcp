@@ -116,6 +116,7 @@ When `output_path` is set, the module also writes dependency files for downstrea
 * `gcp_odb_networks_output.json`
 * `gcp_odb_subnets_output.json`
 * `gcp_cloud_exadata_infrastructures_output.json`
+* `gcp_cloud_vm_clusters_output.json`
 
 The Exadata Infrastructure and VM Cluster outputs include operational fields such as server versions, capacity, Grid Infrastructure version, DB server placement, SCAN details, and OCI URLs. These are intended for validation, handoff to downstream stacks, and troubleshooting after long-running create operations complete.
 

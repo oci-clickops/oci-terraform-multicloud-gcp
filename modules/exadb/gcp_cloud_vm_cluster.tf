@@ -301,7 +301,7 @@ resource "google_oracle_database_cloud_vm_cluster" "these" {
       condition = each.value.properties.db_server_ocids == null ? true : (
         length(each.value.properties.db_server_ocids) >= coalesce(each.value.properties.node_count, 2)
       )
-      error_message = "Each Cloud VM cluster db_server_ocids list must include at least one DB server OCID per node, with a minimum of two when node_count is left unset."
+      error_message = "Each Cloud VM cluster db_server_ocids list must include at least one DB server OCID per node: minimum of node_count entries when node_count is set, or minimum of two entries when node_count is left unset."
     }
   }
 }
