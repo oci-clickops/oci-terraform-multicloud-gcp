@@ -75,8 +75,6 @@ The policy follows Oracle's published guidance for the dual control-plane model.
 
 The exact ignored fields and rationale are documented in [SPEC.md](./SPEC.md).
 
-The exact ignored fields and rationale are documented in [SPEC.md](./SPEC.md).
-
 ## <a name="examples">Examples</a>
 
 Available examples:
