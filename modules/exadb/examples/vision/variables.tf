@@ -19,6 +19,14 @@ variable "default_deletion_protection" {
   default = false
 }
 
+variable "output_path" { default = null }
+
+variable "ssh_public_keys_file_path" {
+  description = "Path to SSH public key file for VM cluster access."
+  type        = string
+  default     = null
+}
+
 variable "default_cloud_exadata_maintenance_window" {
   type    = any
   default = null

@@ -4,11 +4,13 @@
 module "oracle_database_at_gcp" {
   source = "../.."
 
-  default_project_id          = var.project_id
-  default_location            = var.location
-  default_gcp_oracle_zone     = var.gcp_oracle_zone
-  default_deletion_protection = var.default_deletion_protection
-  default_labels              = var.default_labels
+  default_project_id              = var.project_id
+  default_location                = var.location
+  default_gcp_oracle_zone         = var.gcp_oracle_zone
+  default_deletion_protection     = var.default_deletion_protection
+  default_labels                  = var.default_labels
+  output_path                     = var.output_path
+  ssh_public_keys_file_path       = var.ssh_public_keys_file_path
 
   default_cloud_exadata_maintenance_window = var.default_cloud_exadata_maintenance_window
 

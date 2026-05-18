@@ -1,4 +1,6 @@
 **/*.tfstate*
+**/*.tfplan
+**/*.bak
 **/*.out
 **/.terraform/*
 **/.terraform.*

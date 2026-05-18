@@ -18,7 +18,14 @@ Before running it, confirm that:
 
 1. Rename `input.auto.tfvars.template` to a name of your choice, following the pattern `<project-name>.auto.tfvars`.
 2. Edit the renamed file to provide GCP connectivity variables and adjust input variables — replace all `<REPLACE-BY-*>` placeholders with the full resource names of the existing infrastructure.
-3. Set `db_server_ocids` to one validated DB server OCID per VM for controlled placement. Set `db_server_ocids = null` only when the target project, API, and existing Cloud Exadata Infrastructure are real and Terraform may discover `AVAILABLE` DB servers.
+3. Obtain DB server OCIDs from the existing Cloud Exadata Infrastructure:
+   ```sh
+   gcloud oracle-database cloud-exadata-infrastructures db-servers list \
+     --location=<LOCATION> \
+     --cloud-exadata-infrastructure=<EXADATA_INFRASTRUCTURE_NAME>
+   ```
+   Copy the `ocid` values from the output (one per VM node for distributed placement).
+4. Set `db_server_ocids` to one validated DB server OCID per VM for controlled placement.
 
 The VM Cluster GCP Oracle zone is derived from the existing Cloud Exadata Infrastructure by the service, so this example does not set it as an input.
 

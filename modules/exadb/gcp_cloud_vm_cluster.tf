@@ -2,6 +2,9 @@
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl.
 
 locals {
+  # Inject SSH public keys from file if provided
+  ssh_public_keys_from_file = var.ssh_public_keys_file_path != null ? [trimspace(file(var.ssh_public_keys_file_path))] : null
+
   cloud_vm_cluster_exadata_infrastructures = {
     for key, cluster in var.gcp_cloud_vm_clusters_configuration : key =>
     cluster.exadata_infrastructure != null ? cluster.exadata_infrastructure : (
@@ -86,6 +89,23 @@ locals {
     )
   }
 
+  # Inject SSH public keys from file into cluster configurations if ssh_public_keys_file_path is provided
+  gcp_cloud_vm_clusters_configuration_with_ssh_keys = (
+    var.ssh_public_keys_file_path != null ? {
+      for key, cluster in var.gcp_cloud_vm_clusters_configuration : key => merge(
+        cluster,
+        {
+          properties = merge(
+            cluster.properties,
+            {
+              ssh_public_keys = local.ssh_public_keys_from_file
+            }
+          )
+        }
+      )
+    } : var.gcp_cloud_vm_clusters_configuration
+  )
+
   gcp_cloud_vm_clusters_output = {
     for key, cluster in google_oracle_database_cloud_vm_cluster.these : key => {
       id                         = cluster.id
@@ -128,7 +148,7 @@ locals {
 }
 
 resource "google_oracle_database_cloud_vm_cluster" "these" {
-  for_each = var.gcp_cloud_vm_clusters_configuration
+  for_each = local.gcp_cloud_vm_clusters_configuration_with_ssh_keys
 
   cloud_vm_cluster_id = each.value.cloud_vm_cluster_id
   display_name        = each.value.display_name

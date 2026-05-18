@@ -26,6 +26,17 @@ variable "output_path" {
   }
 }
 
+variable "ssh_public_keys_file_path" {
+  description = "Optional path to a file containing SSH public key for VM cluster access. If provided, the module reads this file and injects the key into all VM cluster configurations. Useful for avoiding hardcoding SSH keys in tfvars."
+  type        = string
+  default     = null
+
+  validation {
+    condition     = var.ssh_public_keys_file_path == null ? true : trimspace(var.ssh_public_keys_file_path) != ""
+    error_message = "ssh_public_keys_file_path must be null or a non-empty file path."
+  }
+}
+
 variable "default_project_id" {
   description = "Default Google Cloud project ID used by resources when project_id is not set on the resource."
   type        = string
