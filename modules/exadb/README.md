@@ -53,6 +53,8 @@ After the vision example works in your environment, use the smaller examples to 
 
 ## <a name="configuration-model">Configuration Model</a>
 
+### Key References
+
 Related resources can be wired in two ways:
 
 * Pass the literal provider resource name or ID.
@@ -60,23 +62,23 @@ Related resources can be wired in two ways:
 
 For example, a VM cluster can use `exadata_infrastructure_key` to select an Exadata infrastructure from `gcp_cloud_exadata_infrastructures_configuration`, and `odb_subnet_key` or `backup_odb_subnet_key` to select subnets from `gcp_odb_subnets_configuration`.
 
-For multi-state deployments, a consumer stack passes dependency maps — from Terragrunt `dependency` blocks, `terraform_remote_state` outputs, HCP Terraform workspace outputs, or CI/CD pipeline variables — into these dependency inputs:
+VM clusters use ODB subnet mode with client and backup ODB subnet references, either passed directly or selected through module keys. When using ODB subnet module keys, the client key must point to a `CLIENT_SUBNET`, the backup key must point to a `BACKUP_SUBNET`, and both subnet keys must belong to the ODB network selected by `odb_network_key` when that key is set.
+
+Common defaults such as project, location, GCP Oracle zone, labels, deletion protection, Exadata maintenance windows, and operation timeouts are handled by module-level inputs. Resource-specific values override the defaults.
+
+### Multi-Stack Handoff
+
+For multi-team or multi-state deployments, a consumer stack passes dependency maps — from Terragrunt `dependency` blocks, `terraform_remote_state` outputs, HCP Terraform workspace outputs, or CI/CD pipeline variables — into these dependency inputs:
 
 * `gcp_odb_networks_dependency`
 * `gcp_odb_subnets_dependency`
 * `gcp_cloud_exadata_infrastructures_dependency`
 
-As an alternative for standalone stacks, a producer can set `output_path` to write JSON handoff files that the consumer passes as file paths to the same inputs.
+As an alternative for standalone stacks without external orchestration, a producer can set `output_path` to write JSON handoff files that the consumer passes as file paths to the same inputs.
 
-The reusable module stays backend-agnostic. It does not read remote state. A `*_key` can resolve either to a resource created in the same module call or to one of these dependency inputs. If a consumed key exists in both places, the module fails fast because that handoff is ambiguous.
-
-VM clusters use ODB subnet mode with client and backup ODB subnet references, either passed directly or selected through module keys. This module intentionally exposes only ODB subnet mode for new environments.
-
-When using ODB subnet module keys, the client key must point to a `CLIENT_SUBNET`, the backup key must point to a `BACKUP_SUBNET`, and both subnet keys must belong to the ODB network selected by `odb_network_key` when that key is set.
+The module stays backend-agnostic. It does not read remote state. A `*_key` resolves either to a resource created in the same module call or to one of these dependency inputs. If a consumed key exists in both places, the module fails fast because the reference is ambiguous.
 
 VPC creation stays outside this module boundary. If a deployment needs a new VPC for a proof of concept, create it in a separate landing-zone or networking stack and pass its resource name through the ODB Network `network` input.
-
-Common defaults such as project, location, GCP Oracle zone, labels, deletion protection, Exadata maintenance windows, and operation timeouts are handled by module-level inputs. Resource-specific values override the defaults.
 
 ## <a name="operational-drift-policy">Operational Drift Policy</a>
 
@@ -130,5 +132,5 @@ Licensed under the Universal Permissive License v 1.0 as shown at https://oss.or
 
 1. Oracle Database@Google Cloud resources can take a long time to provision. If a creation or update operation is interrupted, rerun Terraform from the same working directory so it can continue from the current state.
 2. VM cluster creation requires valid networking inputs. When using ODB subnets, provide both client and backup subnet references through direct values or module keys.
-3. Some VM cluster configurations require explicit DB server placement. Use `db_server_ocids` directly, or use the existing-infrastructure VM cluster example to discover available DB servers from the target Exadata Infrastructure.
+3. Some VM cluster configurations require explicit DB server placement. Use `db_server_ocids` directly. To discover available DB server OCIDs, run `gcloud oracle-database cloud-exadata-infrastructures db-servers list --location=<LOCATION> --cloud-exadata-infrastructure=<NAME>`.
 4. Some resource attributes are service-managed and appear only after provisioning completes. Downstream stacks should consume outputs only after the producing stack has completed successfully.

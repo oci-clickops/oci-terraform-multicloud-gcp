@@ -23,6 +23,11 @@ default_labels = {
   example   = "cluster"
 }
 
+# SSH public key — choose one approach:
+# Option A (recommended): inject from file. The module reads the file and injects it into all VM clusters.
+# ssh_public_keys_file_path = "/path/to/id_rsa.pub"
+# Option B: set ssh_public_keys directly inside the VM cluster properties map below.
+
 #---------------------------------------
 # Dependencies — from separate stacks (multi-stack pattern)
 #---------------------------------------
