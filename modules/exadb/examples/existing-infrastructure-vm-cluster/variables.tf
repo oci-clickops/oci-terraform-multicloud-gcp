@@ -24,5 +24,5 @@ variable "gcp_cloud_vm_clusters_configuration" {
 variable "ssh_public_keys_file_path" {
   description = "Path to SSH public key file for VM cluster access."
   type        = string
-  default     = "/home/blake/.ssh/id_rsa.pub"
+  default     = null
 }

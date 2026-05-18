@@ -1,1 +1,12 @@
-{"gcp_odb_networks":{"primary":{"entitlement_id":"89d2eefe-f2a4-4dcb-b544-a0edb470ede5","id":"projects/omcpmpoc2/locations/europe-west2/odbNetworks/dgc-phase3-odb-network","location":"europe-west2","name":"projects/omcpmpoc2/locations/europe-west2/odbNetworks/dgc-phase3-odb-network","odb_network_id":"dgc-phase3-odb-network","project":"omcpmpoc2","state":"AVAILABLE"}}}
+{
+    "gcp_odb_networks": {
+        "primary": {
+            "id": "projects/my-gcp-project/locations/europe-west2/odbNetworks/my-odb-network",
+            "name": "projects/my-gcp-project/locations/europe-west2/odbNetworks/my-odb-network",
+            "odb_network_id": "my-odb-network",
+            "location": "europe-west2",
+            "project": "my-gcp-project",
+            "state": "AVAILABLE"
+        }
+    }
+}

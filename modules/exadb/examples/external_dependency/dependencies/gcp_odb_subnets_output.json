@@ -1,1 +1,26 @@
-{"gcp_odb_subnets":{"backup":{"cidr_range":"10.100.2.0/28","id":"projects/omcpmpoc2/locations/europe-west2/odbNetworks/dgc-phase3-odb-network/odbSubnets/dgc-phase3-backup-subnet","location":"europe-west2","name":"projects/omcpmpoc2/locations/europe-west2/odbNetworks/dgc-phase3-odb-network/odbSubnets/dgc-phase3-backup-subnet","odb_subnet_id":"dgc-phase3-backup-subnet","odbnetwork":"dgc-phase3-odb-network","project":"omcpmpoc2","purpose":"BACKUP_SUBNET","state":"AVAILABLE"},"client":{"cidr_range":"10.100.1.0/24","id":"projects/omcpmpoc2/locations/europe-west2/odbNetworks/dgc-phase3-odb-network/odbSubnets/dgc-phase3-client-subnet","location":"europe-west2","name":"projects/omcpmpoc2/locations/europe-west2/odbNetworks/dgc-phase3-odb-network/odbSubnets/dgc-phase3-client-subnet","odb_subnet_id":"dgc-phase3-client-subnet","odbnetwork":"dgc-phase3-odb-network","project":"omcpmpoc2","purpose":"CLIENT_SUBNET","state":"AVAILABLE"}}}
+{
+    "gcp_odb_subnets": {
+        "client": {
+            "cidr_range": "10.100.1.0/24",
+            "id": "projects/my-gcp-project/locations/europe-west2/odbNetworks/my-odb-network/odbSubnets/my-client-subnet",
+            "location": "europe-west2",
+            "name": "projects/my-gcp-project/locations/europe-west2/odbNetworks/my-odb-network/odbSubnets/my-client-subnet",
+            "odb_subnet_id": "my-client-subnet",
+            "odbnetwork": "my-odb-network",
+            "project": "my-gcp-project",
+            "purpose": "CLIENT_SUBNET",
+            "state": "AVAILABLE"
+        },
+        "backup": {
+            "cidr_range": "10.100.2.0/28",
+            "id": "projects/my-gcp-project/locations/europe-west2/odbNetworks/my-odb-network/odbSubnets/my-backup-subnet",
+            "location": "europe-west2",
+            "name": "projects/my-gcp-project/locations/europe-west2/odbNetworks/my-odb-network/odbSubnets/my-backup-subnet",
+            "odb_subnet_id": "my-backup-subnet",
+            "odbnetwork": "my-odb-network",
+            "project": "my-gcp-project",
+            "purpose": "BACKUP_SUBNET",
+            "state": "AVAILABLE"
+        }
+    }
+}

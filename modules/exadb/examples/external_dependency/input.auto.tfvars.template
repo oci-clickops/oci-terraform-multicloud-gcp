@@ -24,19 +24,23 @@ default_labels = {
 }
 
 #---------------------------------------
-# Dependencies — ODB Network and ODB Subnets from separate stack
+# Dependencies — from separate stacks (multi-stack pattern)
 #---------------------------------------
 
-# Pass a JSON file path produced by examples/basic (with output_path set) or an equivalent map.
+# JSON files produced by the networking stack (examples/basic with output_path set).
 gcp_odb_networks_dependency = "./dependencies/gcp_odb_networks_output.json"
 gcp_odb_subnets_dependency  = "./dependencies/gcp_odb_subnets_output.json"
 
-# Full resource name of the existing Cloud Exadata Infrastructure.
-gcp_cloud_exadata_infrastructures_dependency = {
-  primary = {
-    id = "<REPLACE-BY-EXADATA-INFRASTRUCTURE-RESOURCE-NAME>"
-  }
-}
+# JSON file produced by the ExaDB infrastructure stack (with output_path set).
+# Use the inline map form when the infrastructure is pre-existing and not managed by Terraform.
+gcp_cloud_exadata_infrastructures_dependency = "./dependencies/gcp_cloud_exadata_infrastructures_output.json"
+
+# Inline map alternative (pre-existing infrastructure not managed by Terraform):
+# gcp_cloud_exadata_infrastructures_dependency = {
+#   primary = {
+#     id = "<REPLACE-BY-EXADATA-INFRASTRUCTURE-RESOURCE-NAME>"
+#   }
+# }
 
 #---------------------------------------
 # Cloud VM Clusters
