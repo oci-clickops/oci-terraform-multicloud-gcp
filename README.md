@@ -9,7 +9,7 @@ This repository provides Terraform modules for Oracle Database@Google Cloud reso
 
 Both modules follow the OCI Landing Zones style. Resources are declared through keyed maps, created with `for_each`, and returned with the same keys in the outputs. ODB Network dependency outputs produced by the ExaDB module can be consumed directly by the ADB module through the dependency injection pattern.
 
-For the recommended Day-1 and Day-2 control plane model, see the [oci-multicloud-control-plane-model](https://github.com/oci-clickops/oci-multicloud-control-plane-model) repository.
+For the recommended Day-1 and Day-2 control plane model, see [Oracle Database@Google Cloud Operations Best Practices](https://github.com/oracle-devrel/technology-engineering/blob/OA-OD%40GCP-Operations/operations-advisory/customer-operations/oracle-database/Oracle%20Database%20%40%20Google%20Cloud%20Operations/Oracle%20Database%20%40%20Google%20Operations%20Best%20Practices/README.md).
 
 ## Requirements
 
