@@ -85,7 +85,7 @@ Each map value has these attributes:
 * `location`: Optional. The Google Cloud region. Overrides `default_location`.
 * `project_id`: Optional. The Google Cloud project ID. Overrides `default_project_id`.
 * `gcp_oracle_zone`: Optional. The GCP Oracle zone. Overrides `default_gcp_oracle_zone`.
-* `labels`: Optional. Labels for the ODB network.
+* `labels`: Optional. Labels for the ODB network. **Note**: Changes to labels force network recreation. Define labels at creation time; subsequent changes will destroy and recreate the ODB Network.
 * `deletion_protection`: Optional. Whether deletion protection is enabled. Overrides `default_deletion_protection`.
 * `timeouts`: Optional. Provider timeout overrides for `create`, `update`, and `delete`.
 

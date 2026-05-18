@@ -3,6 +3,6 @@
 
 #-- Used to inform module and release number.
 locals {
-  module_tag     = { "gcp-oci-terraform-module" : fileexists("${path.module}/release.txt") ? "${var.module_name}/${trimspace(file("${path.module}/release.txt"))}" : var.module_name }
+  module_tag     = { "gcp-oci-terraform-module" : fileexists("${path.module}/release.txt") ? replace(replace("${var.module_name}/${trimspace(file("${path.module}/release.txt"))}", "/", "-"), ".", "-") : var.module_name }
   default_labels = var.default_labels == null ? {} : var.default_labels
 }
