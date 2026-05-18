@@ -58,14 +58,12 @@ When `output_path` is set, these files are written when matching resources exist
 
 `gcp_odb_networks_dependency` is a map keyed by logical name. Each value has these attributes:
 
-* `id`: Required. ODB Network full resource name in `projects/{project}/locations/{location}/odbNetworks/{odb_network}` format.
-* `odb_network_id`: Optional. ODB Network ID segment. If omitted, the module derives it from `id` when an ODB Subnet needs the parent network segment. If provided, it must match the final ODB Network segment in `id`.
+* `id`: Required. ODB Network full resource name in `projects/{project}/locations/{location}/odbNetworks/{odb_network}` format. The ODB Network ID segment is always derived from `id`.
 
 `gcp_odb_subnets_dependency` is a map keyed by logical name. Each value has these attributes:
 
-* `id`: Required. ODB Subnet full resource name in `projects/{project}/locations/{location}/odbNetworks/{odb_network}/odbSubnets/{odb_subnet}` format.
-* `purpose`: Optional. Accepted values are `CLIENT_SUBNET` and `BACKUP_SUBNET`. When provided, VM Cluster keys are validated against it.
-* `odbnetwork`: Optional. Parent ODB Network ID segment. If omitted, the module derives it from `id`. If provided, it must match the parent ODB Network segment in `id`. VM Cluster networking references are validated so client and backup subnets belong to the selected ODB Network.
+* `id`: Required. ODB Subnet full resource name in `projects/{project}/locations/{location}/odbNetworks/{odb_network}/odbSubnets/{odb_subnet}` format. The parent ODB Network segment is always derived from `id`.
+* `purpose`: Required. `CLIENT_SUBNET` or `BACKUP_SUBNET`. VM Cluster subnet keys are validated against this value.
 
 `gcp_cloud_exadata_infrastructures_dependency` is a map keyed by logical name. Each value has these attributes:
 
