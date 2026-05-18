@@ -46,7 +46,7 @@ The module accepts these input variables.
 
 ### Dependency Inputs
 
-Dependency inputs implement the OCI Landing Zones state-handoff pattern for Google resources. A producer stack can set `output_path` to write JSON files, and a consumer stack can pass those file paths or equivalent maps into this module. Remote-state, GCS, GitHub, Terraform Cloud, RMS, or other storage concerns belong outside this reusable module.
+Dependency inputs implement the OCI Landing Zones state-handoff pattern for Google resources. A consumer stack passes dependency maps from Terragrunt `dependency` blocks, `terraform_remote_state` outputs, HCP Terraform workspace outputs, or CI/CD pipeline variables directly into these inputs. As an alternative for standalone stacks, a producer can set `output_path` to write JSON files that the consumer passes as file paths. Remote-state, GCS, GitHub, Terraform Cloud, RMS, or other storage concerns belong outside this reusable module.
 
 The module resolves `*_key` references against resources created in the same module call and against dependency inputs. A consumed key must exist in exactly one place. If the same logical key exists in both the local configuration map and the matching dependency map when it is consumed by a `*_key`, the module fails fast because the reference is ambiguous.
 

@@ -60,11 +60,13 @@ Related resources can be wired in two ways:
 
 For example, a VM cluster can use `exadata_infrastructure_key` to select an Exadata infrastructure from `gcp_cloud_exadata_infrastructures_configuration`, and `odb_subnet_key` or `backup_odb_subnet_key` to select subnets from `gcp_odb_subnets_configuration`.
 
-For multi-state deployments, use OCI-style dependency JSON files. A producer stack can set `output_path` to write handoff files, and a consumer stack can pass those file paths or equivalent maps into dependency inputs:
+For multi-state deployments, a consumer stack passes dependency maps — from Terragrunt `dependency` blocks, `terraform_remote_state` outputs, HCP Terraform workspace outputs, or CI/CD pipeline variables — into these dependency inputs:
 
 * `gcp_odb_networks_dependency`
 * `gcp_odb_subnets_dependency`
 * `gcp_cloud_exadata_infrastructures_dependency`
+
+As an alternative for standalone stacks, a producer can set `output_path` to write JSON handoff files that the consumer passes as file paths to the same inputs.
 
 The reusable module stays backend-agnostic. It does not read remote state. A `*_key` can resolve either to a resource created in the same module call or to one of these dependency inputs. If a consumed key exists in both places, the module fails fast because that handoff is ambiguous.
 
@@ -91,10 +93,8 @@ The exact ignored fields and rationale are documented in [SPEC.md](./SPEC.md).
 Available examples:
 
 * [examples/vision](./examples/vision): recommended first deployment path — complete end-to-end example with a ready-to-rename `input.auto.tfvars.template`.
-* [examples/external_dependency](./examples/external_dependency): VM Cluster consumer state that reads ODB Network and ODB Subnet dependency JSON files produced by a separate networking stack.
-* [examples/basic](./examples/basic): networking-only deployment that creates an ODB Network and client/backup ODB Subnets on an existing VPC, without Exadata Infrastructure or VM Clusters. Use this as a producer state; set `output_path` to write dependency files for `examples/external_dependency`.
-* [examples/existing-odb-subnets](./examples/existing-odb-subnets): creates a Cloud Exadata Infrastructure and a VM Cluster using existing ODB network and subnet resource names.
-* [examples/existing-infrastructure-vm-cluster](./examples/existing-infrastructure-vm-cluster): creates only a VM Cluster using an existing Cloud Exadata Infrastructure, ODB network, client ODB subnet, and backup ODB subnet.
+* [examples/networking](./examples/networking): networking-only deployment (Network team Stack 1) — creates an ODB Network and client/backup ODB Subnets on an existing VPC, without Exadata Infrastructure or VM Clusters. Set `output_path` to write dependency files for `examples/cluster`.
+* [examples/cluster](./examples/cluster): Exadata Infrastructure and VM Cluster deployment (Infra team Stack 2) — receives ODB networking outputs from a separate networking stack via inline maps or JSON file paths. To use an existing Exadata Infrastructure created outside Terraform, pass its resource name directly in `exadata_infrastructure` instead of using a key.
 
 Each example includes an `input.auto.tfvars.template` file. Rename it to `<project-name>.auto.tfvars` and Terraform will load it automatically — no `terraform.tfvars` copy needed.
 

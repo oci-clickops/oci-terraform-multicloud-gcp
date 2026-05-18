@@ -2,7 +2,7 @@
 # 1. Rename this file to <project-name>.auto.tfvars, where <project-name> is a name of your choice.
 # 2. Provide values for "GCP Connectivity Variables".
 # 3. Replace placeholder values in the configuration maps below with your own.
-# 4. Optionally set output_path to write dependency JSON files for downstream Terraform states (examples/external_dependency).
+# 4. Optionally set output_path to write dependency JSON files for downstream Terraform states (examples/cluster).
 #-------------------------------------------------------------------------------------------------------------------------------------------
 
 #---------------------------------------
@@ -21,7 +21,7 @@ default_deletion_protection = false
 
 default_labels = {
   terraform = "true"
-  example   = "basic"
+  example   = "networking"
 }
 
 output_path = "./output"

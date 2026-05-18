@@ -2,7 +2,7 @@
 # 1. Rename this file to <project-name>.auto.tfvars, where <project-name> is a name of your choice.
 # 2. Provide values for "GCP Connectivity Variables".
 # 3. Replace <REPLACE-BY-*> placeholders with actual values.
-# 4. Replace fixture dependency paths with real JSON file paths or equivalent maps from the networking stack.
+# 4. Replace <REPLACE-BY-*> placeholders in the dependency maps with actual resource names from the upstream stacks.
 #-------------------------------------------------------------------------------------------------------------------------------------------
 
 #---------------------------------------
@@ -20,27 +20,44 @@ default_deletion_protection = false
 
 default_labels = {
   terraform = "true"
-  example   = "external-dependency"
+  example   = "cluster"
 }
 
 #---------------------------------------
 # Dependencies — from separate stacks (multi-stack pattern)
 #---------------------------------------
 
-# JSON files produced by the networking stack (examples/basic with output_path set).
-gcp_odb_networks_dependency = "./dependencies/gcp_odb_networks_output.json"
-gcp_odb_subnets_dependency  = "./dependencies/gcp_odb_subnets_output.json"
+# Inline maps — primary pattern.
+# Pass values directly from Terragrunt dependency blocks, terraform_remote_state outputs,
+# HCP Terraform workspace outputs, or CI/CD pipeline variables.
+gcp_odb_networks_dependency = {
+  network = {
+    id = "<REPLACE-BY-ODB-NETWORK-RESOURCE-NAME>"  # projects/{project}/locations/{location}/odbNetworks/{odb_network_id}
+  }
+}
 
-# JSON file produced by the ExaDB infrastructure stack (with output_path set).
-# Use the inline map form when the infrastructure is pre-existing and not managed by Terraform.
-gcp_cloud_exadata_infrastructures_dependency = "./dependencies/gcp_cloud_exadata_infrastructures_output.json"
+gcp_odb_subnets_dependency = {
+  client = {
+    id      = "<REPLACE-BY-CLIENT-SUBNET-RESOURCE-NAME>"  # projects/{project}/locations/{location}/odbNetworks/{network}/odbSubnets/{subnet_id}
+    purpose = "CLIENT_SUBNET"
+  }
+  backup = {
+    id      = "<REPLACE-BY-BACKUP-SUBNET-RESOURCE-NAME>"
+    purpose = "BACKUP_SUBNET"
+  }
+}
 
-# Inline map alternative (pre-existing infrastructure not managed by Terraform):
-# gcp_cloud_exadata_infrastructures_dependency = {
-#   primary = {
-#     id = "<REPLACE-BY-EXADATA-INFRASTRUCTURE-RESOURCE-NAME>"
-#   }
-# }
+gcp_cloud_exadata_infrastructures_dependency = {
+  infra = {
+    id = "<REPLACE-BY-EXADATA-INFRASTRUCTURE-RESOURCE-NAME>"  # projects/{project}/locations/{location}/cloudExadataInfrastructures/{infrastructure_id}
+  }
+}
+
+# JSON file path alternative — for standalone stacks without external orchestration.
+# Requires the upstream stack to have output_path set so it writes the dependency files.
+# gcp_odb_networks_dependency                  = "<path-to>/gcp_odb_networks_output.json"
+# gcp_odb_subnets_dependency                   = "<path-to>/gcp_odb_subnets_output.json"
+# gcp_cloud_exadata_infrastructures_dependency = "<path-to>/gcp_cloud_exadata_infrastructures_output.json"
 
 #---------------------------------------
 # Cloud VM Clusters
@@ -48,10 +65,10 @@ gcp_cloud_exadata_infrastructures_dependency = "./dependencies/gcp_cloud_exadata
 
 gcp_cloud_vm_clusters_configuration = {
   primary = {
-    cloud_vm_cluster_id        = "ext-dep-vm-cluster"
-    display_name               = "ext-dep-vm-cluster"
-    exadata_infrastructure_key = "primary"
-    odb_network_key            = "primary"
+    cloud_vm_cluster_id        = "<REPLACE-BY-VM-CLUSTER-ID>"
+    display_name               = "<REPLACE-BY-DISPLAY-NAME>"
+    exadata_infrastructure_key = "infra"
+    odb_network_key            = "network"
     odb_subnet_key             = "client"
     backup_odb_subnet_key      = "backup"
     timeouts = {
@@ -70,7 +87,7 @@ gcp_cloud_vm_clusters_configuration = {
       disk_redundancy          = "HIGH"
       local_backup_enabled     = false
       sparse_diskgroup_enabled = false
-      cluster_name             = "extdep"
+      cluster_name             = "<REPLACE-BY-CLUSTER-NAME>"
       gi_version               = "23.0.0.0"
       hostname_prefix          = "exa"
       # Set one explicit DB server OCID per VM for controlled placement and offline planning.

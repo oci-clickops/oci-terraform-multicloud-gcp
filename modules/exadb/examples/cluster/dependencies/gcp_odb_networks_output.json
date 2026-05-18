@@ -1,6 +1,6 @@
 {
     "gcp_odb_networks": {
-        "primary": {
+        "network": {
             "id": "projects/my-gcp-project/locations/europe-west2/odbNetworks/my-odb-network",
             "name": "projects/my-gcp-project/locations/europe-west2/odbNetworks/my-odb-network",
             "odb_network_id": "my-odb-network",
