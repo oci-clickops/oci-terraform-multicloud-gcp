@@ -76,29 +76,29 @@ resource "google_oracle_database_autonomous_database" "these" {
   dynamic "properties" {
     for_each = each.value.properties == null ? [] : [each.value.properties]
     content {
-      db_workload                     = try(properties.value.db_workload, null)
-      license_type                    = try(properties.value.license_type, null)
-      compute_count                   = try(properties.value.compute_count, null)
-      cpu_core_count                  = try(properties.value.cpu_core_count, null)
-      data_storage_size_tb            = try(properties.value.data_storage_size_tb, null)
-      data_storage_size_gb            = try(properties.value.data_storage_size_gb, null)
-      db_version                      = try(properties.value.db_version, null)
-      db_edition                      = try(properties.value.db_edition, null)
-      character_set                   = try(properties.value.character_set, null)
-      n_character_set                 = try(properties.value.n_character_set, null)
-      private_endpoint_ip             = try(properties.value.private_endpoint_ip, null)
-      private_endpoint_label          = try(properties.value.private_endpoint_label, null)
-      is_auto_scaling_enabled         = try(properties.value.is_auto_scaling_enabled, null)
-      is_storage_auto_scaling_enabled = try(properties.value.is_storage_auto_scaling_enabled, null)
-      backup_retention_period_days    = try(properties.value.backup_retention_period_days, null)
-      maintenance_schedule_type       = try(properties.value.maintenance_schedule_type, null)
-      mtls_connection_required        = try(properties.value.mtls_connection_required, null)
-      operations_insights_state       = try(properties.value.operations_insights_state, null)
-      secret_id                       = try(properties.value.secret_id, null)
-      vault_id                        = try(properties.value.vault_id, null)
+      db_workload                     = properties.value.db_workload
+      license_type                    = properties.value.license_type
+      compute_count                   = properties.value.compute_count
+      cpu_core_count                  = properties.value.cpu_core_count
+      data_storage_size_tb            = properties.value.data_storage_size_tb
+      data_storage_size_gb            = properties.value.data_storage_size_gb
+      db_version                      = properties.value.db_version
+      db_edition                      = properties.value.db_edition
+      character_set                   = properties.value.character_set
+      n_character_set                 = properties.value.n_character_set
+      private_endpoint_ip             = properties.value.private_endpoint_ip
+      private_endpoint_label          = properties.value.private_endpoint_label
+      is_auto_scaling_enabled         = properties.value.is_auto_scaling_enabled
+      is_storage_auto_scaling_enabled = properties.value.is_storage_auto_scaling_enabled
+      backup_retention_period_days    = properties.value.backup_retention_period_days
+      maintenance_schedule_type       = properties.value.maintenance_schedule_type
+      mtls_connection_required        = properties.value.mtls_connection_required
+      operations_insights_state       = properties.value.operations_insights_state
+      secret_id                       = properties.value.secret_id
+      vault_id                        = properties.value.vault_id
 
       dynamic "customer_contacts" {
-        for_each = try(properties.value.customer_contacts, [])
+        for_each = properties.value.customer_contacts
         content {
           email = customer_contacts.value.email
         }
@@ -133,6 +133,11 @@ resource "google_oracle_database_autonomous_database" "these" {
     precondition {
       condition     = each.value.location != null || var.default_location != null
       error_message = "Each Autonomous Database must set location or default_location."
+    }
+
+    precondition {
+      condition     = try(each.value.properties.db_workload, null) != null && try(each.value.properties.license_type, null) != null
+      error_message = "Autonomous database '${each.key}': properties.db_workload and properties.license_type are required by the Google provider."
     }
 
     precondition {

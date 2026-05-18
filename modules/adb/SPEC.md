@@ -20,6 +20,8 @@ This module requires Terraform `>= 1.3.0` and HashiCorp Google provider `>= 7.13
 
 Google Cloud project enablement, Oracle Database@Google Cloud entitlement, IAM permissions, and provider authentication are external prerequisites.
 
+Out of scope for this module: Autonomous Database clones, refreshable clones, and cross-region clones (the provider's `source_config` block on `google_oracle_database_autonomous_database` is not exposed). Use the Google provider directly or extend this module if clone provisioning is required.
+
 ## <a name="module-inputs">Module Inputs</a>
 
 The module accepts these input variables.
@@ -76,8 +78,8 @@ Each map value has these attributes:
 
 The `properties` object has these attributes:
 
-* `db_workload`: Optional. `DB_WORKLOAD_UNSPECIFIED`, `OLTP`, `DW`, `AJD`, or `APEX`.
-* `license_type`: Optional. `LICENSE_TYPE_UNSPECIFIED`, `LICENSE_INCLUDED`, or `BRING_YOUR_OWN_LICENSE`.
+* `db_workload`: Required. `DB_WORKLOAD_UNSPECIFIED`, `OLTP`, `DW`, `AJD`, or `APEX`.
+* `license_type`: Required. `LICENSE_TYPE_UNSPECIFIED`, `LICENSE_INCLUDED`, or `BRING_YOUR_OWN_LICENSE`.
 * `compute_count`: Optional. Number of compute servers.
 * `cpu_core_count`: Optional. Number of CPU cores.
 * `data_storage_size_tb`: Optional. Storage size in terabytes.
