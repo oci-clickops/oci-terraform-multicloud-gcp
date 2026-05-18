@@ -212,25 +212,11 @@ resource "google_oracle_database_cloud_vm_cluster" "these" {
     }
 
     precondition {
-      condition     = (each.value.exadata_infrastructure != null ? 1 : 0) + (each.value.exadata_infrastructure_key != null ? 1 : 0) == 1
-      error_message = "Each Cloud VM cluster must set exactly one Exadata infrastructure reference: exadata_infrastructure or exadata_infrastructure_key."
-    }
-
-    precondition {
       condition = each.value.exadata_infrastructure_key == null ? true : (
         (contains(keys(var.gcp_cloud_exadata_infrastructures_configuration), each.value.exadata_infrastructure_key) ? 1 : 0) +
         (contains(keys(local.gcp_cloud_exadata_infrastructures_dependency), each.value.exadata_infrastructure_key) ? 1 : 0) == 1
       )
       error_message = "Each Cloud VM cluster exadata_infrastructure_key must reference exactly one key from gcp_cloud_exadata_infrastructures_configuration or gcp_cloud_exadata_infrastructures_dependency."
-    }
-
-    precondition {
-      condition = (
-        (each.value.odb_network != null ? 1 : 0) + (each.value.odb_network_key != null ? 1 : 0) == 1 &&
-        (each.value.odb_subnet != null ? 1 : 0) + (each.value.odb_subnet_key != null ? 1 : 0) == 1 &&
-        (each.value.backup_odb_subnet != null ? 1 : 0) + (each.value.backup_odb_subnet_key != null ? 1 : 0) == 1
-      )
-      error_message = "Each Cloud VM cluster must set exactly one ODB network reference, one client ODB subnet reference, and one backup ODB subnet reference."
     }
 
     precondition {

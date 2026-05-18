@@ -10,16 +10,15 @@ locals {
 
   gcp_odb_subnets_dependency = {
     for key, subnet in local.gcp_odb_subnets_dependency_raw : key => {
-      id         = subnet.id
-      purpose    = try(subnet.purpose, null)
-      odbnetwork = try(subnet.odbnetwork, null)
+      id      = subnet.id
+      purpose = try(subnet.purpose, null)
     }
   }
 
   odb_subnet_network_id_segments = merge(
     {
       for key, subnet in local.gcp_odb_subnets_dependency : key =>
-      subnet.odbnetwork != null ? subnet.odbnetwork : try(split("/", subnet.id)[5], null)
+      try(split("/", subnet.id)[5], null)
     },
     {
       for key, subnet in var.gcp_odb_subnets_configuration : key =>
@@ -96,11 +95,6 @@ resource "google_oracle_database_odb_subnet" "these" {
     precondition {
       condition     = each.value.location != null || var.default_location != null
       error_message = "Each ODB subnet must set location or default_location."
-    }
-
-    precondition {
-      condition     = (each.value.odbnetwork != null ? 1 : 0) + (each.value.odb_network_key != null ? 1 : 0) == 1
-      error_message = "Each ODB subnet must set exactly one of odbnetwork or odb_network_key."
     }
 
     precondition {

@@ -127,29 +127,6 @@ variable "gcp_odb_networks_dependency" {
     error_message = "ODB network dependency id values must use projects/{project}/locations/{location}/odbNetworks/{odb_network} format."
   }
 
-  validation {
-    condition = try(alltrue([
-      for network in try(
-        var.gcp_odb_networks_dependency.gcp_odb_networks,
-        jsondecode(file(var.gcp_odb_networks_dependency)).gcp_odb_networks,
-        var.gcp_odb_networks_dependency
-      ) :
-      try(network.odb_network_id, null) == null ? true : can(regex("^[a-z]([a-z0-9-]{0,61}[a-z0-9])?$", network.odb_network_id))
-    ]), false)
-    error_message = "ODB network dependency odb_network_id values must be ODB network ID segments."
-  }
-
-  validation {
-    condition = try(alltrue([
-      for network in try(
-        var.gcp_odb_networks_dependency.gcp_odb_networks,
-        jsondecode(file(var.gcp_odb_networks_dependency)).gcp_odb_networks,
-        var.gcp_odb_networks_dependency
-      ) :
-      try(network.odb_network_id, null) == null ? true : try(network.odb_network_id == split("/", network.id)[5], false)
-    ]), false)
-    error_message = "ODB network dependency odb_network_id values must match the ODB network segment from id."
-  }
 }
 
 variable "gcp_odb_subnets_dependency" {
@@ -191,29 +168,6 @@ variable "gcp_odb_subnets_dependency" {
     error_message = "ODB subnet dependency purpose must be set to CLIENT_SUBNET or BACKUP_SUBNET on every entry."
   }
 
-  validation {
-    condition = try(alltrue([
-      for subnet in try(
-        var.gcp_odb_subnets_dependency.gcp_odb_subnets,
-        jsondecode(file(var.gcp_odb_subnets_dependency)).gcp_odb_subnets,
-        var.gcp_odb_subnets_dependency
-      ) :
-      try(subnet.odbnetwork, null) == null ? true : can(regex("^[a-z]([a-z0-9-]{0,61}[a-z0-9])?$", subnet.odbnetwork))
-    ]), false)
-    error_message = "ODB subnet dependency odbnetwork values must be ODB network ID segments when set."
-  }
-
-  validation {
-    condition = try(alltrue([
-      for subnet in try(
-        var.gcp_odb_subnets_dependency.gcp_odb_subnets,
-        jsondecode(file(var.gcp_odb_subnets_dependency)).gcp_odb_subnets,
-        var.gcp_odb_subnets_dependency
-      ) :
-      try(subnet.odbnetwork, null) == null ? true : try(subnet.odbnetwork == split("/", subnet.id)[5], false)
-    ]), false)
-    error_message = "ODB subnet dependency odbnetwork values must match the parent ODB network segment from id."
-  }
 }
 
 variable "gcp_cloud_exadata_infrastructures_dependency" {

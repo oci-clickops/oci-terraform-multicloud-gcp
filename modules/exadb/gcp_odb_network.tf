@@ -10,15 +10,14 @@ locals {
 
   gcp_odb_networks_dependency = {
     for key, network in local.gcp_odb_networks_dependency_raw : key => {
-      id             = network.id
-      odb_network_id = try(network.odb_network_id, null)
+      id = network.id
     }
   }
 
   odb_network_id_segments = merge(
     {
       for key, network in local.gcp_odb_networks_dependency : key =>
-      network.odb_network_id != null ? network.odb_network_id : try(split("/", network.id)[5], null)
+      try(split("/", network.id)[5], null)
     },
     {
       for key, network in var.gcp_odb_networks_configuration : key =>
