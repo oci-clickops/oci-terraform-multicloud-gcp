@@ -1,7 +1,7 @@
 # Copyright (c) 2026, Oracle and/or its affiliates. All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl.
 
-module "oracle_database_at_gcp" {
+module "odb_networking" {
   source = "../.."
 
   default_project_id          = var.project_id

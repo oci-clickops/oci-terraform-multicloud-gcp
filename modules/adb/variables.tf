@@ -6,6 +6,11 @@ variable "module_name" {
   type        = string
   default     = "oracle-autonomous-database-at-gcp"
   nullable    = false
+
+  validation {
+    condition     = can(regex("^[a-z]([a-z0-9_-]{0,54})?$", var.module_name))
+    error_message = "module_name must be 1-55 characters, start with a lowercase letter, and contain only lowercase letters, numbers, hyphens, or underscores so it can be used in Google Cloud labels."
+  }
 }
 
 variable "enable_output" {
@@ -53,7 +58,7 @@ variable "default_deletion_protection" {
 }
 
 variable "gcp_odb_networks_dependency" {
-  description = "Externally managed ODB networks this module may depend on, keyed by logical name. Accepts a map or a path to a JSON dependency file produced by the root module with output_path set."
+  description = "Externally managed ODB networks this module may depend on, keyed by logical name. Accepts a map or a wrapped map under gcp_odb_networks."
   type        = any
   default     = {}
   nullable    = false
@@ -61,17 +66,15 @@ variable "gcp_odb_networks_dependency" {
   validation {
     condition = can(keys(try(
       var.gcp_odb_networks_dependency.gcp_odb_networks,
-      jsondecode(file(var.gcp_odb_networks_dependency)).gcp_odb_networks,
       var.gcp_odb_networks_dependency
     )))
-    error_message = "gcp_odb_networks_dependency must be a map, a map with gcp_odb_networks, or a path to a JSON file with gcp_odb_networks."
+    error_message = "gcp_odb_networks_dependency must be a map or a map with gcp_odb_networks."
   }
 
   validation {
     condition = try(alltrue([
       for network in try(
         var.gcp_odb_networks_dependency.gcp_odb_networks,
-        jsondecode(file(var.gcp_odb_networks_dependency)).gcp_odb_networks,
         var.gcp_odb_networks_dependency
       ) :
       can(regex("^projects/[^/]+/locations/[^/]+/odbNetworks/[^/]+$", network.id))
@@ -81,7 +84,7 @@ variable "gcp_odb_networks_dependency" {
 }
 
 variable "gcp_odb_subnets_dependency" {
-  description = "Externally managed ODB subnets this module may depend on, keyed by logical name. Accepts a map or a path to a JSON dependency file produced by the root module with output_path set."
+  description = "Externally managed ODB subnets this module may depend on, keyed by logical name. Accepts a map or a wrapped map under gcp_odb_subnets."
   type        = any
   default     = {}
   nullable    = false
@@ -89,17 +92,15 @@ variable "gcp_odb_subnets_dependency" {
   validation {
     condition = can(keys(try(
       var.gcp_odb_subnets_dependency.gcp_odb_subnets,
-      jsondecode(file(var.gcp_odb_subnets_dependency)).gcp_odb_subnets,
       var.gcp_odb_subnets_dependency
     )))
-    error_message = "gcp_odb_subnets_dependency must be a map, a map with gcp_odb_subnets, or a path to a JSON file with gcp_odb_subnets."
+    error_message = "gcp_odb_subnets_dependency must be a map or a map with gcp_odb_subnets."
   }
 
   validation {
     condition = try(alltrue([
       for subnet in try(
         var.gcp_odb_subnets_dependency.gcp_odb_subnets,
-        jsondecode(file(var.gcp_odb_subnets_dependency)).gcp_odb_subnets,
         var.gcp_odb_subnets_dependency
       ) :
       can(regex("^projects/[^/]+/locations/[^/]+/odbNetworks/[^/]+/odbSubnets/[^/]+$", subnet.id))
@@ -111,7 +112,6 @@ variable "gcp_odb_subnets_dependency" {
     condition = try(alltrue([
       for subnet in try(
         var.gcp_odb_subnets_dependency.gcp_odb_subnets,
-        jsondecode(file(var.gcp_odb_subnets_dependency)).gcp_odb_subnets,
         var.gcp_odb_subnets_dependency
       ) :
       contains(["CLIENT_SUBNET", "BACKUP_SUBNET"], try(subnet.purpose, ""))
@@ -130,9 +130,6 @@ variable "gcp_autonomous_databases_configuration" {
     project_id             = optional(string)
     labels                 = optional(map(string), {})
     deletion_protection    = optional(bool)
-
-    network = optional(string)
-    cidr    = optional(string)
 
     odb_network     = optional(string)
     odb_network_key = optional(string)
@@ -185,29 +182,19 @@ variable "gcp_autonomous_databases_configuration" {
   validation {
     condition = alltrue([
       for adb in var.gcp_autonomous_databases_configuration :
-      !(
-        (adb.network != null || adb.cidr != null) &&
-        (adb.odb_network != null || adb.odb_network_key != null)
-      )
+      (adb.odb_network != null ? 1 : 0) + (adb.odb_network_key != null ? 1 : 0) == 1 &&
+      (adb.odb_subnet != null ? 1 : 0) + (adb.odb_subnet_key != null ? 1 : 0) == 1
     ])
-    error_message = "Each Autonomous Database must use either VPC mode (network + cidr) or ODB Network mode (odb_network/odb_network_key + odb_subnet/odb_subnet_key), not both."
+    error_message = "Each Autonomous Database must set exactly one ODB network reference and one ODB subnet reference, using either direct values or keys."
   }
 
   validation {
     condition = alltrue([
       for adb in var.gcp_autonomous_databases_configuration :
       !((adb.odb_network != null && adb.odb_network_key != null) ||
-        (adb.odb_subnet != null && adb.odb_subnet_key != null))
+      (adb.odb_subnet != null && adb.odb_subnet_key != null))
     ])
-    error_message = "Each Autonomous Database must set at most one of (odb_network, odb_network_key) and at most one of (odb_subnet, odb_subnet_key); both null is allowed for VPC mode."
-  }
-
-  validation {
-    condition = alltrue([
-      for adb in var.gcp_autonomous_databases_configuration :
-      adb.network == null ? true : can(regex("^projects/[^/]+/global/networks/[^/]+$", adb.network))
-    ])
-    error_message = "Autonomous database network values must use projects/{project}/global/networks/{network} format."
+    error_message = "Each Autonomous Database must set at most one of (odb_network, odb_network_key) and at most one of (odb_subnet, odb_subnet_key)."
   }
 
   validation {

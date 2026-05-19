@@ -2,51 +2,6 @@
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl.
 
 locals {
-  gcp_odb_networks_dependency_raw = try(
-    var.gcp_odb_networks_dependency.gcp_odb_networks,
-    jsondecode(file(var.gcp_odb_networks_dependency)).gcp_odb_networks,
-    var.gcp_odb_networks_dependency
-  )
-
-  gcp_odb_networks_dependency = {
-    for key, network in local.gcp_odb_networks_dependency_raw : key => {
-      id = network.id
-    }
-  }
-
-  odb_network_id_segments = merge(
-    {
-      for key, network in local.gcp_odb_networks_dependency : key =>
-      try(split("/", network.id)[5], null)
-    },
-    {
-      for key, network in var.gcp_odb_networks_configuration : key =>
-      network.odb_network_id
-    }
-  )
-
-  odb_network_project_ids = merge(
-    {
-      for key, network in local.gcp_odb_networks_dependency : key =>
-      try(split("/", network.id)[1], null)
-    },
-    {
-      for key, network in var.gcp_odb_networks_configuration : key =>
-      network.project_id != null ? network.project_id : var.default_project_id
-    }
-  )
-
-  odb_network_locations = merge(
-    {
-      for key, network in local.gcp_odb_networks_dependency : key =>
-      try(split("/", network.id)[3], null)
-    },
-    {
-      for key, network in var.gcp_odb_networks_configuration : key =>
-      network.location != null ? network.location : var.default_location
-    }
-  )
-
   gcp_odb_networks_output = {
     for key, network in google_oracle_database_odb_network.these : key => {
       id             = network.id

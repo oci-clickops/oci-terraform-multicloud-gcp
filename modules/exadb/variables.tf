@@ -6,6 +6,11 @@ variable "module_name" {
   type        = string
   default     = "oracle-database-at-gcp"
   nullable    = false
+
+  validation {
+    condition     = can(regex("^[a-z]([a-z0-9_-]{0,54})?$", var.module_name))
+    error_message = "module_name must be 1-55 characters, start with a lowercase letter, and contain only lowercase letters, numbers, hyphens, or underscores so it can be used in Google Cloud labels."
+  }
 }
 
 variable "enable_output" {
@@ -34,6 +39,28 @@ variable "ssh_public_keys_file_path" {
   validation {
     condition     = var.ssh_public_keys_file_path == null ? true : trimspace(var.ssh_public_keys_file_path) != ""
     error_message = "ssh_public_keys_file_path must be null or a non-empty file path."
+  }
+
+  validation {
+    condition     = var.ssh_public_keys_file_path == null ? true : fileexists(var.ssh_public_keys_file_path)
+    error_message = "ssh_public_keys_file_path must point to an existing file."
+  }
+
+  validation {
+    condition = var.ssh_public_keys_file_path == null ? true : (
+      fileexists(var.ssh_public_keys_file_path) ? (
+        length([
+          for key in split("\n", trimspace(file(var.ssh_public_keys_file_path))) :
+          trimspace(key) if trimspace(key) != ""
+        ]) > 0 &&
+        alltrue([
+          for key in split("\n", trimspace(file(var.ssh_public_keys_file_path))) :
+          can(regex("^ssh-rsa[[:space:]]+[A-Za-z0-9+/]+={0,3}([[:space:]]+.+)?$", trimspace(key)))
+          if trimspace(key) != ""
+        ])
+      ) : true
+    )
+    error_message = "ssh_public_keys_file_path must contain one or more valid RSA public keys in OpenSSH format, one key per non-empty line."
   }
 }
 
@@ -112,7 +139,7 @@ variable "default_cloud_exadata_maintenance_window" {
 }
 
 variable "gcp_odb_networks_dependency" {
-  description = "Externally managed ODB networks this module may depend on, keyed by logical name. Accepts a map, a wrapped map under gcp_odb_networks, or a path to a JSON dependency file."
+  description = "Externally managed ODB networks this module may depend on, keyed by logical name. Accepts a map or a wrapped map under gcp_odb_networks."
   type        = any
   default     = {}
   nullable    = false
@@ -120,17 +147,15 @@ variable "gcp_odb_networks_dependency" {
   validation {
     condition = can(keys(try(
       var.gcp_odb_networks_dependency.gcp_odb_networks,
-      jsondecode(file(var.gcp_odb_networks_dependency)).gcp_odb_networks,
       var.gcp_odb_networks_dependency
     )))
-    error_message = "gcp_odb_networks_dependency must be a map, a map with gcp_odb_networks, or a path to a JSON file with gcp_odb_networks."
+    error_message = "gcp_odb_networks_dependency must be a map or a map with gcp_odb_networks."
   }
 
   validation {
     condition = try(alltrue([
       for network in try(
         var.gcp_odb_networks_dependency.gcp_odb_networks,
-        jsondecode(file(var.gcp_odb_networks_dependency)).gcp_odb_networks,
         var.gcp_odb_networks_dependency
       ) :
       can(regex("^projects/[^/]+/locations/[^/]+/odbNetworks/[^/]+$", network.id))
@@ -141,7 +166,7 @@ variable "gcp_odb_networks_dependency" {
 }
 
 variable "gcp_odb_subnets_dependency" {
-  description = "Externally managed ODB subnets this module may depend on, keyed by logical name. Accepts a map, a wrapped map under gcp_odb_subnets, or a path to a JSON dependency file."
+  description = "Externally managed ODB subnets this module may depend on, keyed by logical name. Accepts a map or a wrapped map under gcp_odb_subnets."
   type        = any
   default     = {}
   nullable    = false
@@ -149,17 +174,15 @@ variable "gcp_odb_subnets_dependency" {
   validation {
     condition = can(keys(try(
       var.gcp_odb_subnets_dependency.gcp_odb_subnets,
-      jsondecode(file(var.gcp_odb_subnets_dependency)).gcp_odb_subnets,
       var.gcp_odb_subnets_dependency
     )))
-    error_message = "gcp_odb_subnets_dependency must be a map, a map with gcp_odb_subnets, or a path to a JSON file with gcp_odb_subnets."
+    error_message = "gcp_odb_subnets_dependency must be a map or a map with gcp_odb_subnets."
   }
 
   validation {
     condition = try(alltrue([
       for subnet in try(
         var.gcp_odb_subnets_dependency.gcp_odb_subnets,
-        jsondecode(file(var.gcp_odb_subnets_dependency)).gcp_odb_subnets,
         var.gcp_odb_subnets_dependency
       ) :
       can(regex("^projects/[^/]+/locations/[^/]+/odbNetworks/[^/]+/odbSubnets/[^/]+$", subnet.id))
@@ -171,7 +194,6 @@ variable "gcp_odb_subnets_dependency" {
     condition = try(alltrue([
       for subnet in try(
         var.gcp_odb_subnets_dependency.gcp_odb_subnets,
-        jsondecode(file(var.gcp_odb_subnets_dependency)).gcp_odb_subnets,
         var.gcp_odb_subnets_dependency
       ) :
       contains(["CLIENT_SUBNET", "BACKUP_SUBNET"], try(subnet.purpose, ""))
@@ -182,7 +204,7 @@ variable "gcp_odb_subnets_dependency" {
 }
 
 variable "gcp_cloud_exadata_infrastructures_dependency" {
-  description = "Externally managed Cloud Exadata Infrastructures this module may depend on, keyed by logical name. Accepts a map, a wrapped map under gcp_cloud_exadata_infrastructures, or a path to a JSON dependency file."
+  description = "Externally managed Cloud Exadata Infrastructures this module may depend on, keyed by logical name. Accepts a map or a wrapped map under gcp_cloud_exadata_infrastructures."
   type        = any
   default     = {}
   nullable    = false
@@ -190,129 +212,20 @@ variable "gcp_cloud_exadata_infrastructures_dependency" {
   validation {
     condition = can(keys(try(
       var.gcp_cloud_exadata_infrastructures_dependency.gcp_cloud_exadata_infrastructures,
-      jsondecode(file(var.gcp_cloud_exadata_infrastructures_dependency)).gcp_cloud_exadata_infrastructures,
       var.gcp_cloud_exadata_infrastructures_dependency
     )))
-    error_message = "gcp_cloud_exadata_infrastructures_dependency must be a map, a map with gcp_cloud_exadata_infrastructures, or a path to a JSON file with gcp_cloud_exadata_infrastructures."
+    error_message = "gcp_cloud_exadata_infrastructures_dependency must be a map or a map with gcp_cloud_exadata_infrastructures."
   }
 
   validation {
     condition = try(alltrue([
       for infrastructure in try(
         var.gcp_cloud_exadata_infrastructures_dependency.gcp_cloud_exadata_infrastructures,
-        jsondecode(file(var.gcp_cloud_exadata_infrastructures_dependency)).gcp_cloud_exadata_infrastructures,
         var.gcp_cloud_exadata_infrastructures_dependency
       ) :
       can(regex("^projects/[^/]+/locations/[^/]+/cloudExadataInfrastructures/[^/]+$", infrastructure.id))
     ]), false)
     error_message = "Cloud Exadata Infrastructure dependency id values must use projects/{project}/locations/{location}/cloudExadataInfrastructures/{infrastructure} format."
-  }
-}
-
-variable "gcp_odb_networks_configuration" {
-  description = "Map of Oracle Database@Google Cloud ODB networks to create."
-  type = map(object({
-    odb_network_id      = string
-    network             = string
-    location            = optional(string)
-    project_id          = optional(string)
-    gcp_oracle_zone     = optional(string)
-    labels              = optional(map(string), {})
-    deletion_protection = optional(bool)
-    timeouts = optional(object({
-      create = optional(string)
-      update = optional(string)
-      delete = optional(string)
-    }))
-  }))
-  default  = {}
-  nullable = false
-
-  validation {
-    condition = alltrue([
-      for network in var.gcp_odb_networks_configuration :
-      can(regex("^[a-z]([a-z0-9-]{0,61}[a-z0-9])?$", network.odb_network_id))
-    ])
-    error_message = "ODB network IDs must start with a lowercase letter, end with a lowercase letter or number, contain only lowercase letters, numbers, and hyphens, and be 1-63 characters long."
-  }
-
-  validation {
-    condition = alltrue([
-      for network in var.gcp_odb_networks_configuration :
-      can(regex("^projects/[^/]+/global/networks/[^/]+$", network.network))
-    ])
-    error_message = "ODB network network values must use projects/{project}/global/networks/{network} format."
-  }
-}
-
-variable "gcp_odb_subnets_configuration" {
-  description = "Map of Oracle Database@Google Cloud ODB subnets to create."
-  type = map(object({
-    odb_subnet_id       = string
-    cidr_range          = string
-    purpose             = string
-    odbnetwork          = optional(string)
-    odb_network_key     = optional(string)
-    location            = optional(string)
-    project_id          = optional(string)
-    labels              = optional(map(string), {})
-    deletion_protection = optional(bool)
-    timeouts = optional(object({
-      create = optional(string)
-      update = optional(string)
-      delete = optional(string)
-    }))
-  }))
-  default  = {}
-  nullable = false
-
-  validation {
-    condition = alltrue([
-      for subnet in var.gcp_odb_subnets_configuration :
-      can(regex("^[a-z]([a-z0-9-]{0,61}[a-z0-9])?$", subnet.odb_subnet_id))
-    ])
-    error_message = "ODB subnet IDs must start with a lowercase letter, end with a lowercase letter or number, contain only lowercase letters, numbers, and hyphens, and be 1-63 characters long."
-  }
-
-  validation {
-    condition = alltrue([
-      for subnet in var.gcp_odb_subnets_configuration :
-      can(cidrnetmask(subnet.cidr_range))
-    ])
-    error_message = "ODB subnet cidr_range values must be valid CIDR blocks."
-  }
-
-  validation {
-    condition = alltrue([
-      for subnet in var.gcp_odb_subnets_configuration : contains(["CLIENT_SUBNET", "BACKUP_SUBNET"], subnet.purpose)
-    ])
-    error_message = "ODB subnet purpose must be either CLIENT_SUBNET or BACKUP_SUBNET."
-  }
-
-  validation {
-    condition = alltrue([
-      for subnet in var.gcp_odb_subnets_configuration :
-      (subnet.odbnetwork != null ? 1 : 0) + (subnet.odb_network_key != null ? 1 : 0) == 1
-    ])
-    error_message = "Each ODB subnet must set exactly one of odbnetwork or odb_network_key."
-  }
-
-  validation {
-    condition = alltrue([
-      for subnet in var.gcp_odb_subnets_configuration :
-      subnet.odbnetwork == null ? true : can(regex("^[a-z]([a-z0-9-]{0,61}[a-z0-9])?$", subnet.odbnetwork))
-    ])
-    error_message = "Direct ODB subnet odbnetwork values must be ODB network ID segments, for example my-odb-network."
-  }
-
-  validation {
-    condition = alltrue([
-      for subnet in var.gcp_odb_subnets_configuration : (
-        (subnet.odbnetwork == null || trimspace(subnet.odbnetwork) != "") &&
-        (subnet.odb_network_key == null || trimspace(subnet.odb_network_key) != "")
-      )
-    ])
-    error_message = "ODB subnet odbnetwork and odb_network_key must not be empty when set."
   }
 }
 

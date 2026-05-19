@@ -1,7 +1,0 @@
-{
-  "gcp_cloud_exadata_infrastructures": {
-    "infra": {
-      "id": "projects/my-gcp-project/locations/europe-west2/cloudExadataInfrastructures/my-existing-exadata"
-    }
-  }
-}

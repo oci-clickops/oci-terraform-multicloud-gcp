@@ -1,15 +1,16 @@
 # Cluster
 
-Use this example for the standard enterprise two-team split:
+Use this example for a VM Cluster consumer stack:
 
-* **Network team (Stack 1)** — owns the ODB Network and ODB Subnets, typically managed in a dedicated networking stack such as `examples/networking`.
-* **Infra/DB team (Stack 2)** — owns the Cloud Exadata Infrastructure and the VM Cluster, consuming the network outputs from Stack 1.
+* **Network team (Stack 1)** — owns the ODB Network and ODB Subnets, typically managed in a dedicated networking stack such as `../../../odb-networking/examples/basic`.
+* **Exadata infrastructure stack** — owns the Cloud Exadata Infrastructure, either through `modules/exadb` or another approved workflow.
+* **VM Cluster stack** — owns the Cloud VM Cluster, consuming the networking and Exadata Infrastructure outputs from upstream stacks.
 
-The consumer (Stack 2) passes the Stack 1 outputs into `gcp_odb_networks_dependency`, `gcp_odb_subnets_dependency`, and `gcp_cloud_exadata_infrastructures_dependency`. The VM Cluster then references those resources by logical keys (`network`, `infra`, `client`, `backup`) instead of hardcoded resource names.
+The consumer passes upstream outputs into `gcp_odb_networks_dependency`, `gcp_odb_subnets_dependency`, and `gcp_cloud_exadata_infrastructures_dependency`. The VM Cluster then references those resources by logical keys (`network`, `infra`, `client`, `backup`) instead of hardcoded resource names.
 
 The primary way to pass dependencies is as **inline maps** — inject them directly from Terragrunt `dependency` blocks, `terraform_remote_state` outputs, HCP Terraform workspace outputs, or CI/CD pipeline variables. Only `id` is required for networks and Exadata infrastructure; subnets also require `purpose`.
 
-As an alternative for standalone stacks without external orchestration, the producer can set `output_path` to write JSON files and the consumer can pass those file paths instead of inline maps.
+As an alternative for standalone stacks without external orchestration, the producer can set `output_path` to write JSON files and this example can read them through the `*_dependency_file_path` variables. The example decodes the files and passes dependency maps to the reusable module.
 
 The module itself does not read remote state or object storage. How dependencies are transported between stacks stays outside the module so it remains backend-agnostic.
 
@@ -43,7 +44,7 @@ gcp_cloud_exadata_infrastructures_dependency = {
 }
 ```
 
-For standalone stacks without external orchestration, uncomment the JSON file path alternative at the bottom of the template.
+For standalone stacks without external orchestration, uncomment the `*_dependency_file_path` variables at the bottom of the template. Do not set an inline map and file path for the same dependency at the same time.
 
 4. Set `db_server_ocids` to one validated DB server OCID per VM for controlled placement. Set `db_server_ocids = null` only when the target project, API, and existing Cloud Exadata Infrastructure are real and Terraform may discover `AVAILABLE` DB servers.
 

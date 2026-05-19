@@ -1,5 +1,7 @@
 **/*.tfstate*
 **/*.tfplan
+**/tfplan
+**/*.tftest.hcl
 **/*.bak
 **/*.out
 **/.terraform/*
@@ -20,4 +22,6 @@
 **/tf-facade-*
 **/*-example.json
 examples/**/output/*.json
+**/examples/**/output/*.json
+**/examples/**/dependencies/*.json
 **/*.ignore

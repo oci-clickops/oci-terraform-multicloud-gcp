@@ -24,7 +24,7 @@ default_labels = {
 }
 
 # SSH public key — choose one approach:
-# Option A (recommended): inject from file. The module reads the file and injects it into all VM clusters.
+# Option A (recommended): inject from file. The module reads one RSA public key per non-empty line and injects them into all VM clusters.
 # ssh_public_keys_file_path = "/path/to/id_rsa.pub"
 # Option B: set ssh_public_keys directly inside the VM cluster properties map below.
 
@@ -60,9 +60,10 @@ gcp_cloud_exadata_infrastructures_dependency = {
 
 # JSON file path alternative — for standalone stacks without external orchestration.
 # Requires the upstream stack to have output_path set so it writes the dependency files.
-# gcp_odb_networks_dependency                  = "<path-to>/gcp_odb_networks_output.json"
-# gcp_odb_subnets_dependency                   = "<path-to>/gcp_odb_subnets_output.json"
-# gcp_cloud_exadata_infrastructures_dependency = "<path-to>/gcp_cloud_exadata_infrastructures_output.json"
+# Do not set the inline map and file path variable for the same dependency at the same time.
+# gcp_odb_networks_dependency_file_path                  = "<path-to>/gcp_odb_networks_output.json"
+# gcp_odb_subnets_dependency_file_path                   = "<path-to>/gcp_odb_subnets_output.json"
+# gcp_cloud_exadata_infrastructures_dependency_file_path = "<path-to>/gcp_cloud_exadata_infrastructures_output.json"
 
 #---------------------------------------
 # Cloud VM Clusters

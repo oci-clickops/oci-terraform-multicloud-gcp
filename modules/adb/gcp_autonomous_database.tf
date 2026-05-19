@@ -2,31 +2,6 @@
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl.
 
 locals {
-  gcp_odb_networks_dependency_raw = try(
-    var.gcp_odb_networks_dependency.gcp_odb_networks,
-    jsondecode(file(var.gcp_odb_networks_dependency)).gcp_odb_networks,
-    var.gcp_odb_networks_dependency
-  )
-
-  gcp_odb_networks_dependency = {
-    for key, network in local.gcp_odb_networks_dependency_raw : key => {
-      id = network.id
-    }
-  }
-
-  gcp_odb_subnets_dependency_raw = try(
-    var.gcp_odb_subnets_dependency.gcp_odb_subnets,
-    jsondecode(file(var.gcp_odb_subnets_dependency)).gcp_odb_subnets,
-    var.gcp_odb_subnets_dependency
-  )
-
-  gcp_odb_subnets_dependency = {
-    for key, subnet in local.gcp_odb_subnets_dependency_raw : key => {
-      id      = subnet.id
-      purpose = try(subnet.purpose, null)
-    }
-  }
-
   autonomous_database_odb_networks = {
     for key, adb in var.gcp_autonomous_databases_configuration : key =>
     adb.odb_network != null ? adb.odb_network : (
@@ -97,12 +72,9 @@ resource "google_oracle_database_autonomous_database" "these" {
   autonomous_database_id = each.value.autonomous_database_id
   location               = each.value.location != null ? each.value.location : var.default_location
   project                = each.value.project_id != null ? each.value.project_id : var.default_project_id
-  display_name           = each.value.display_name
+  display_name           = each.value.display_name != null ? each.value.display_name : each.value.autonomous_database_id
   database               = each.value.database
   admin_password         = try(var.gcp_autonomous_databases_admin_passwords[each.key], null)
-
-  network = each.value.network
-  cidr    = each.value.cidr
 
   odb_network = local.autonomous_database_odb_networks[each.key]
   odb_subnet  = local.autonomous_database_odb_subnets[each.key]
@@ -175,14 +147,6 @@ resource "google_oracle_database_autonomous_database" "these" {
     precondition {
       condition     = try(each.value.properties.db_workload, null) != null && try(each.value.properties.license_type, null) != null
       error_message = "Autonomous database '${each.key}': properties.db_workload and properties.license_type are required by the Google provider."
-    }
-
-    precondition {
-      condition = !(
-        (each.value.network != null || each.value.cidr != null) &&
-        (each.value.odb_network != null || each.value.odb_network_key != null)
-      )
-      error_message = "Autonomous database '${each.key}': set either VPC mode (network + cidr) or ODB Network mode (odb_network/odb_network_key + odb_subnet/odb_subnet_key), not both."
     }
 
     precondition {

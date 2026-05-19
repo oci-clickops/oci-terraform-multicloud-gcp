@@ -2,18 +2,6 @@
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl.
 
 locals {
-  gcp_cloud_exadata_infrastructures_dependency_raw = try(
-    var.gcp_cloud_exadata_infrastructures_dependency.gcp_cloud_exadata_infrastructures,
-    jsondecode(file(var.gcp_cloud_exadata_infrastructures_dependency)).gcp_cloud_exadata_infrastructures,
-    var.gcp_cloud_exadata_infrastructures_dependency
-  )
-
-  gcp_cloud_exadata_infrastructures_dependency = {
-    for key, infrastructure in local.gcp_cloud_exadata_infrastructures_dependency_raw : key => {
-      id = infrastructure.id
-    }
-  }
-
   gcp_cloud_exadata_infrastructures_output = {
     for key, infrastructure in google_oracle_database_cloud_exadata_infrastructure.these : key => {
       id                                 = infrastructure.id
@@ -52,7 +40,7 @@ resource "google_oracle_database_cloud_exadata_infrastructure" "these" {
   for_each = var.gcp_cloud_exadata_infrastructures_configuration
 
   cloud_exadata_infrastructure_id = each.value.cloud_exadata_infrastructure_id
-  display_name                    = each.value.display_name
+  display_name                    = each.value.display_name != null ? each.value.display_name : each.value.cloud_exadata_infrastructure_id
   location                        = each.value.location != null ? each.value.location : var.default_location
   project                         = each.value.project_id != null ? each.value.project_id : var.default_project_id
   gcp_oracle_zone                 = each.value.gcp_oracle_zone != null ? each.value.gcp_oracle_zone : var.default_gcp_oracle_zone

@@ -16,10 +16,7 @@
 
 This module creates Oracle Autonomous Databases on Google Cloud using the `google_oracle_database_autonomous_database` resource.
 
-It supports:
-
-* Autonomous Databases in VPC networking mode (`network` + `cidr`)
-* Autonomous Databases in ODB Network mode (`odb_network` + `odb_subnet`)
+For v1, new Autonomous Database deployments use ODB Network mode only: `odb_network` / `odb_subnet`, either directly or through module keys. The Google provider still exposes the older VPC/CIDR fields, but this module does not expose them as a public interface because new Oracle Database@Google Cloud environments should use ODB Networks and ODB Subnets.
 
 The module follows the OCI Landing Zones style. Databases are declared through keyed maps, created with `for_each`, and returned with the same keys in the outputs.
 
@@ -35,46 +32,36 @@ Before running Terraform against real infrastructure, make sure these pieces are
 * Google provider authentication for the Terraform caller.
 * IAM permissions to manage Oracle Database@Google Cloud resources.
 * Terraform `>= 1.4.0` and HashiCorp Google provider `>= 7.13.0, < 8.0.0`.
-* For VPC mode: an existing Google Cloud VPC network and an available CIDR range.
-* For ODB Network mode: an existing ODB Network and ODB Subnet, created by the root module or an equivalent stack.
+* An existing ODB Network and client ODB Subnet, created by `modules/odb-networking` or an equivalent stack.
 * Oracle Database@Google Cloud entitlement and capacity in the target project and region.
 
 The admin password is accepted as a separate sensitive input keyed by the same map key as the database. Do not store passwords in tfvars files committed to version control. Use the `TF_VAR_gcp_autonomous_databases_admin_passwords` environment variable instead.
 
 ## <a name="getting-started">Getting Started</a>
 
-Start with [examples/vision](./examples/vision) for a complete VPC-mode deployment. It creates a single Autonomous Database with a full set of properties.
+Start with [examples/vision](./examples/vision) for a complete ODB Network mode deployment. It creates a single Autonomous Database with a full set of properties.
 
-If you are using an ODB Network created by the root module, use [examples/existing-odb-network](./examples/existing-odb-network) instead.
+If you are using an ODB Network created by a separate networking stack, use [examples/existing-odb-network](./examples/existing-odb-network) instead.
 
 ## <a name="configuration-model">Configuration Model</a>
 
-Two networking modes are supported. Each database in `gcp_autonomous_databases_configuration` must use exactly one mode.
+Each database in `gcp_autonomous_databases_configuration` must set exactly one ODB Network reference and one ODB Subnet reference. Each reference can be direct or key-based.
 
-### VPC mode
-
-Set `network` (full VPC resource name in `projects/{project}/global/networks/{network}` format) and `cidr` (CIDR block for the database subnet):
+`*_key` form — recommended when the upstream ODB Network and Subnet come from dependency maps supplied by Terragrunt `dependency` blocks, `terraform_remote_state` outputs, HCP Terraform workspace outputs, or CI/CD pipeline variables:
 
 ```hcl
-gcp_autonomous_databases_configuration = {
-  "analytics" = {
-    autonomous_database_id = "analytics"
-    network                = "projects/my-project/global/networks/my-vpc"
-    cidr                   = "10.20.30.0/24"
-    properties             = { db_workload = "DW", license_type = "BRING_YOUR_OWN_LICENSE" }
+gcp_odb_networks_dependency = {
+  prod-net = {
+    id = "projects/my-project/locations/us-east4/odbNetworks/prod-net"
   }
 }
-```
 
-### ODB Network mode
-
-ODB Network mode supports two interchangeable forms for the network and subnet references.
-
-`*_key` form — recommended when the upstream ODB Network and Subnet come from an existing `gcp_odb_networks_dependency` / `gcp_odb_subnets_dependency` map, typically produced by the root module via `output_path`:
-
-```hcl
-gcp_odb_networks_dependency = "/path/to/gcp_odb_networks_output.json"
-gcp_odb_subnets_dependency  = "/path/to/gcp_odb_subnets_output.json"
+gcp_odb_subnets_dependency = {
+  prod-client = {
+    id      = "projects/my-project/locations/us-east4/odbNetworks/prod-net/odbSubnets/prod-client"
+    purpose = "CLIENT_SUBNET"
+  }
+}
 
 gcp_autonomous_databases_configuration = {
   "txn" = {
@@ -85,6 +72,8 @@ gcp_autonomous_databases_configuration = {
   }
 }
 ```
+
+As an optional bridge for local development, demos, or file-based orchestration, a producer can set `output_path` in `modules/odb-networking` to write JSON handoff files. Reusable module inputs still receive dependency maps; wrappers such as `examples/existing-odb-network` are responsible for reading JSON files with `jsondecode(file(...))` before passing those maps to this module.
 
 Direct form — useful when the ODB Network and Subnet were created by `gcloud`, an OCI console operator, or a stack that does not produce a JSON handoff:
 
@@ -101,7 +90,7 @@ gcp_autonomous_databases_configuration = {
 
 Set exactly one of `odb_network` or `odb_network_key`, and exactly one of `odb_subnet` or `odb_subnet_key`. The two forms are mutually exclusive on the same field pair and can be mixed across entries in the same map when ownership differs.
 
-Common defaults such as project, location, labels, and deletion protection are handled by module-level inputs. Resource-specific values override the defaults.
+Common defaults such as project, location, labels, and deletion protection are handled by module-level inputs. Resource-specific values override the defaults. When `display_name` is omitted, Autonomous Database resources use `autonomous_database_id` as the display name. `module_name` is validated and the generated module label is sanitized for Google Cloud label rules.
 
 The module performs strict validation at `terraform plan`: ODB Network and Subnet references must be geographically consistent (same project, location, and parent ODB Network segment), dependency-provided subnets must declare `purpose = "CLIENT_SUBNET"` to be usable, and `autonomous_database_id` must be unique within each `(project, location)`. Configuration errors fail the plan with actionable messages instead of producing a late Google Cloud API error during apply. See [SPEC.md](./SPEC.md#plan-time-validations) for the full list.
 
@@ -126,8 +115,8 @@ The exact ignored fields and rationale are documented in [SPEC.md](./SPEC.md).
 
 Available examples:
 
-* [examples/vision](./examples/vision): recommended first deployment — complete Autonomous Database in VPC networking mode with a ready-to-rename `input.auto.tfvars.template`.
-* [examples/existing-odb-network](./examples/existing-odb-network): creates an Autonomous Database using an existing ODB Network and ODB Subnet, passed as dependency inputs.
+* [examples/vision](./examples/vision): recommended first deployment — complete Autonomous Database in ODB Network mode with direct resource names and a ready-to-rename `input.auto.tfvars.template`.
+* [examples/existing-odb-network](./examples/existing-odb-network): creates an Autonomous Database using an existing ODB Network and ODB Subnet, passed as dependency maps or, for local file handoff, example-level `*_dependency_file_path` variables.
 
 Each example includes an `input.auto.tfvars.template` file. Rename it to `<project-name>.auto.tfvars` and Terraform will load it automatically — no `terraform.tfvars` copy needed.
 
@@ -156,4 +145,4 @@ Licensed under the Universal Permissive License v 1.0 as shown at https://oss.or
 1. Oracle Autonomous Database resources can take a long time to provision. If a creation or update operation is interrupted, rerun Terraform from the same working directory so it can continue from the current state.
 2. The admin password is accepted at creation time but is not read back by the Google provider. Manage password rotation outside Terraform.
 3. Some resource attributes are service-managed and appear only after provisioning completes. Downstream stacks should consume outputs only after the producing stack has completed successfully.
-4. When using ODB Network mode, both `odb_network` and `odb_subnet` references must exist before the Autonomous Database can be created. Provision the networking stack first.
+4. Both `odb_network` and `odb_subnet` references must exist before the Autonomous Database can be created. Provision the networking stack first.

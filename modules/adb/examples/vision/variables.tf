@@ -2,7 +2,7 @@
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl.
 
 variable "project_id" { description = "GCP project ID enabled for Oracle Database@Google Cloud." }
-variable "location"   { description = "GCP region for Oracle Database@Google Cloud resources." }
+variable "location" { description = "GCP region for Oracle Database@Google Cloud resources." }
 
 variable "gcp_autonomous_databases_admin_passwords" {
   description = "Admin passwords for Autonomous Databases, keyed by the same keys as gcp_autonomous_databases_configuration."

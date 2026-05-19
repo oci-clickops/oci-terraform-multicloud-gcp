@@ -8,7 +8,7 @@ Use this example for a complete end-to-end Oracle Database@Google Cloud deployme
 * One Cloud Exadata Infrastructure
 * One Cloud VM Cluster
 
-The example uses module keys (`primary`, `client`, `backup`) to connect resources created within the same module call, without having to copy resource names. It also sets a default maintenance window and explicit timeouts for long-running operations.
+The example composes `modules/odb-networking` and `modules/exadb` in the same root module. ODB Network/Subnet outputs are passed directly as dependency maps, so the VM Cluster uses module keys (`primary`, `client`, `backup`) without copying resource names. It also sets a default maintenance window and explicit timeouts for long-running operations.
 
 ## Prerequisites
 

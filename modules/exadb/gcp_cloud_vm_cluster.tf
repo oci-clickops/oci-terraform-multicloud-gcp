@@ -2,8 +2,10 @@
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl.
 
 locals {
-  # Inject SSH public keys from file if provided
-  ssh_public_keys_from_file = var.ssh_public_keys_file_path != null ? [trimspace(file(var.ssh_public_keys_file_path))] : null
+  ssh_public_keys_from_file = var.ssh_public_keys_file_path != null ? [
+    for key in split("\n", trimspace(file(var.ssh_public_keys_file_path))) :
+    trimspace(key) if trimspace(key) != ""
+  ] : null
 
   cloud_vm_cluster_exadata_infrastructures = {
     for key, cluster in var.gcp_cloud_vm_clusters_configuration : key =>
@@ -17,27 +19,21 @@ locals {
   cloud_vm_cluster_odb_networks = {
     for key, cluster in var.gcp_cloud_vm_clusters_configuration : key =>
     cluster.odb_network != null ? cluster.odb_network : (
-      cluster.odb_network_key == null ? null : (
-        contains(keys(var.gcp_odb_networks_configuration), cluster.odb_network_key) ? google_oracle_database_odb_network.these[cluster.odb_network_key].id : try(local.gcp_odb_networks_dependency[cluster.odb_network_key].id, null)
-      )
+      cluster.odb_network_key == null ? null : try(local.gcp_odb_networks_dependency[cluster.odb_network_key].id, null)
     )
   }
 
   cloud_vm_cluster_odb_subnets = {
     for key, cluster in var.gcp_cloud_vm_clusters_configuration : key =>
     cluster.odb_subnet != null ? cluster.odb_subnet : (
-      cluster.odb_subnet_key == null ? null : (
-        contains(keys(var.gcp_odb_subnets_configuration), cluster.odb_subnet_key) ? google_oracle_database_odb_subnet.these[cluster.odb_subnet_key].id : try(local.gcp_odb_subnets_dependency[cluster.odb_subnet_key].id, null)
-      )
+      cluster.odb_subnet_key == null ? null : try(local.gcp_odb_subnets_dependency[cluster.odb_subnet_key].id, null)
     )
   }
 
   cloud_vm_cluster_backup_odb_subnets = {
     for key, cluster in var.gcp_cloud_vm_clusters_configuration : key =>
     cluster.backup_odb_subnet != null ? cluster.backup_odb_subnet : (
-      cluster.backup_odb_subnet_key == null ? null : (
-        contains(keys(var.gcp_odb_subnets_configuration), cluster.backup_odb_subnet_key) ? google_oracle_database_odb_subnet.these[cluster.backup_odb_subnet_key].id : try(local.gcp_odb_subnets_dependency[cluster.backup_odb_subnet_key].id, null)
-      )
+      cluster.backup_odb_subnet_key == null ? null : try(local.gcp_odb_subnets_dependency[cluster.backup_odb_subnet_key].id, null)
     )
   }
 
@@ -89,7 +85,6 @@ locals {
     )
   }
 
-  # Inject SSH public keys from file into cluster configurations if ssh_public_keys_file_path is provided
   gcp_cloud_vm_clusters_configuration_with_ssh_keys = (
     var.ssh_public_keys_file_path != null ? {
       for key, cluster in var.gcp_cloud_vm_clusters_configuration : key => merge(
@@ -151,7 +146,7 @@ resource "google_oracle_database_cloud_vm_cluster" "these" {
   for_each = local.gcp_cloud_vm_clusters_configuration_with_ssh_keys
 
   cloud_vm_cluster_id = each.value.cloud_vm_cluster_id
-  display_name        = each.value.display_name
+  display_name        = each.value.display_name != null ? each.value.display_name : each.value.cloud_vm_cluster_id
   location            = each.value.location != null ? each.value.location : var.default_location
   project             = each.value.project_id != null ? each.value.project_id : var.default_project_id
 
@@ -241,26 +236,23 @@ resource "google_oracle_database_cloud_vm_cluster" "these" {
 
     precondition {
       condition = each.value.odb_network_key == null ? true : (
-        (contains(keys(var.gcp_odb_networks_configuration), each.value.odb_network_key) ? 1 : 0) +
-        (contains(keys(local.gcp_odb_networks_dependency), each.value.odb_network_key) ? 1 : 0) == 1
+        contains(keys(local.gcp_odb_networks_dependency), each.value.odb_network_key)
       )
-      error_message = "Each Cloud VM cluster odb_network_key must reference exactly one key from gcp_odb_networks_configuration or gcp_odb_networks_dependency."
+      error_message = "Each Cloud VM cluster odb_network_key must reference a key from gcp_odb_networks_dependency."
     }
 
     precondition {
       condition = each.value.odb_subnet_key == null ? true : (
-        (contains(keys(var.gcp_odb_subnets_configuration), each.value.odb_subnet_key) ? 1 : 0) +
-        (contains(keys(local.gcp_odb_subnets_dependency), each.value.odb_subnet_key) ? 1 : 0) == 1
+        contains(keys(local.gcp_odb_subnets_dependency), each.value.odb_subnet_key)
       )
-      error_message = "Each Cloud VM cluster odb_subnet_key must reference exactly one key from gcp_odb_subnets_configuration or gcp_odb_subnets_dependency."
+      error_message = "Each Cloud VM cluster odb_subnet_key must reference a key from gcp_odb_subnets_dependency."
     }
 
     precondition {
       condition = each.value.backup_odb_subnet_key == null ? true : (
-        (contains(keys(var.gcp_odb_subnets_configuration), each.value.backup_odb_subnet_key) ? 1 : 0) +
-        (contains(keys(local.gcp_odb_subnets_dependency), each.value.backup_odb_subnet_key) ? 1 : 0) == 1
+        contains(keys(local.gcp_odb_subnets_dependency), each.value.backup_odb_subnet_key)
       )
-      error_message = "Each Cloud VM cluster backup_odb_subnet_key must reference exactly one key from gcp_odb_subnets_configuration or gcp_odb_subnets_dependency."
+      error_message = "Each Cloud VM cluster backup_odb_subnet_key must reference a key from gcp_odb_subnets_dependency."
     }
 
     precondition {
@@ -291,16 +283,6 @@ resource "google_oracle_database_cloud_vm_cluster" "these" {
         )
       )
       error_message = "Each Cloud VM cluster backup ODB subnet must resolve to a non-null parent ODB network and belong to the selected ODB network, including project and location."
-    }
-
-    precondition {
-      condition     = each.value.odb_subnet_key == null ? true : (contains(keys(var.gcp_odb_subnets_configuration), each.value.odb_subnet_key) ? var.gcp_odb_subnets_configuration[each.value.odb_subnet_key].purpose == "CLIENT_SUBNET" : true)
-      error_message = "Each Cloud VM cluster odb_subnet_key must reference an ODB subnet with purpose CLIENT_SUBNET."
-    }
-
-    precondition {
-      condition     = each.value.backup_odb_subnet_key == null ? true : (contains(keys(var.gcp_odb_subnets_configuration), each.value.backup_odb_subnet_key) ? var.gcp_odb_subnets_configuration[each.value.backup_odb_subnet_key].purpose == "BACKUP_SUBNET" : true)
-      error_message = "Each Cloud VM cluster backup_odb_subnet_key must reference an ODB subnet with purpose BACKUP_SUBNET."
     }
 
     precondition {

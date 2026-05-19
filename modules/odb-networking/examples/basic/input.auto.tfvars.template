@@ -21,7 +21,7 @@ default_deletion_protection = false
 
 default_labels = {
   terraform = "true"
-  example   = "networking"
+  example   = "basic"
 }
 
 output_path = "./output"

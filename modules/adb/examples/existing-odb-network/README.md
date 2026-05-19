@@ -4,7 +4,9 @@ Use this example to create an Oracle Autonomous Database@Google Cloud using an e
 
 * One Autonomous Database attached to an existing ODB Network and subnet
 
-This is the recommended pattern when the networking stack is managed separately — for example, when the ODB Network was created by the root module in a different Terraform state.
+This is the recommended pattern when the networking stack is managed separately — for example, when the ODB Network was created by `modules/odb-networking` in a different Terraform state.
+
+The primary way to pass dependencies is as inline maps injected from Terragrunt `dependency` blocks, `terraform_remote_state` outputs, HCP Terraform workspace outputs, or CI/CD pipeline variables. For standalone stacks without external orchestration, set the `*_dependency_file_path` variables and this example will decode the JSON files before passing dependency maps to the reusable module.
 
 ## Prerequisites
 
@@ -20,13 +22,14 @@ Before running it, confirm that:
 
 1. Rename `input.auto.tfvars.template` to a name of your choice, following the pattern `<project-name>.auto.tfvars`.
 2. Edit the renamed file — replace all `<REPLACE-BY-*>` placeholders with the full resource names of the existing ODB Network and ODB Subnet.
-3. Set the admin password via environment variable to avoid storing credentials in files:
+3. If using JSON files from an upstream `output_path`, set the `*_dependency_file_path` variables instead of the inline dependency maps.
+4. Set the admin password via environment variable to avoid storing credentials in files:
 
 ```sh
 export TF_VAR_gcp_autonomous_databases_admin_passwords='{"primary":"<your-password>"}'
 ```
 
-4. Run the standard Terraform commands:
+5. Run the standard Terraform commands:
 
 ```sh
 terraform init

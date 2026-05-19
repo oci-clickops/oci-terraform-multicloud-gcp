@@ -41,6 +41,12 @@ gcp_odb_subnets_dependency = {
   }
 }
 
+# JSON file path alternative — for standalone stacks without external orchestration.
+# Requires the upstream stack to have output_path set so it writes the dependency files.
+# Do not set the inline map and file path variable for the same dependency at the same time.
+# gcp_odb_networks_dependency_file_path = "<path-to>/gcp_odb_networks_output.json"
+# gcp_odb_subnets_dependency_file_path  = "<path-to>/gcp_odb_subnets_output.json"
+
 #---------------------------------------
 # Autonomous Databases
 #---------------------------------------
