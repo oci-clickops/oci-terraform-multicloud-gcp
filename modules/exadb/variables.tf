@@ -68,18 +68,33 @@ variable "default_project_id" {
   description = "Default Google Cloud project ID used by resources when project_id is not set on the resource."
   type        = string
   default     = null
+
+  validation {
+    condition     = var.default_project_id == null ? true : trimspace(var.default_project_id) != ""
+    error_message = "default_project_id must be null or a non-empty Google Cloud project ID."
+  }
 }
 
 variable "default_location" {
   description = "Default Google Cloud region used by resources when location is not set on the resource."
   type        = string
   default     = null
+
+  validation {
+    condition     = var.default_location == null ? true : trimspace(var.default_location) != ""
+    error_message = "default_location must be null or a non-empty Google Cloud region."
+  }
 }
 
 variable "default_gcp_oracle_zone" {
   description = "Default GCP Oracle zone used by resources that support it."
   type        = string
   default     = null
+
+  validation {
+    condition     = var.default_gcp_oracle_zone == null ? true : trimspace(var.default_gcp_oracle_zone) != ""
+    error_message = "default_gcp_oracle_zone must be null or a non-empty GCP Oracle zone."
+  }
 }
 
 variable "default_labels" {
@@ -87,6 +102,15 @@ variable "default_labels" {
   type        = map(string)
   default     = {}
   nullable    = false
+
+  validation {
+    condition = alltrue([
+      for key, value in var.default_labels :
+      can(regex("^[a-z][a-z0-9_-]{0,62}$", key)) &&
+      (value == null ? false : (value == "" ? true : can(regex("^[a-z0-9][a-z0-9_-]{0,62}$", value))))
+    ])
+    error_message = "default_labels keys must be 1-63 characters, start with a lowercase letter, and contain only lowercase letters, numbers, underscores, or hyphens. Values must be empty or 1-63 characters containing only lowercase letters, numbers, underscores, or hyphens."
+  }
 }
 
 variable "default_deletion_protection" {
@@ -297,6 +321,41 @@ variable "gcp_cloud_exadata_infrastructures_configuration" {
   }
 
   validation {
+    condition = alltrue(flatten([
+      for infrastructure in var.gcp_cloud_exadata_infrastructures_configuration : [
+        for key, value in infrastructure.labels :
+        can(regex("^[a-z][a-z0-9_-]{0,62}$", key)) &&
+        (value == null ? false : (value == "" ? true : can(regex("^[a-z0-9][a-z0-9_-]{0,62}$", value))))
+      ]
+    ]))
+    error_message = "Cloud Exadata Infrastructure labels keys must be 1-63 characters, start with a lowercase letter, and contain only lowercase letters, numbers, underscores, or hyphens. Values must be empty or 1-63 characters containing only lowercase letters, numbers, underscores, or hyphens."
+  }
+
+  validation {
+    condition = alltrue([
+      for infrastructure in var.gcp_cloud_exadata_infrastructures_configuration :
+      infrastructure.project_id == null ? true : trimspace(infrastructure.project_id) != ""
+    ])
+    error_message = "Cloud Exadata Infrastructure project_id values must be null or non-empty strings."
+  }
+
+  validation {
+    condition = alltrue([
+      for infrastructure in var.gcp_cloud_exadata_infrastructures_configuration :
+      infrastructure.location == null ? true : trimspace(infrastructure.location) != ""
+    ])
+    error_message = "Cloud Exadata Infrastructure location values must be null or non-empty strings."
+  }
+
+  validation {
+    condition = alltrue([
+      for infrastructure in var.gcp_cloud_exadata_infrastructures_configuration :
+      infrastructure.gcp_oracle_zone == null ? true : trimspace(infrastructure.gcp_oracle_zone) != ""
+    ])
+    error_message = "Cloud Exadata Infrastructure gcp_oracle_zone values must be null or non-empty strings."
+  }
+
+  validation {
     condition = alltrue([
       for infrastructure in var.gcp_cloud_exadata_infrastructures_configuration :
       infrastructure.properties.maintenance_window == null ? true : (
@@ -432,6 +491,33 @@ variable "gcp_cloud_vm_clusters_configuration" {
       )
     ])
     error_message = "Cloud VM cluster Exadata infrastructure, ODB network, and ODB subnet reference fields must not be empty when set."
+  }
+
+  validation {
+    condition = alltrue(flatten([
+      for cluster in var.gcp_cloud_vm_clusters_configuration : [
+        for key, value in cluster.labels :
+        can(regex("^[a-z][a-z0-9_-]{0,62}$", key)) &&
+        (value == null ? false : (value == "" ? true : can(regex("^[a-z0-9][a-z0-9_-]{0,62}$", value))))
+      ]
+    ]))
+    error_message = "Cloud VM cluster labels keys must be 1-63 characters, start with a lowercase letter, and contain only lowercase letters, numbers, underscores, or hyphens. Values must be empty or 1-63 characters containing only lowercase letters, numbers, underscores, or hyphens."
+  }
+
+  validation {
+    condition = alltrue([
+      for cluster in var.gcp_cloud_vm_clusters_configuration :
+      cluster.project_id == null ? true : trimspace(cluster.project_id) != ""
+    ])
+    error_message = "Cloud VM cluster project_id values must be null or non-empty strings."
+  }
+
+  validation {
+    condition = alltrue([
+      for cluster in var.gcp_cloud_vm_clusters_configuration :
+      cluster.location == null ? true : trimspace(cluster.location) != ""
+    ])
+    error_message = "Cloud VM cluster location values must be null or non-empty strings."
   }
 
   validation {

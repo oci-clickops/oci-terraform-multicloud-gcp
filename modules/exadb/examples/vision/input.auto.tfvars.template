@@ -23,7 +23,9 @@ odb_networking_enable_output = true
 exadb_module_name   = "oracle-database-at-gcp"
 exadb_enable_output = true
 
-# Optional: write ODB Networking, Cloud Exadata Infrastructure, and VM Cluster dependency JSON files.
+# Optional with both *_enable_output flags true: write ODB Networking,
+# Cloud Exadata Infrastructure, and VM Cluster dependency JSON files.
+# Set output_path = null when orchestration consumes Terraform outputs directly.
 output_path = "./output"
 
 # SSH public key - choose one approach:

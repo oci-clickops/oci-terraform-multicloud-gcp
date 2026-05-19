@@ -14,7 +14,7 @@ kept in this wrapper so the module stays backend-agnostic.
 ## Flow
 
 1. Deploy the GCP VM Cluster stack, for example `../cluster`, with
-   `output_path = "./output"`.
+   `enable_output = true` and `output_path = "./output"`.
 2. Wait until the VM Cluster output has `state = "AVAILABLE"` and `ocid` is not
    null.
 3. Rename `input.auto.tfvars.template` to `<name>.auto.tfvars`.
@@ -82,10 +82,10 @@ The wrapper fails the plan when:
 
 ## Source Pinning
 
-This example references the upstream OCI Exadata module from GitHub:
+This example pins the upstream OCI Exadata module to release `v1.1.0`:
 
 ```hcl
-git::https://github.com/oci-landing-zones/terraform-oci-modules-exadata.git//exadata-database?ref=main
+git::https://github.com/oci-landing-zones/terraform-oci-modules-exadata.git//exadata-database?ref=v1.1.0
 ```
 
-For production, pin `ref` to a release tag or commit SHA.
+Update the pin deliberately after validating a newer upstream release.

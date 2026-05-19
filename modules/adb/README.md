@@ -35,7 +35,7 @@ Before running Terraform against real infrastructure, make sure these pieces are
 * For this reusable module: an existing ODB Network and client ODB Subnet, created by `modules/odb-networking` or an equivalent stack.
 * Oracle Database@Google Cloud entitlement and capacity in the target project and region.
 
-The admin password is accepted as a separate sensitive input keyed by the same map key as the database. Do not store passwords in tfvars files committed to version control. Use the `TF_VAR_gcp_autonomous_databases_admin_passwords` environment variable instead. Passwords are validated at plan time: they must be 12–30 characters, include at least one uppercase letter, one lowercase letter, and one number, and must not contain double quotes or `admin` in any casing.
+The admin password is accepted as a separate sensitive input keyed by the same map key as the database. Each configured database must have a matching password entry unless `properties.secret_id` is set, and unknown password keys are rejected when databases are configured. Do not store passwords in tfvars files committed to version control. Use the `TF_VAR_gcp_autonomous_databases_admin_passwords` environment variable instead. Passwords are validated at plan time: they must be 12–30 characters, include at least one uppercase letter, one lowercase letter, and one number, and must not contain double quotes or `admin` in any casing.
 
 ## <a name="getting-started">Getting Started</a>
 
@@ -94,6 +94,16 @@ Common defaults such as project, location, labels, and deletion protection are h
 
 The module performs strict validation at `terraform plan`: ODB Network and Subnet references must be geographically consistent (same project, location, and parent ODB Network segment), dependency-provided subnets must declare `purpose = "CLIENT_SUBNET"` to be usable, and provider-sensitive fields such as `database`, labels, `operations_insights_state`, and `private_endpoint_ip` are checked before the Google API call. Duplicate resource names are left to the Google provider/API, matching the OCI module style. See [SPEC.md](./SPEC.md#plan-time-validations) for the full list.
 
+### Output Controls
+
+Use these controls deliberately:
+
+* `enable_output = true`, `output_path = null`: expose Terraform outputs only.
+* `enable_output = true`, `output_path = "./output"`: expose Terraform outputs and write JSON handoff files when Autonomous Databases exist.
+* `enable_output = false`: return `null` from module outputs and write no JSON files, even when `output_path` is set.
+
+The JSON files are producer outputs for downstream wrappers and orchestration. Consumer dependency inputs still receive maps, not file paths.
+
 ## <a name="operational-drift-policy">Operational Drift Policy</a>
 
 Oracle Autonomous Database can be operated through both Google and OCI control planes. Several properties drift during Oracle-managed maintenance or OCI-side operations. The module ignores changes to:
@@ -129,9 +139,9 @@ The module returns created resources with the same keys used in the input map:
 
 * `gcp_autonomous_databases`
 
-Each output includes stable identifiers, the OCI OCID, parsed OCI region, tenant, and compartment ID, OCI console URL, connection strings and URLs, private endpoint details, SQL Web Developer URL, Data Guard/peer metadata, and lifecycle state. Set `enable_output = false` to suppress outputs.
+Each output includes stable identifiers, the OCI OCID, parsed OCI region, tenant, and compartment ID, OCI console URL, connection strings and URLs, private endpoint details, SQL Web Developer URL, Data Guard/peer metadata, and lifecycle state. Set `enable_output = false` to return `null` from this output and disable JSON handoff file creation.
 
-When `output_path` is set, the module writes:
+When `enable_output = true` and `output_path` is set, the module writes this dependency file when Autonomous Databases exist:
 
 * `gcp_autonomous_databases_output.json`
 

@@ -19,7 +19,10 @@ location   = "<REPLACE-BY-GCP-REGION>" # E.g., europe-west2.
 module_name   = "oracle-database-at-gcp"
 enable_output = true
 
-# Optional: write gcp_cloud_vm_clusters_output.json for OCI DB Home handoff.
+# Optional with enable_output = true: write JSON handoff files for resources
+# created by this stack.
+# gcp_cloud_vm_clusters_output.json is used by the OCI DB Home handoff wrapper.
+# Set output_path = null when orchestration consumes Terraform outputs directly.
 output_path = "./output"
 
 # SSH public key - choose one approach:
@@ -102,9 +105,10 @@ gcp_cloud_exadata_infrastructures_dependency = {
 
 # JSON file path alternative - for standalone local stacks without orchestration.
 # Do not set the inline map and file path variable for the same dependency at the same time.
-# gcp_odb_networks_dependency_file_path                  = "../odb-networking/output/gcp_odb_networks_output.json"
-# gcp_odb_subnets_dependency_file_path                   = "../odb-networking/output/gcp_odb_subnets_output.json"
-# gcp_cloud_exadata_infrastructures_dependency_file_path = "../exadata/output/gcp_cloud_exadata_infrastructures_output.json"
+# These paths are relative to this consumer example directory.
+# gcp_odb_networks_dependency_file_path                  = "../../../odb-networking/examples/basic/output/gcp_odb_networks_output.json"
+# gcp_odb_subnets_dependency_file_path                   = "../../../odb-networking/examples/basic/output/gcp_odb_subnets_output.json"
+# gcp_cloud_exadata_infrastructures_dependency_file_path = "../<exadata-infra-stack>/output/gcp_cloud_exadata_infrastructures_output.json"
 
 #---------------------------------------
 # Cloud VM Clusters

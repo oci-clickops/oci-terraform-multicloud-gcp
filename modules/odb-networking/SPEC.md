@@ -15,8 +15,8 @@ This module requires Terraform `>= 1.4.0` and HashiCorp Google provider `>= 7.13
 ### General
 
 * `module_name`: The module name. Defaults to `oracle-database-networking-at-gcp`.
-* `enable_output`: Whether Terraform should enable module outputs. Defaults to `true`.
-* `output_path`: Optional directory where dependency JSON files are written.
+* `enable_output`: Whether Terraform should enable module outputs and JSON handoff file creation. Defaults to `true`.
+* `output_path`: Optional producer-side directory where dependency JSON files are written when outputs are enabled and matching resources exist.
 * `default_project_id`: Default Google Cloud project ID used when `project_id` is not set on a resource. If set, it must be non-empty.
 * `default_location`: Default Google Cloud region used when `location` is not set on a resource. If set, it must be non-empty.
 * `default_gcp_oracle_zone`: Default GCP Oracle zone used when `gcp_oracle_zone` is not set on an ODB Network. If set, it must be non-empty.
@@ -80,9 +80,11 @@ The policy is intentionally narrow. The current Google provider plans replacemen
 * `gcp_odb_networks`: Created ODB Networks, keyed by input key.
 * `gcp_odb_subnets`: Created ODB Subnets, keyed by input key.
 
-When `output_path` is set and outputs are enabled, the module writes:
+When `enable_output = true` and `output_path` is set, the module writes files for matching resources:
 
 * `gcp_odb_networks_output.json`
 * `gcp_odb_subnets_output.json`
 
 The JSON shape is wrapped under the output family name, matching the dependency maps consumed by `modules/exadb` and `modules/adb`.
+
+If `enable_output` is `false`, Terraform outputs return `null` and no JSON files are written. The module never reads JSON files, remote state, object storage, or other transport-specific sources.

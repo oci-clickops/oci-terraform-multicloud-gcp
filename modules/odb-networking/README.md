@@ -61,16 +61,22 @@ Downstream modules should consume `module.odb_networking.gcp_odb_networks` and `
 
 The module validates provider-sensitive inputs at plan time: project, location, and GCP Oracle zone defaults cannot be whitespace-only; labels must use Google Cloud label-compatible syntax; and subnet CIDRs and purposes are checked before any Google Cloud API call. Duplicate resource IDs are left to the Google provider/API, matching the OCI module style.
 
-## JSON Handoff
+## Output Controls
 
-The sweet path is direct dependency maps from Terraform outputs, Terragrunt dependency blocks, `terraform_remote_state`, HCP Terraform workspace outputs, CI/CD variables, or an orchestration layer.
+The sweet path is direct dependency maps from Terraform outputs, Terragrunt dependency blocks, `terraform_remote_state`, HCP Terraform workspace outputs, CI/CD variables, or an orchestration layer. JSON files are an optional producer-side bridge for local development, demos, or file-based orchestration.
 
-For local development, demos, or file-based orchestration, set `output_path` to write:
+Use these controls deliberately:
+
+* `enable_output = true`, `output_path = null`: expose Terraform outputs only.
+* `enable_output = true`, `output_path = "./output"`: expose Terraform outputs and write JSON handoff files for resource families that have instances.
+* `enable_output = false`: return `null` from module outputs and write no JSON files, even when `output_path` is set.
+
+When JSON handoff is enabled, this module can write:
 
 * `gcp_odb_networks_output.json`
 * `gcp_odb_subnets_output.json`
 
-Reusable consumer modules still receive maps. Wrappers/examples are responsible for decoding files with `jsondecode(file(...))`.
+Reusable consumer modules still receive maps. Wrappers/examples are responsible for decoding files with `jsondecode(file(...))`; the reusable modules do not read JSON paths, remote state, GCS, or other transport-specific sources.
 
 ## Operational Drift Policy
 
@@ -86,6 +92,8 @@ ODB Network and ODB Subnet labels are treated as creation-time tracking metadata
 * `gcp_odb_subnets`
 
 Both outputs are keyed by the same logical keys used in the input maps.
+
+When `enable_output` is `false`, both outputs are `null`.
 
 ## License
 

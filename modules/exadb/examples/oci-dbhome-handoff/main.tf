@@ -106,8 +106,7 @@ resource "terraform_data" "validate_handoff" {
 }
 
 module "oci_exadata_database" {
-  # Pin this source to a release tag or commit SHA in production.
-  source = "git::https://github.com/oci-landing-zones/terraform-oci-modules-exadata.git//exadata-database?ref=main"
+  source = "git::https://github.com/oci-landing-zones/terraform-oci-modules-exadata.git//exadata-database?ref=v1.1.0"
 
   depends_on = [terraform_data.validate_handoff]
 

@@ -10,7 +10,7 @@ The consumer passes upstream outputs into `gcp_odb_networks_dependency`, `gcp_od
 
 The primary way to pass dependencies is as **inline maps** — inject them directly from Terragrunt `dependency` blocks, `terraform_remote_state` outputs, HCP Terraform workspace outputs, or CI/CD pipeline variables. Only `id` is required for networks and Exadata infrastructure; subnets also require `purpose`.
 
-As an alternative for standalone stacks without external orchestration, the producer can set `output_path` to write JSON files and this example can read them through the `*_dependency_file_path` variables. The example decodes the files and passes dependency maps to the reusable module.
+As an alternative for standalone stacks without external orchestration, the producer can set `enable_output = true` and `output_path` to write JSON files and this example can read them through the `*_dependency_file_path` variables. The file path variables belong to this wrapper; the reusable module still receives decoded dependency maps, not paths.
 
 The module itself does not read remote state or object storage. How dependencies are transported between stacks stays outside the module so it remains backend-agnostic.
 
@@ -44,7 +44,8 @@ gcp_cloud_exadata_infrastructures_dependency = {
 }
 ```
 
-For standalone stacks without external orchestration, uncomment the `*_dependency_file_path` variables at the bottom of the template. Do not set an inline map and file path for the same dependency at the same time.
+For standalone stacks without external orchestration, uncomment the `*_dependency_file_path` variables at the bottom of the template. The ODB networking paths are written for the sibling producer example at `../../../odb-networking/examples/basic/output` when that producer keeps `enable_output = true` and sets `output_path = "./output"`.
+Replace the Exadata Infrastructure path with the output directory of the stack that creates Cloud Exadata Infrastructure. Do not set an inline map and file path for the same dependency at the same time.
 
 4. Set `db_server_ocids` to one validated DB server OCID per VM node. The provider schema allows `db_server_ocids = null`, but real VM Cluster creation can fail at API time without explicit placement, so keep `null` only for environments where server-side placement has already been validated.
 

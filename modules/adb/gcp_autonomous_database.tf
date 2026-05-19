@@ -71,6 +71,7 @@ locals {
       private_endpoint_label                = try(adb.properties[0].private_endpoint_label, null)
       sql_web_developer_url                 = try(adb.properties[0].sql_web_developer_url, null)
       role                                  = try(adb.properties[0].role, null)
+      peer_autonomous_databases             = try(adb.peer_autonomous_databases, null)
       peer_db_ids                           = try(adb.properties[0].peer_db_ids, null)
       permission_level                      = try(adb.properties[0].permission_level, null)
       is_local_data_guard_enabled           = try(adb.properties[0].is_local_data_guard_enabled, null)

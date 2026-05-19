@@ -20,8 +20,9 @@ gcp_oracle_zone = "<REPLACE-BY-GCP-ORACLE-ZONE>" # E.g., europe-west2-c-r2.
 module_name   = "oracle-database-networking-at-gcp"
 enable_output = true
 
-# Set output_path when downstream stacks will consume generated JSON files.
-# Leave null when dependency maps are passed through orchestration outputs.
+# With enable_output = true, output_path writes JSON files for local handoff.
+# Leave output_path null when dependency maps are passed through orchestration outputs.
+# With enable_output = false, module outputs are null and JSON files are not produced.
 output_path = "./output"
 
 #---------------------------------------

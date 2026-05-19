@@ -32,26 +32,26 @@ The module accepts these input variables.
 ### General
 
 * `module_name`: The module name. Defaults to `oracle-database-at-gcp`. It must be compatible with Google Cloud label value syntax because it is included in the module label.
-* `enable_output`: Whether Terraform should enable module output. Defaults to `true`.
+* `enable_output`: Whether Terraform should enable module outputs and JSON handoff file creation. Defaults to `true`.
 * `ssh_public_keys_file_path`: Optional path to a file containing RSA OpenSSH public keys for VM Cluster access. The file must contain one public key per non-empty line. When set, it replaces `properties.ssh_public_keys` for every VM Cluster in the module call.
-* `default_project_id`: Default Google Cloud project ID used by resources when `project_id` is not set on the resource.
-* `default_location`: Default Google Cloud region used by resources when `location` is not set on the resource.
-* `default_gcp_oracle_zone`: Default GCP Oracle zone used by resources that support it.
-* `default_labels`: Default labels merged into all resources. Resource-specific labels win on key collisions.
+* `default_project_id`: Default Google Cloud project ID used by resources when `project_id` is not set on the resource. Must be `null` or non-empty.
+* `default_location`: Default Google Cloud region used by resources when `location` is not set on the resource. Must be `null` or non-empty.
+* `default_gcp_oracle_zone`: Default GCP Oracle zone used by resources that support it. Must be `null` or non-empty.
+* `default_labels`: Default labels merged into all resources. Resource-specific labels win on key collisions. Keys and values must satisfy the module label validation.
 * `default_deletion_protection`: Default deletion protection value for resources that support `deletion_protection`. Defaults to `true`.
 * `default_cloud_exadata_maintenance_window`: Default Cloud Exadata Infrastructure maintenance window used when a resource does not set `properties.maintenance_window`.
-* `output_path`: Optional directory where dependency JSON files are written for downstream stacks.
+* `output_path`: Optional producer-side directory where dependency JSON files are written for downstream stacks when outputs are enabled and matching resources exist.
 * `gcp_odb_networks_dependency`: Externally managed ODB Networks that this module may consume by key. Accepts a map or a map wrapped under `gcp_odb_networks`.
 * `gcp_odb_subnets_dependency`: Externally managed ODB Subnets that this module may consume by key. Accepts a map or a map wrapped under `gcp_odb_subnets`.
 * `gcp_cloud_exadata_infrastructures_dependency`: Externally managed Cloud Exadata Infrastructures that this module may consume by key. Accepts a map or a map wrapped under `gcp_cloud_exadata_infrastructures`.
 
 ### Dependency Inputs
 
-Dependency inputs implement the OCI Landing Zones state-handoff pattern for Google resources. A consumer stack passes dependency maps from Terragrunt `dependency` blocks, `terraform_remote_state` outputs, HCP Terraform workspace outputs, or CI/CD pipeline variables directly into these inputs. As an optional bridge for standalone stacks, a producer can set `output_path` to write JSON files; the consumer wrapper decodes those files and passes the resulting maps to this module. Remote-state, GCS, GitHub, Terraform Cloud, RMS, local file decoding, or other transport concerns belong outside this reusable module.
+Dependency inputs implement the OCI Landing Zones state-handoff pattern for Google resources. A consumer stack passes dependency maps from Terragrunt `dependency` blocks, `terraform_remote_state` outputs, HCP Terraform workspace outputs, or CI/CD pipeline variables directly into these inputs. As an optional bridge for standalone stacks, a producer can set `enable_output = true` and `output_path` to write JSON files; the consumer wrapper decodes those files and passes the resulting maps to this module. Remote-state, GCS, GitHub, Terraform Cloud, RMS, local file decoding, or other transport concerns belong outside this reusable module.
 
 The module resolves Exadata Infrastructure `*_key` references against resources created in the same module call and against `gcp_cloud_exadata_infrastructures_dependency`. ODB Network and ODB Subnet `*_key` references resolve only against `gcp_odb_networks_dependency` and `gcp_odb_subnets_dependency`.
 
-When `output_path` is set, these files are written when matching resources exist:
+When `enable_output = true` and `output_path` is set, these files are written when matching resources exist:
 
 * `gcp_cloud_exadata_infrastructures_output.json`
 * `gcp_cloud_vm_clusters_output.json`
@@ -81,10 +81,10 @@ Each map value has these attributes:
 
 * `cloud_exadata_infrastructure_id`: Required. The Cloud Exadata Infrastructure ID.
 * `display_name`: Optional. Display name of the Exadata infrastructure. Defaults to `cloud_exadata_infrastructure_id` when omitted.
-* `location`: Optional. The Google Cloud region. Overrides `default_location`.
-* `project_id`: Optional. The Google Cloud project ID. Overrides `default_project_id`.
-* `gcp_oracle_zone`: Optional. The GCP Oracle zone. Overrides `default_gcp_oracle_zone`.
-* `labels`: Optional. Labels for the Exadata infrastructure.
+* `location`: Optional. The Google Cloud region. Overrides `default_location`. Must be `null` or non-empty.
+* `project_id`: Optional. The Google Cloud project ID. Overrides `default_project_id`. Must be `null` or non-empty.
+* `gcp_oracle_zone`: Optional. The GCP Oracle zone. Overrides `default_gcp_oracle_zone`. Must be `null` or non-empty.
+* `labels`: Optional. Labels for the Exadata infrastructure. Keys and values must satisfy the module label validation.
 * `deletion_protection`: Optional. Whether deletion protection is enabled. Overrides `default_deletion_protection`.
 * `timeouts`: Optional. Provider timeout overrides for `create`, `update`, and `delete`.
 * `properties`: Required. Exadata infrastructure properties.
@@ -138,9 +138,9 @@ Each map value has these attributes:
 
 * `cloud_vm_cluster_id`: Required. The Cloud VM Cluster ID.
 * `display_name`: Optional. Display name of the VM cluster. Defaults to `cloud_vm_cluster_id` when omitted.
-* `location`: Optional. The Google Cloud region. Overrides `default_location`.
-* `project_id`: Optional. The Google Cloud project ID. Overrides `default_project_id`.
-* `labels`: Optional. Labels for the VM cluster.
+* `location`: Optional. The Google Cloud region. Overrides `default_location`. Must be `null` or non-empty.
+* `project_id`: Optional. The Google Cloud project ID. Overrides `default_project_id`. Must be `null` or non-empty.
+* `labels`: Optional. Labels for the VM cluster. Keys and values must satisfy the module label validation.
 * `deletion_protection`: Optional. Whether deletion protection is enabled. Overrides `default_deletion_protection`.
 * `timeouts`: Optional. Provider timeout overrides for `create`, `update`, and `delete`.
 * `exadata_infrastructure`: Optional. The Exadata infrastructure full resource name in `projects/{project}/locations/{region}/cloudExadataInfrastructures/{cloud_exadata_infrastructure}` format.
@@ -217,4 +217,6 @@ The module returns these outputs:
 * `gcp_cloud_exadata_infrastructures`: Created Exadata infrastructures, keyed by input key.
 * `gcp_cloud_vm_clusters`: Created Exadata VM clusters, keyed by input key.
 
-Each resource output includes stable identifiers and selected computed attributes exported by the Google provider. Exadata Infrastructure outputs include server versions and storage activation counts. VM Cluster outputs include Grid Infrastructure version, cluster identity, placement, capacity, SCAN details, backup and disk redundancy settings, OCI metadata, and lifecycle state. Outputs are disabled when `enable_output` is set to `false`.
+Each resource output includes stable identifiers and selected computed attributes exported by the Google provider. Exadata Infrastructure outputs include server versions and storage activation counts. VM Cluster outputs include Grid Infrastructure version, cluster identity, placement, capacity, SCAN details, backup and disk redundancy settings, OCI metadata, and lifecycle state.
+
+If `enable_output` is `false`, Terraform outputs return `null` and no JSON files are written. JSON output files are wrapped under `gcp_cloud_exadata_infrastructures` and `gcp_cloud_vm_clusters`, matching the dependency maps consumed by downstream wrappers.

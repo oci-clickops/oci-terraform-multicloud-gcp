@@ -8,6 +8,8 @@ Use this example for a complete end-to-end Oracle Autonomous Database@Google Clo
 
 The example composes `modules/odb-networking` and `modules/adb` in the same root module. ODB Network/Subnet outputs are passed directly as dependency maps, so the Autonomous Database uses module keys (`primary`, `client`) without copying resource names.
 
+The shared `output_path` is optional. When the relevant `*_enable_output` flags are `true`, it writes ODB Networking and Autonomous Database JSON handoff files for downstream stacks. If a flag is `false`, that module's Terraform outputs are `null` and its JSON files are not written.
+
 ## Prerequisites
 
 Before running it, confirm that:

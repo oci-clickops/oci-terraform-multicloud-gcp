@@ -6,7 +6,7 @@ Use this example for a multi-stack Oracle Autonomous Database@Google Cloud deplo
 
 This is the recommended pattern when the networking stack is managed separately — for example, when the ODB Network was created by `modules/odb-networking` in a different Terraform state.
 
-The primary way to pass dependencies is as inline maps injected from Terragrunt `dependency` blocks, `terraform_remote_state` outputs, HCP Terraform workspace outputs, or CI/CD pipeline variables. For standalone stacks without external orchestration, set the `*_dependency_file_path` variables and this example will decode the JSON files before passing dependency maps to the reusable module.
+The primary way to pass dependencies is as inline maps injected from Terragrunt `dependency` blocks, `terraform_remote_state` outputs, HCP Terraform workspace outputs, or CI/CD pipeline variables. For standalone stacks without external orchestration, set the `*_dependency_file_path` variables and this example will decode the JSON files before passing dependency maps to the reusable module. The file path variables belong to this wrapper; the reusable module still receives maps, not paths.
 
 ## Prerequisites
 
@@ -23,6 +23,7 @@ Before running it, confirm that:
 1. Rename `input.auto.tfvars.template` to a name of your choice, following the pattern `<project-name>.auto.tfvars`.
 2. Edit the renamed file — replace all `<REPLACE-BY-*>` placeholders with the full resource names of the existing ODB Network and ODB Subnet.
 3. If using JSON files from an upstream `output_path`, set the `*_dependency_file_path` variables instead of the inline dependency maps.
+   The template paths are relative to this consumer example and point to the networking producer example at `../../../odb-networking/examples/basic/output` when that producer keeps `enable_output = true` and sets `output_path = "./output"`.
 4. Set the admin password via environment variable to avoid storing credentials in files:
 
 ```sh

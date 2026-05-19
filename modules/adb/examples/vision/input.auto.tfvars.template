@@ -24,7 +24,9 @@ odb_networking_enable_output = true
 adb_module_name   = "oracle-autonomous-database-at-gcp"
 adb_enable_output = true
 
-# Optional: write ODB Networking and ADB dependency JSON files.
+# Optional with both *_enable_output flags true: write ODB Networking and ADB
+# dependency JSON files. Set output_path = null when orchestration consumes
+# Terraform outputs directly.
 output_path = "./output"
 
 #---------------------------------------

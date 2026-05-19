@@ -109,6 +109,8 @@ When `*_key` references are used for ODB networking, the module enforces that OD
 
 Common defaults such as project, location, GCP Oracle zone, labels, deletion protection, Exadata maintenance windows, and operation timeouts are handled by module-level inputs. Resource-specific values override the defaults.
 
+The module rejects whitespace-only project, location, and GCP Oracle zone values and validates labels on defaults, Cloud Exadata Infrastructure resources, and VM Cluster resources before the provider call.
+
 When `display_name` is omitted, Cloud Exadata Infrastructure and Cloud VM Cluster resources use their resource ID as the display name. `module_name` is also validated so the generated module label remains compatible with Google Cloud label rules.
 
 VM Cluster SSH public keys can be supplied directly with `properties.ssh_public_keys` or centrally with `ssh_public_keys_file_path`. When the file path is set, the module reads one RSA OpenSSH public key per non-empty line and injects the resulting list into every VM Cluster configuration.
@@ -123,9 +125,19 @@ For multi-team or multi-state deployments, a consumer stack passes dependency ma
 * `gcp_odb_subnets_dependency`
 * `gcp_cloud_exadata_infrastructures_dependency`
 
-As an optional bridge for local development, demos, or file-based orchestration, a producer can set `output_path` to write JSON handoff files. `modules/odb-networking` writes ODB networking handoff files, and this module writes Exadata/VM Cluster handoff files. Reusable module inputs still receive dependency maps; wrappers such as `examples/cluster` are responsible for reading JSON files with `jsondecode(file(...))` before passing those maps to the module.
+As an optional bridge for local development, demos, or file-based orchestration, a producer can set `enable_output = true` and `output_path` to write JSON handoff files. `modules/odb-networking` writes ODB networking handoff files, and this module writes Exadata/VM Cluster handoff files. Reusable module inputs still receive dependency maps; wrappers such as `examples/cluster` are responsible for reading JSON files with `jsondecode(file(...))` before passing those maps to the module.
 
 The module stays backend-agnostic. It does not read remote state. Exadata Infrastructure keys can resolve to a resource created in the same module call or to `gcp_cloud_exadata_infrastructures_dependency`; ODB Network and ODB Subnet keys resolve only to their dependency maps.
+
+### Output Controls
+
+Use these controls deliberately:
+
+* `enable_output = true`, `output_path = null`: expose Terraform outputs only.
+* `enable_output = true`, `output_path = "./output"`: expose Terraform outputs and write JSON handoff files for resource families that have instances.
+* `enable_output = false`: return `null` from module outputs and write no JSON files, even when `output_path` is set.
+
+The JSON files are producer outputs for downstream wrappers and orchestration. Consumer dependency inputs still receive maps, not file paths.
 
 VPC and ODB networking creation stay outside this module boundary. If a deployment needs a new VPC for a proof of concept, create it in a separate landing-zone or networking stack, then create the ODB Network/Subnets with `modules/odb-networking`.
 
@@ -161,9 +173,9 @@ The module returns created resources with the same keys used in the input maps:
 * `gcp_cloud_exadata_infrastructures`
 * `gcp_cloud_vm_clusters`
 
-Each output includes stable identifiers and selected computed attributes exported by the Google provider. Set `enable_output = false` to suppress outputs.
+Each output includes stable identifiers and selected computed attributes exported by the Google provider. Set `enable_output = false` to return `null` from these outputs and disable JSON handoff file creation.
 
-When `output_path` is set, the module also writes dependency files for downstream stacks:
+When `enable_output = true` and `output_path` is set, the module also writes dependency files for downstream stacks when matching resources exist:
 
 * `gcp_cloud_exadata_infrastructures_output.json`
 * `gcp_cloud_vm_clusters_output.json`

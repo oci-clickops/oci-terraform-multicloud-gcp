@@ -8,7 +8,7 @@ Use this example to create only the Oracle Database@Google Cloud networking laye
 
 This example does not create Cloud Exadata Infrastructure or Cloud VM Clusters. Use it when the platform or landing zone owns the VPC and you want to validate Oracle Database@Google Cloud networking without consuming Exadata capacity.
 
-It is also useful as a separate Terraform state boundary. One state can own the ODB Network and ODB Subnets, set `output_path`, and publish dependency JSON files for a later Exadata/VM Cluster state. This mirrors the common split between platform networking and database infrastructure. See `../../../exadb/examples/cluster` for the consumer side of this pattern.
+It is also useful as a separate Terraform state boundary. One state can own the ODB Network and ODB Subnets, keep `enable_output = true`, set `output_path`, and publish dependency JSON files for a later Exadata/VM Cluster or Autonomous Database state. This mirrors the common split between platform networking and database infrastructure. See `../../../exadb/examples/cluster` and `../../../adb/examples/existing-odb-network` for consumer-side examples of this pattern.
 
 ## Prerequisites
 
@@ -33,6 +33,6 @@ terraform apply plan.out
 
 Review the plan carefully before applying.
 
-When `output_path` is set, apply writes `gcp_odb_networks_output.json` and `gcp_odb_subnets_output.json` to that directory. A consumer stack such as `../../../exadb/examples/cluster` can receive the resource IDs as inline maps via Terragrunt, `terraform_remote_state`, or CI/CD. For standalone deployments, set the consumer example-level `*_dependency_file_path` variables so the wrapper decodes the JSON and passes maps to the reusable module.
+When `enable_output = true` and `output_path` is set, apply writes `gcp_odb_networks_output.json` and `gcp_odb_subnets_output.json` to that directory. A consumer stack such as `../../../exadb/examples/cluster` can receive the resource IDs as inline maps via Terragrunt, `terraform_remote_state`, or CI/CD. For standalone deployments, set the consumer example-level `*_dependency_file_path` variables so the wrapper decodes the JSON and passes maps to the reusable module. If `enable_output = false`, module outputs are `null` and JSON handoff files are not produced.
 
 See the module [README](../../README.md) for full attribute documentation.

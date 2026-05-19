@@ -32,19 +32,19 @@ The module accepts these input variables.
 ### General
 
 * `module_name`: The module name. Defaults to `oracle-autonomous-database-at-gcp`. It must be compatible with Google Cloud label value syntax because it is included in the module label.
-* `enable_output`: Whether Terraform should enable module output. Defaults to `true`.
-* `output_path`: Optional directory where dependency JSON files are written for downstream stacks.
+* `enable_output`: Whether Terraform should enable module outputs and JSON handoff file creation. Defaults to `true`.
+* `output_path`: Optional producer-side directory where dependency JSON files are written for downstream stacks when outputs are enabled and matching resources exist.
 * `default_project_id`: Default Google Cloud project ID used by resources when `project_id` is not set on the resource. If set, it must be non-empty.
 * `default_location`: Default Google Cloud region used by resources when `location` is not set on the resource. If set, it must be non-empty.
 * `default_labels`: Default labels merged into all resources. Resource-specific labels win on key collisions. Keys and values must follow Google Cloud label syntax: lowercase letters, numbers, underscores, and hyphens; keys must start with a lowercase letter; values may be empty.
 * `default_deletion_protection`: Default deletion protection value. Defaults to `true`.
 * `gcp_odb_networks_dependency`: Externally managed ODB Networks this module may consume by key. Accepts a map or a map wrapped under `gcp_odb_networks`.
 * `gcp_odb_subnets_dependency`: Externally managed ODB Subnets this module may consume by key. Accepts a map or a map wrapped under `gcp_odb_subnets`.
-* `gcp_autonomous_databases_admin_passwords`: Admin passwords for Autonomous Databases, keyed by the same keys as `gcp_autonomous_databases_configuration`. Sensitive. Do not store in committed files — use `TF_VAR_gcp_autonomous_databases_admin_passwords` instead. Values must be 12–30 characters, include at least one uppercase letter, one lowercase letter, and one number, and must not contain double quotes or `admin` in any casing.
+* `gcp_autonomous_databases_admin_passwords`: Admin passwords for Autonomous Databases, keyed by the same keys as `gcp_autonomous_databases_configuration`. Sensitive. Do not store in committed files — use `TF_VAR_gcp_autonomous_databases_admin_passwords` instead. Each configured database must have a matching password entry unless `properties.secret_id` is set, and unknown password keys are rejected when databases are configured. Values must be 12–30 characters, include at least one uppercase letter, one lowercase letter, and one number, and must not contain double quotes or `admin` in any casing.
 
 ### Dependency Inputs
 
-`gcp_odb_networks_dependency` and `gcp_odb_subnets_dependency` implement the OCI Landing Zones state-handoff pattern. A consumer stack passes dependency maps from Terragrunt `dependency` blocks, `terraform_remote_state` outputs, HCP Terraform workspace outputs, or CI/CD pipeline variables directly into these inputs. As an optional bridge for standalone stacks, a producer can set `output_path` on the ODB networking module (`modules/odb-networking/`) to write JSON files; the consumer wrapper decodes those files and passes the resulting maps to this module. Remote-state, GCS, GitHub, Terraform Cloud, RMS, local file decoding, or other transport concerns belong outside this reusable module.
+`gcp_odb_networks_dependency` and `gcp_odb_subnets_dependency` implement the OCI Landing Zones state-handoff pattern. A consumer stack passes dependency maps from Terragrunt `dependency` blocks, `terraform_remote_state` outputs, HCP Terraform workspace outputs, or CI/CD pipeline variables directly into these inputs. As an optional bridge for standalone stacks, a producer can set `enable_output = true` and `output_path` on the ODB networking module (`modules/odb-networking/`) to write JSON files; the consumer wrapper decodes those files and passes the resulting maps to this module. Remote-state, GCS, GitHub, Terraform Cloud, RMS, local file decoding, or other transport concerns belong outside this reusable module.
 
 `gcp_odb_networks_dependency` entries:
 
@@ -131,7 +131,7 @@ The module enforces these checks at `terraform plan`, not at apply, to avoid lat
 * **Reference requirement and mutex** — each entry must set exactly one of `odb_network` or `odb_network_key`, and exactly one of `odb_subnet` or `odb_subnet_key`.
 * **Geographic coherence** — `odb_subnet` (literal or resolved through `odb_subnet_key`) must belong to the selected `odb_network` and share the same project, location, and parent ODB Network segment.
 * **Subnet purpose** — when `odb_subnet_key` resolves through `gcp_odb_subnets_dependency`, the referenced subnet must have `purpose = "CLIENT_SUBNET"`. Backup subnets are rejected.
-* **Admin password policy** — each supplied admin password must satisfy the Oracle Autonomous Database password policy enforced by the module: length 12–30, at least one uppercase letter, one lowercase letter, one number, no double quotes, and no `admin` substring in any casing.
+* **Admin password policy** — each configured database must have a matching entry in `gcp_autonomous_databases_admin_passwords` unless `properties.secret_id` is set, and password keys that do not match configured database keys are rejected. Each supplied admin password must satisfy the Oracle Autonomous Database password policy enforced by the module: length 12–30, at least one uppercase letter, one lowercase letter, one number, no double quotes, and no `admin` substring in any casing.
 * **Database name format** — `database`, when set, must match the Google provider rule: starts with a letter, contains only alphanumeric characters, and is at most 30 characters long. Duplicate resource or database names are left to the Google provider/API, matching the OCI module style.
 * **Google label syntax** — `default_labels` and per-resource `labels` are validated for Google Cloud label-compatible keys and values before planning resources.
 * **Project and location hygiene** — `default_project_id`, `default_location`, per-resource `project_id`, and per-resource `location` can be omitted, but cannot be whitespace-only strings.
@@ -153,8 +153,8 @@ Each database output includes:
 * Google identifiers: `id`, `name`, `location`, and `project`.
 * OCI identifiers: `ocid`, `oci_url`, `oci_region`, `oci_tenant`, and `oci_compartment_id`.
 * Connectivity details: `connection_strings`, `connection_urls`, `private_endpoint`, `private_endpoint_ip`, `private_endpoint_label`, and `sql_web_developer_url`.
-* Lifecycle and peer metadata: `state`, `role`, `peer_db_ids`, `permission_level`, `is_local_data_guard_enabled`, `local_disaster_recovery_type`, `local_standby_db`, and `disaster_recovery_supported_locations`.
+* Lifecycle and peer metadata: `state`, `role`, `peer_autonomous_databases`, `peer_db_ids`, `permission_level`, `is_local_data_guard_enabled`, `local_disaster_recovery_type`, `local_standby_db`, and `disaster_recovery_supported_locations`.
 
-Outputs are disabled when `enable_output` is set to `false`.
+If `enable_output` is `false`, Terraform outputs return `null` and no JSON files are written.
 
-When `output_path` is set, the module writes `gcp_autonomous_databases_output.json` when matching resources exist.
+When `enable_output = true` and `output_path` is set, the module writes `gcp_autonomous_databases_output.json` when matching resources exist. The JSON shape is wrapped under `gcp_autonomous_databases`, matching the dependency maps consumed by downstream wrappers.
