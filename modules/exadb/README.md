@@ -36,7 +36,7 @@ Before running Terraform against real infrastructure, make sure these pieces are
 * A Google Cloud project enabled for Oracle Database@Google Cloud.
 * Google provider authentication for the Terraform caller.
 * IAM permissions to manage Oracle Database@Google Cloud resources and reference the target VPC network.
-* Terraform `>= 1.3.0` and HashiCorp Google provider `>= 7.13.0, < 8.0.0`.
+* Terraform `>= 1.4.0` and HashiCorp Google provider `>= 7.13.0, < 8.0.0`.
 * An existing Google Cloud VPC network.
 * Oracle Database@Google Cloud entitlement and capacity in the target project and region.
 * RSA SSH public keys for VM Cluster access. Ed25519 keys are rejected by the Oracle Database@Google Cloud VM Cluster API.
@@ -55,14 +55,57 @@ After the vision example works in your environment, use the smaller examples to 
 
 ### Key References
 
-Related resources can be wired in two ways:
+Every cross-resource reference accepts two interchangeable forms. Pick whichever fits the way the upstream resource was managed:
 
-* Pass the literal provider resource name or ID.
-* Pass a module key that points to another resource created in the same module call.
+* **`*_key` form** — a logical name resolved against `*_configuration` (same module call) or `*_dependency` (external map or JSON file). Keys must be unique across both maps; a collision fails the plan up front.
+* **direct form** — the literal full GCP resource name, useful for one-off references to externally managed infrastructure that is not modeled in any dependency map.
 
-For example, a VM cluster can use `exadata_infrastructure_key` to select an Exadata infrastructure from `gcp_cloud_exadata_infrastructures_configuration`, and `odb_subnet_key` or `backup_odb_subnet_key` to select subnets from `gcp_odb_subnets_configuration`.
+The two forms are mutually exclusive on the same field pair: set exactly one of `exadata_infrastructure` or `exadata_infrastructure_key`, exactly one of `odb_network` or `odb_network_key`, and so on.
 
-VM clusters use ODB subnet mode with client and backup ODB subnet references, either passed directly or selected through module keys. When using ODB subnet module keys, the client key must point to a `CLIENT_SUBNET`, the backup key must point to a `BACKUP_SUBNET`, and both subnet keys must belong to the ODB network selected by `odb_network_key` when that key is set.
+#### Side-by-side example
+
+`*_key` form — recommended when the upstream resource is either created in this same module call or imported through a `*_dependency` map:
+
+```hcl
+gcp_cloud_exadata_infrastructures_configuration = {
+  "shared-exa" = {
+    cloud_exadata_infrastructure_id = "shared-exa"
+    properties = { shape = "Exadata.X11M" }
+  }
+}
+
+gcp_cloud_vm_clusters_configuration = {
+  "prod-cluster" = {
+    cloud_vm_cluster_id        = "prod-cluster"
+    exadata_infrastructure_key = "shared-exa"   # resolves to the entry above
+    odb_network_key            = "prod-net"     # resolves from gcp_odb_networks_configuration or _dependency
+    odb_subnet_key             = "prod-client"
+    backup_odb_subnet_key      = "prod-backup"
+    properties = { license_type = "BRING_YOUR_OWN_LICENSE", cpu_core_count = 8 }
+  }
+}
+```
+
+Direct form — useful when the Exadata infrastructure was created by `gcloud`, an OCI console operator, or a parallel stack that does not produce a JSON handoff:
+
+```hcl
+gcp_cloud_vm_clusters_configuration = {
+  "prod-cluster" = {
+    cloud_vm_cluster_id    = "prod-cluster"
+    exadata_infrastructure = "projects/my-project/locations/us-east4/cloudExadataInfrastructures/shared-exa"
+    odb_network            = "projects/my-project/locations/us-east4/odbNetworks/prod-net"
+    odb_subnet             = "projects/my-project/locations/us-east4/odbNetworks/prod-net/odbSubnets/prod-client"
+    backup_odb_subnet      = "projects/my-project/locations/us-east4/odbNetworks/prod-net/odbSubnets/prod-backup"
+    properties = { license_type = "BRING_YOUR_OWN_LICENSE", cpu_core_count = 8 }
+  }
+}
+```
+
+Both forms accept the same surrounding configuration. Mix them across different entries in the same map when that matches the way the upstream resources are owned.
+
+#### Cross-resource consistency
+
+When `*_key` references are used, the module enforces that ODB subnets belong to the parent ODB network (same project, location, and network segment), that the client `odb_subnet_key` resolves to `purpose = CLIENT_SUBNET`, and that `backup_odb_subnet_key` resolves to `purpose = BACKUP_SUBNET`. These checks run at plan time as resource preconditions.
 
 Common defaults such as project, location, GCP Oracle zone, labels, deletion protection, Exadata maintenance windows, and operation timeouts are handled by module-level inputs. Resource-specific values override the defaults.
 

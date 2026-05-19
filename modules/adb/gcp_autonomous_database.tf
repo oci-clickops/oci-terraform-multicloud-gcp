@@ -22,7 +22,8 @@ locals {
 
   gcp_odb_subnets_dependency = {
     for key, subnet in local.gcp_odb_subnets_dependency_raw : key => {
-      id = subnet.id
+      id      = subnet.id
+      purpose = try(subnet.purpose, null)
     }
   }
 
@@ -37,6 +38,42 @@ locals {
     for key, adb in var.gcp_autonomous_databases_configuration : key =>
     adb.odb_subnet != null ? adb.odb_subnet : (
       adb.odb_subnet_key == null ? null : try(local.gcp_odb_subnets_dependency[adb.odb_subnet_key].id, null)
+    )
+  }
+
+  autonomous_database_selected_odb_network_segments = {
+    for key, adb in var.gcp_autonomous_databases_configuration : key => (
+      adb.odb_network != null ? {
+        project  = try(split("/", adb.odb_network)[1], null)
+        location = try(split("/", adb.odb_network)[3], null)
+        segment  = try(split("/", adb.odb_network)[5], null)
+        } : (
+        adb.odb_network_key == null ? null : (
+          try(local.gcp_odb_networks_dependency[adb.odb_network_key].id, null) == null ? null : {
+            project  = try(split("/", local.gcp_odb_networks_dependency[adb.odb_network_key].id)[1], null)
+            location = try(split("/", local.gcp_odb_networks_dependency[adb.odb_network_key].id)[3], null)
+            segment  = try(split("/", local.gcp_odb_networks_dependency[adb.odb_network_key].id)[5], null)
+          }
+        )
+      )
+    )
+  }
+
+  autonomous_database_subnet_parent_segments = {
+    for key, adb in var.gcp_autonomous_databases_configuration : key => (
+      adb.odb_subnet != null ? {
+        project  = try(split("/", adb.odb_subnet)[1], null)
+        location = try(split("/", adb.odb_subnet)[3], null)
+        segment  = try(split("/", adb.odb_subnet)[5], null)
+        } : (
+        adb.odb_subnet_key == null ? null : (
+          try(local.gcp_odb_subnets_dependency[adb.odb_subnet_key].id, null) == null ? null : {
+            project  = try(split("/", local.gcp_odb_subnets_dependency[adb.odb_subnet_key].id)[1], null)
+            location = try(split("/", local.gcp_odb_subnets_dependency[adb.odb_subnet_key].id)[3], null)
+            segment  = try(split("/", local.gcp_odb_subnets_dependency[adb.odb_subnet_key].id)[5], null)
+          }
+        )
+      )
     )
   }
 
@@ -160,6 +197,29 @@ resource "google_oracle_database_autonomous_database" "these" {
         contains(keys(local.gcp_odb_subnets_dependency), each.value.odb_subnet_key)
       )
       error_message = "Autonomous database '${each.key}': odb_subnet_key not found in gcp_odb_subnets_dependency. Available keys: ${join(", ", keys(local.gcp_odb_subnets_dependency))}."
+    }
+
+    precondition {
+      condition = (
+        local.autonomous_database_selected_odb_network_segments[each.key] == null ||
+        local.autonomous_database_subnet_parent_segments[each.key] == null ||
+        (
+          local.autonomous_database_selected_odb_network_segments[each.key].segment != null &&
+          local.autonomous_database_subnet_parent_segments[each.key].segment != null &&
+          local.autonomous_database_selected_odb_network_segments[each.key].project == local.autonomous_database_subnet_parent_segments[each.key].project &&
+          local.autonomous_database_selected_odb_network_segments[each.key].location == local.autonomous_database_subnet_parent_segments[each.key].location &&
+          local.autonomous_database_selected_odb_network_segments[each.key].segment == local.autonomous_database_subnet_parent_segments[each.key].segment
+        )
+      )
+      error_message = "Autonomous database '${each.key}': odb_subnet must belong to the selected odb_network and share the same project and location."
+    }
+
+    precondition {
+      condition = each.value.odb_subnet_key == null ? true : (
+        try(local.gcp_odb_subnets_dependency[each.value.odb_subnet_key].purpose, null) == null ||
+        local.gcp_odb_subnets_dependency[each.value.odb_subnet_key].purpose == "CLIENT_SUBNET"
+      )
+      error_message = "Autonomous database '${each.key}': odb_subnet_key must reference an ODB subnet with purpose CLIENT_SUBNET."
     }
   }
 }

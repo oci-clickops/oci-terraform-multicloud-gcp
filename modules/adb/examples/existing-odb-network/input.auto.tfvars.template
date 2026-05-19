@@ -36,7 +36,8 @@ gcp_odb_networks_dependency = {
 
 gcp_odb_subnets_dependency = {
   client = {
-    id = "<REPLACE-BY-ODB-SUBNET-RESOURCE-NAME>"  # E.g., projects/<project>/locations/<region>/odbNetworks/<network>/odbSubnets/<subnet>.
+    id      = "<REPLACE-BY-ODB-SUBNET-RESOURCE-NAME>"  # E.g., projects/<project>/locations/<region>/odbNetworks/<network>/odbSubnets/<subnet>.
+    purpose = "CLIENT_SUBNET"                          # CLIENT_SUBNET for ADB connectivity. BACKUP_SUBNET is rejected by precondition.
   }
 }
 

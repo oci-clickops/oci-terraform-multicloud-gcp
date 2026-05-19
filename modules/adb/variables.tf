@@ -106,6 +106,18 @@ variable "gcp_odb_subnets_dependency" {
     ]), false)
     error_message = "ODB subnet dependency id values must use projects/{project}/locations/{location}/odbNetworks/{odb_network}/odbSubnets/{odb_subnet} format."
   }
+
+  validation {
+    condition = try(alltrue([
+      for subnet in try(
+        var.gcp_odb_subnets_dependency.gcp_odb_subnets,
+        jsondecode(file(var.gcp_odb_subnets_dependency)).gcp_odb_subnets,
+        var.gcp_odb_subnets_dependency
+      ) :
+      contains(["CLIENT_SUBNET", "BACKUP_SUBNET"], try(subnet.purpose, ""))
+    ]), false)
+    error_message = "ODB subnet dependency purpose must be set to CLIENT_SUBNET or BACKUP_SUBNET on every entry."
+  }
 }
 
 variable "gcp_autonomous_databases_configuration" {
@@ -179,6 +191,15 @@ variable "gcp_autonomous_databases_configuration" {
       )
     ])
     error_message = "Each Autonomous Database must use either VPC mode (network + cidr) or ODB Network mode (odb_network/odb_network_key + odb_subnet/odb_subnet_key), not both."
+  }
+
+  validation {
+    condition = alltrue([
+      for adb in var.gcp_autonomous_databases_configuration :
+      !((adb.odb_network != null && adb.odb_network_key != null) ||
+        (adb.odb_subnet != null && adb.odb_subnet_key != null))
+    ])
+    error_message = "Each Autonomous Database must set at most one of (odb_network, odb_network_key) and at most one of (odb_subnet, odb_subnet_key); both null is allowed for VPC mode."
   }
 
   validation {

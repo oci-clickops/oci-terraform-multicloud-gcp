@@ -6,6 +6,7 @@
 - [Compatibility](#compatibility)
 - [Module Inputs](#module-inputs)
 - [Autonomous Databases](#autonomous-databases)
+- [Plan-time Validations](#plan-time-validations)
 - [Module Outputs](#module-outputs)
 
 ## <a name="overview">Overview</a>
@@ -16,7 +17,7 @@ The README covers deployment guidance and examples. This specification focuses o
 
 ## <a name="compatibility">Compatibility</a>
 
-This module requires Terraform `>= 1.3.0` and HashiCorp Google provider `>= 7.13.0, < 8.0.0`. The schema was validated against Google provider `7.31.0` on May 6, 2026.
+This module requires Terraform `>= 1.4.0` and HashiCorp Google provider `>= 7.13.0, < 8.0.0`. The schema was validated against Google provider `7.31.0` on May 6, 2026.
 
 Google Cloud project enablement, Oracle Database@Google Cloud entitlement, IAM permissions, and provider authentication are external prerequisites.
 
@@ -50,7 +51,7 @@ The module accepts these input variables.
 `gcp_odb_subnets_dependency` entries:
 
 * `id`: Required. Full resource name in `projects/{project}/locations/{location}/odbNetworks/{odb_network}/odbSubnets/{odb_subnet}` format.
-* `purpose`: Optional. `CLIENT_SUBNET` or `BACKUP_SUBNET`. Ignored by this module; preserved so the same map can be reused by the ExaDB module without modification.
+* `purpose`: Required. `CLIENT_SUBNET` or `BACKUP_SUBNET`. The module validates this field is set on every dependency entry and additionally rejects subnets that resolve to a non-`CLIENT_SUBNET` purpose when referenced by an Autonomous Database via `odb_subnet_key`. The same map produced by the ExaDB module (`modules/exadb/`) already emits this field, so the handoff works without modification.
 
 ## <a name="autonomous-databases">Autonomous Databases</a>
 
@@ -119,6 +120,17 @@ Ignored Autonomous Database fields:
 The policy follows Oracle's published guidance for the dual control-plane model (see [Modify an Autonomous Database](https://docs.oracle.com/en-us/iaas/Content/database-at-gcp/gcpmd-modify-autonomous-ai-database.html)), which recommends ignoring capacity, storage, version, edition, auto-scaling flags, and backup retention fields that change when Day-2 operations are performed through the OCI control plane. `operations_insights_state` is additionally ignored because the Google Cloud Oracle Database REST API marks it as output-only. Labels and all other attributes remain visible to Terraform.
 
 Provider resource: `google_oracle_database_autonomous_database`.
+
+## <a name="plan-time-validations">Plan-time Validations</a>
+
+The module enforces these checks at `terraform plan`, not at apply, to avoid late provider failures:
+
+* **Reference mutex** — `odb_network` and `odb_network_key` cannot both be set on the same entry; same for `odb_subnet` and `odb_subnet_key`. Both null is allowed when using VPC mode.
+* **Geographic coherence** — `odb_subnet` (literal or resolved through `odb_subnet_key`) must belong to the selected `odb_network` and share the same project, location, and parent ODB Network segment.
+* **Subnet purpose** — when `odb_subnet_key` resolves through `gcp_odb_subnets_dependency`, the referenced subnet must have `purpose = "CLIENT_SUBNET"`. Backup subnets are rejected.
+* **Internal ID uniqueness** — `autonomous_database_id` must be unique within each `(project, location)` tuple across all entries in `gcp_autonomous_databases_configuration`. Duplicates fail the plan with a listing of the colliding keys.
+
+These checks fail with actionable error messages before any Google Cloud API call is made. They complement the variable-level format validations (resource name regex, enum values, numeric ranges) which run earlier as part of input parsing.
 
 ## <a name="module-outputs">Module Outputs</a>
 

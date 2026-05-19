@@ -34,7 +34,7 @@ Before running Terraform against real infrastructure, make sure these pieces are
 * A Google Cloud project enabled for Oracle Database@Google Cloud.
 * Google provider authentication for the Terraform caller.
 * IAM permissions to manage Oracle Database@Google Cloud resources.
-* Terraform `>= 1.3.0` and HashiCorp Google provider `>= 7.13.0, < 8.0.0`.
+* Terraform `>= 1.4.0` and HashiCorp Google provider `>= 7.13.0, < 8.0.0`.
 * For VPC mode: an existing Google Cloud VPC network and an available CIDR range.
 * For ODB Network mode: an existing ODB Network and ODB Subnet, created by the root module or an equivalent stack.
 * Oracle Database@Google Cloud entitlement and capacity in the target project and region.
@@ -49,14 +49,61 @@ If you are using an ODB Network created by the root module, use [examples/existi
 
 ## <a name="configuration-model">Configuration Model</a>
 
-Two networking modes are supported. Each database in `gcp_autonomous_databases_configuration` must use exactly one:
+Two networking modes are supported. Each database in `gcp_autonomous_databases_configuration` must use exactly one mode.
 
-* **VPC mode**: set `network` (full VPC resource name in `projects/{project}/global/networks/{network}` format) and `cidr` (CIDR block for the database subnet).
-* **ODB Network mode**: set `odb_network` (full ODB Network resource name) or `odb_network_key` (logical key in `gcp_odb_networks_dependency`), plus `odb_subnet` or `odb_subnet_key`.
+### VPC mode
 
-For ODB Network mode, pass existing ODB Network and ODB Subnet resource names or dependency maps through `gcp_odb_networks_dependency` and `gcp_odb_subnets_dependency`. These accept the same JSON dependency files produced by the root module when `output_path` is set.
+Set `network` (full VPC resource name in `projects/{project}/global/networks/{network}` format) and `cidr` (CIDR block for the database subnet):
+
+```hcl
+gcp_autonomous_databases_configuration = {
+  "analytics" = {
+    autonomous_database_id = "analytics"
+    network                = "projects/my-project/global/networks/my-vpc"
+    cidr                   = "10.20.30.0/24"
+    properties             = { db_workload = "DW", license_type = "BRING_YOUR_OWN_LICENSE" }
+  }
+}
+```
+
+### ODB Network mode
+
+ODB Network mode supports two interchangeable forms for the network and subnet references.
+
+`*_key` form — recommended when the upstream ODB Network and Subnet come from an existing `gcp_odb_networks_dependency` / `gcp_odb_subnets_dependency` map, typically produced by the root module via `output_path`:
+
+```hcl
+gcp_odb_networks_dependency = "/path/to/gcp_odb_networks_output.json"
+gcp_odb_subnets_dependency  = "/path/to/gcp_odb_subnets_output.json"
+
+gcp_autonomous_databases_configuration = {
+  "txn" = {
+    autonomous_database_id = "txn"
+    odb_network_key        = "prod-net"     # logical key from the dependency file
+    odb_subnet_key         = "prod-client"
+    properties             = { db_workload = "OLTP", license_type = "LICENSE_INCLUDED" }
+  }
+}
+```
+
+Direct form — useful when the ODB Network and Subnet were created by `gcloud`, an OCI console operator, or a stack that does not produce a JSON handoff:
+
+```hcl
+gcp_autonomous_databases_configuration = {
+  "txn" = {
+    autonomous_database_id = "txn"
+    odb_network            = "projects/my-project/locations/us-east4/odbNetworks/prod-net"
+    odb_subnet             = "projects/my-project/locations/us-east4/odbNetworks/prod-net/odbSubnets/prod-client"
+    properties             = { db_workload = "OLTP", license_type = "LICENSE_INCLUDED" }
+  }
+}
+```
+
+Set exactly one of `odb_network` or `odb_network_key`, and exactly one of `odb_subnet` or `odb_subnet_key`. The two forms are mutually exclusive on the same field pair and can be mixed across entries in the same map when ownership differs.
 
 Common defaults such as project, location, labels, and deletion protection are handled by module-level inputs. Resource-specific values override the defaults.
+
+The module performs strict validation at `terraform plan`: ODB Network and Subnet references must be geographically consistent (same project, location, and parent ODB Network segment), dependency-provided subnets must declare `purpose = "CLIENT_SUBNET"` to be usable, and `autonomous_database_id` must be unique within each `(project, location)`. Configuration errors fail the plan with actionable messages instead of producing a late Google Cloud API error during apply. See [SPEC.md](./SPEC.md#plan-time-validations) for the full list.
 
 ## <a name="operational-drift-policy">Operational Drift Policy</a>
 
