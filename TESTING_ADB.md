@@ -183,7 +183,7 @@ Use `modules/adb/examples/existing-odb-network` with local ignored
 | 2026-05-19 21:09:59 CEST | User | ADB-D-007 | User-run cleanup of ADB test resource | Pass | ADB resource destruction completed after 6m14s; wrapper `terraform_data.validate_dependency_sources` destruction completed after 0s |
 | 2026-05-19 21:15:40 CEST | Codex | ADB-C-017..ADB-C-023 | Added provider-field validation tests and implementation | Pass | Red/green cycle completed; `terraform test -no-color` reported 40 passed, 0 failed |
 | 2026-05-19 21:55:57 CEST | Codex | ADB-C-009, ADB-C-018, ADB-L-004..ADB-L-007 | Removed standalone uniqueness `terraform_data` to align with OCI module style | Pass | ADB `validate`, `terraform test` 38/38, and both ADB examples `init -backend=false` plus `validate` passed |
-| 2026-05-19 21:16:44 CEST | Codex | ADB-L-004..ADB-L-007 | Final local verification after provider-field validations | Pass | `terraform fmt -check -recursive modules`, ADB `validate`, ADB `test` 40/40, both example `init -backend=false` and `validate`, and `git diff --check` passed |
+| 2026-05-19 21:16:44 CEST | Codex | ADB-L-004..ADB-L-007 | Historical final local verification after provider-field validations | Pass | At that point `terraform test` reported 40/40; later uniqueness-scope alignment removed two duplicate-name tests, so current coverage is 38/38 |
 
 ## Publication Checklist
 
