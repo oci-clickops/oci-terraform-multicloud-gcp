@@ -1,30 +1,41 @@
 #-------------------------------------------------------------------------------------------------------------------------------------------
 # 1. Rename this file to <project-name>.auto.tfvars, where <project-name> is a name of your choice.
 # 2. Provide values for "GCP Connectivity Variables".
-# 3. Replace placeholder values in the configuration maps below with your own.
-# 4. Optionally set output_path to write dependency JSON files for downstream Terraform states (examples/cluster).
+# 3. Replace <REPLACE-BY-*> placeholders with actual values.
+# 4. Keep exactly one active parent reference per subnet: odb_network_key or odbnetwork.
 #-------------------------------------------------------------------------------------------------------------------------------------------
 
 #---------------------------------------
 # GCP Connectivity Variables
 #---------------------------------------
 
-project_id      = "<your GCP project ID>"
-location        = "<your GCP region>"
-gcp_oracle_zone = "<your GCP Oracle zone>"
+project_id      = "<REPLACE-BY-GCP-PROJECT-ID>"
+location        = "<REPLACE-BY-GCP-REGION>"      # E.g., europe-west2.
+gcp_oracle_zone = "<REPLACE-BY-GCP-ORACLE-ZONE>" # E.g., europe-west2-c-r2.
 
 #---------------------------------------
-# Module defaults
+# Module Controls
+#---------------------------------------
+
+module_name   = "oracle-database-networking-at-gcp"
+enable_output = true
+
+# Set output_path when downstream stacks will consume generated JSON files.
+# Leave null when dependency maps are passed through orchestration outputs.
+output_path = "./output"
+
+#---------------------------------------
+# Module Defaults
 #---------------------------------------
 
 default_deletion_protection = false
 
 default_labels = {
-  terraform = "true"
-  example   = "basic"
+  managed_by = "terraform"
+  workload   = "oracle_database_at_gcp"
+  component  = "odb_networking"
+  env        = "dev"
 }
-
-output_path = "./output"
 
 #---------------------------------------
 # ODB Networks
@@ -32,8 +43,18 @@ output_path = "./output"
 
 gcp_odb_networks_configuration = {
   primary = {
-    odb_network_id = "primary-odb-network"
-    network        = "<your VPC network self-link>"  # E.g., projects/<project>/global/networks/<network>.
+    odb_network_id  = "primary-odb-network"
+    network         = "projects/<REPLACE-BY-GCP-PROJECT-ID>/global/networks/<REPLACE-BY-VPC-NAME>"
+    project_id      = null
+    location        = null
+    gcp_oracle_zone = null
+
+    labels = {
+      role = "primary"
+    }
+
+    deletion_protection = false
+
     timeouts = {
       create = "90m"
       update = "60m"
@@ -50,19 +71,44 @@ gcp_odb_subnets_configuration = {
   client = {
     odb_subnet_id   = "primary-client-subnet"
     odb_network_key = "primary"
-    cidr_range      = "192.168.1.0/24"
-    purpose         = "CLIENT_SUBNET"
+    # Direct parent alternative. Use this only when the parent ODB Network is external to this map.
+    # odbnetwork = "primary-odb-network"
+
+    cidr_range = "192.168.1.0/24"
+    purpose    = "CLIENT_SUBNET"
+    project_id = null
+    location   = null
+
+    labels = {
+      role = "client"
+    }
+
+    deletion_protection = false
+
     timeouts = {
       create = "90m"
       update = "60m"
       delete = "60m"
     }
   }
+
   backup = {
     odb_subnet_id   = "primary-backup-subnet"
     odb_network_key = "primary"
-    cidr_range      = "192.168.2.0/28"
-    purpose         = "BACKUP_SUBNET"
+    # Direct parent alternative. Use this only when the parent ODB Network is external to this map.
+    # odbnetwork = "primary-odb-network"
+
+    cidr_range = "192.168.2.0/28"
+    purpose    = "BACKUP_SUBNET"
+    project_id = null
+    location   = null
+
+    labels = {
+      role = "backup"
+    }
+
+    deletion_protection = false
+
     timeouts = {
       create = "90m"
       update = "60m"

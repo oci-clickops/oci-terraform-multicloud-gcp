@@ -11,6 +11,21 @@ variable "gcp_autonomous_databases_admin_passwords" {
   default     = {}
 }
 
+variable "module_name" {
+  type    = string
+  default = "oracle-autonomous-database-at-gcp"
+}
+
+variable "enable_output" {
+  type    = bool
+  default = true
+}
+
+variable "output_path" {
+  type    = any
+  default = null
+}
+
 variable "default_labels" {
   type    = any
   default = {}

@@ -1,8 +1,8 @@
 #-------------------------------------------------------------------------------------------------------------------------------------------
 # 1. Rename this file to <project-name>.auto.tfvars, where <project-name> is a name of your choice.
 # 2. Provide values for "GCP Connectivity Variables".
-# 3. Replace <REPLACE-BY-*> placeholders with the full resource names of the existing ODB network and subnet.
-# 4. Provide the admin password via the TF_VAR_gcp_autonomous_databases_admin_passwords environment variable:
+# 3. Replace <REPLACE-BY-*> placeholders with actual values.
+# 4. Provide the admin password via TF_VAR_gcp_autonomous_databases_admin_passwords, not in this file:
 #      export TF_VAR_gcp_autonomous_databases_admin_passwords='{"primary":"<password>"}'
 #-------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -10,42 +10,73 @@
 # GCP Connectivity Variables
 #---------------------------------------
 
-project_id = "<your GCP project ID>"   # The Google Cloud project enabled for Oracle Database@Google Cloud.
-location   = "<your GCP region>"       # E.g., us-east4, europe-west2.
+project_id = "<REPLACE-BY-GCP-PROJECT-ID>"
+location   = "<REPLACE-BY-GCP-REGION>" # E.g., europe-west2.
 
 #---------------------------------------
-# Module defaults
+# Module Controls
+#---------------------------------------
+
+module_name   = "oracle-autonomous-database-at-gcp"
+enable_output = true
+
+# Optional: write gcp_autonomous_databases_output.json for downstream tooling.
+output_path = "./output"
+
+#---------------------------------------
+# Module Defaults
 #---------------------------------------
 
 default_deletion_protection = false
 
 default_labels = {
-  terraform = "true"
-  example   = "existing-odb-network"
+  managed_by = "terraform"
+  workload   = "oracle_database_at_gcp"
+  component  = "adb"
+  env        = "dev"
 }
 
 #---------------------------------------
-# Dependencies — ODB Network and ODB Subnet from separate stack
+# Dependencies - ODB Network and ODB Subnet from separate stack
 #---------------------------------------
 
+# Inline maps are the primary pattern. They can come from Terragrunt dependency
+# blocks, terraform_remote_state outputs, HCP Terraform workspace outputs, or CI/CD variables.
 gcp_odb_networks_dependency = {
   primary = {
-    id = "<REPLACE-BY-ODB-NETWORK-RESOURCE-NAME>"  # E.g., projects/<project>/locations/<region>/odbNetworks/<network>.
+    id = "projects/<REPLACE-BY-GCP-PROJECT-ID>/locations/<REPLACE-BY-GCP-REGION>/odbNetworks/<REPLACE-BY-ODB-NETWORK-ID>"
   }
 }
 
 gcp_odb_subnets_dependency = {
   client = {
-    id      = "<REPLACE-BY-ODB-SUBNET-RESOURCE-NAME>"  # E.g., projects/<project>/locations/<region>/odbNetworks/<network>/odbSubnets/<subnet>.
-    purpose = "CLIENT_SUBNET"                          # CLIENT_SUBNET for ADB connectivity. BACKUP_SUBNET is rejected by precondition.
+    id      = "projects/<REPLACE-BY-GCP-PROJECT-ID>/locations/<REPLACE-BY-GCP-REGION>/odbNetworks/<REPLACE-BY-ODB-NETWORK-ID>/odbSubnets/<REPLACE-BY-CLIENT-ODB-SUBNET-ID>"
+    purpose = "CLIENT_SUBNET"
   }
 }
 
-# JSON file path alternative — for standalone stacks without external orchestration.
-# Requires the upstream stack to have output_path set so it writes the dependency files.
+# Wrapped map alternative, matching the producer JSON output shape:
+# gcp_odb_networks_dependency = {
+#   gcp_odb_networks = {
+#     primary = {
+#       id = "projects/<project>/locations/<region>/odbNetworks/<network>"
+#     }
+#   }
+# }
+#
+# gcp_odb_subnets_dependency = {
+#   gcp_odb_subnets = {
+#     client = {
+#       id      = "projects/<project>/locations/<region>/odbNetworks/<network>/odbSubnets/<subnet>"
+#       purpose = "CLIENT_SUBNET"
+#     }
+#   }
+# }
+
+# JSON file path alternative - for standalone local stacks without orchestration.
 # Do not set the inline map and file path variable for the same dependency at the same time.
-# gcp_odb_networks_dependency_file_path = "<path-to>/gcp_odb_networks_output.json"
-# gcp_odb_subnets_dependency_file_path  = "<path-to>/gcp_odb_subnets_output.json"
+# gcp_odb_networks_dependency_file_path = "../odb-networking/output/gcp_odb_networks_output.json"
+# gcp_odb_subnets_dependency_file_path  = "../odb-networking/output/gcp_odb_subnets_output.json"
 
 #---------------------------------------
 # Autonomous Databases
@@ -53,29 +84,57 @@ gcp_odb_subnets_dependency = {
 
 gcp_autonomous_databases_configuration = {
   primary = {
-    autonomous_database_id = "odb-adb"
-    display_name           = "odb-adb"
-    database               = "odbadb"
-    odb_network_key        = "primary"
-    odb_subnet_key         = "client"
+    autonomous_database_id = "primary-adb"
+    display_name           = "primary-adb"
+    database               = "primaryadb"
+
+    project_id          = null
+    location            = null
+    deletion_protection = false
+
+    labels = {
+      role = "primary"
+    }
+
+    odb_network_key = "primary"
+    odb_subnet_key  = "client"
+
+    # Direct resource-name alternative. Use direct values only when not using dependency keys.
+    # odb_network = "projects/<project>/locations/<region>/odbNetworks/<network>"
+    # odb_subnet  = "projects/<project>/locations/<region>/odbNetworks/<network>/odbSubnets/<client-subnet>"
+
     timeouts = {
       create = "240m"
       update = "120m"
       delete = "120m"
     }
+
     properties = {
-      db_workload                     = "OLTP"
-      license_type                    = "LICENSE_INCLUDED"
-      compute_count                   = 2
-      data_storage_size_tb            = 1
-      db_version                      = "23ai"
+      db_workload          = "OLTP"
+      license_type         = "LICENSE_INCLUDED"
+      compute_count        = 2
+      data_storage_size_tb = 1
+      db_version           = "23ai"
+
+      character_set   = "AL32UTF8"
+      n_character_set = "AL16UTF16"
+
       is_auto_scaling_enabled         = true
       is_storage_auto_scaling_enabled = false
       backup_retention_period_days    = 60
-      character_set                   = "AL32UTF8"
-      n_character_set                 = "AL16UTF16"
       maintenance_schedule_type       = "REGULAR"
       mtls_connection_required        = false
+
+      # Optional alternatives and advanced provider fields:
+      # cpu_core_count            = 2
+      # data_storage_size_gb      = 1024
+      # db_edition                = "ENTERPRISE_EDITION"
+      # private_endpoint_ip       = "192.168.1.10"
+      # private_endpoint_label    = "primary-adb"
+      # operations_insights_state = "NOT_ENABLED"
+      # secret_id                 = "<REPLACE-BY-SECRET-ID>"
+      # vault_id                  = "<REPLACE-BY-VAULT-ID>"
+
       customer_contacts = [
         { email = "dba@example.com" }
       ]

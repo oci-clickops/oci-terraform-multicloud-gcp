@@ -9,6 +9,26 @@ variable "gcp_oracle_zone" {
   default = null
 }
 
+variable "odb_networking_module_name" {
+  type    = string
+  default = "oracle-database-networking-at-gcp"
+}
+
+variable "odb_networking_enable_output" {
+  type    = bool
+  default = true
+}
+
+variable "exadb_module_name" {
+  type    = string
+  default = "oracle-database-at-gcp"
+}
+
+variable "exadb_enable_output" {
+  type    = bool
+  default = true
+}
+
 variable "default_labels" {
   type    = any
   default = null

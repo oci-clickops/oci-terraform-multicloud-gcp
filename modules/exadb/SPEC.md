@@ -191,7 +191,7 @@ The `properties` object has these attributes:
 * `sparse_diskgroup_enabled`: Optional. Whether sparse diskgroup is enabled.
 * `local_backup_enabled`: Optional. Whether local backup is enabled.
 * `hostname_prefix`: Optional. Hostname prefix.
-* `db_server_ocids`: Optional. Database server OCIDs for explicit VM placement. When set, values must be DB server OCIDs and the list must include at least one OCID per requested `node_count`; some service configurations require this field instead of accepting server-side placement.
+* `db_server_ocids`: Optional in the Google provider schema, but recommended for real VM Cluster creation. Database server OCIDs for explicit VM placement. Values must be DB server OCIDs and the list must include at least one OCID per requested `node_count`. Leaving this unset is provider-schema-valid, but VM Cluster creation can fail at API time when the service cannot choose DB servers implicitly.
 * `cluster_name`: Optional. Cluster name.
 * `time_zone`: Optional. Time zone configuration.
 * `diagnostics_data_collection_options`: Optional. Diagnostics data collection options.

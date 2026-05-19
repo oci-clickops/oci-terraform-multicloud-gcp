@@ -5,6 +5,8 @@ module "odb_networking" {
   # Local source for repository examples. In production wrappers, replace with a pinned Git or registry source.
   source = "../../../odb-networking"
 
+  module_name                 = var.odb_networking_module_name
+  enable_output               = var.odb_networking_enable_output
   default_project_id          = var.project_id
   default_location            = var.location
   default_gcp_oracle_zone     = var.gcp_oracle_zone
@@ -19,6 +21,8 @@ module "odb_networking" {
 module "oracle_autonomous_database_at_gcp" {
   source = "../.."
 
+  module_name                 = var.adb_module_name
+  enable_output               = var.adb_enable_output
   default_project_id          = var.project_id
   default_location            = var.location
   default_deletion_protection = var.default_deletion_protection

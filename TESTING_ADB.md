@@ -92,7 +92,7 @@ default_labels = {
 | ADB-L-002 | ADB Schema | `terraform providers schema -json > /tmp/adb-provider-schema.json` from `modules/adb` | Schema generated for installed Google provider | Schema generated after sandbox escalation | Pass | Sandbox plugin loading failed first; reran per `AGENTS.md` |
 | ADB-L-003 | ADB Schema | `jq` inspect `google_oracle_database_autonomous_database` | Resource exposes ODB Network/Subnet attributes and expected properties | `odb_network`, `odb_subnet`, labels, and ignored property fields confirmed | Pass | Google provider `7.32.0` |
 | ADB-L-004 | ADB Module | `cd modules/adb && terraform validate -no-color` | Configuration is valid | Configuration is valid | Pass | |
-| ADB-L-005 | ADB Module | `cd modules/adb && terraform test -no-color` | All local tests pass | 40 passed, 0 failed | Pass | Expanded from 24 tests to cover additional provider-field validations |
+| ADB-L-005 | ADB Module | `cd modules/adb && terraform test -no-color` | All local tests pass | 38 passed, 0 failed | Pass | Duplicate-name tests removed to align with OCI-style provider/API uniqueness |
 | ADB-L-006 | ADB Existing ODB Example | `cd modules/adb/examples/existing-odb-network && terraform init -backend=false && terraform validate -no-color` | Init and validation pass | Init and validation pass | Pass | Reused installed providers |
 | ADB-L-007 | ADB Vision Example | `cd modules/adb/examples/vision && terraform init -backend=false && terraform validate -no-color` | Init and validation pass | Init and validation pass | Pass | Reused installed providers |
 
@@ -108,7 +108,7 @@ default_labels = {
 | ADB-C-006 | ADB | Required references | Missing ODB references and missing dependency keys fail at plan time | Pass | Missing subnet/network/subnet key tests |
 | ADB-C-007 | ADB | Subnet purpose | Backup subnet is rejected for ADB | Pass | `rejects_backup_subnet_dependency_for_adb` |
 | ADB-C-008 | ADB | Network coherence | ODB subnet must belong to selected ODB Network | Pass | `rejects_mismatched_subnet_parent_network` |
-| ADB-C-009 | ADB | Resource uniqueness | Duplicate ADB IDs in same project/location are rejected | Pass | `rejects_duplicate_autonomous_database_ids_in_same_project_location` |
+| ADB-C-009 | ADB | Provider/API uniqueness | Duplicate ADB IDs are left to the Google provider/API | Pass | OCI-style scope decision; no standalone `terraform_data` uniqueness resource |
 | ADB-C-010 | ADB | Property validation | Enums, backup retention range, and contact email are validated | Pass | `rejects_invalid_property_enums_ranges_and_contacts` |
 | ADB-C-011 | ADB | Output JSON | `output_path` writes wrapped ADB JSON | Pass | `plans_dependency_output_file_when_output_path_is_set` |
 | ADB-C-012 | ADB Examples | Vision composition | ODB networking and ADB compose in one stack | Pass | `vision_example_composes_odb_networking_and_adb` |
@@ -117,7 +117,7 @@ default_labels = {
 | ADB-C-015 | ADB | Admin password policy | Invalid admin passwords fail at plan time | Pass | Too short, missing uppercase, missing lowercase, missing number, containing `admin`, and containing double quote are rejected |
 | ADB-C-016 | ADB | Extended dependency output | Wrapped output JSON includes OCI, connection, endpoint, and peer metadata fields | Pass | `plans_dependency_output_file_when_output_path_is_set` asserts new output keys |
 | ADB-C-017 | ADB | Database name format | Invalid `database` names fail before provider apply | Pass | `rejects_invalid_database_name_format`, `rejects_database_names_longer_than_30_characters` |
-| ADB-C-018 | ADB | Database name uniqueness | Duplicate `database` names in the same project fail before provider apply | Pass | `rejects_duplicate_database_names_in_same_project` |
+| ADB-C-018 | ADB | Provider/API database uniqueness | Duplicate `database` names are left to the Google provider/API | Pass | The module validates database name format only, matching OCI-style scope |
 | ADB-C-019 | ADB | Google label syntax | Invalid default and per-resource labels fail at plan time | Pass | `rejects_invalid_default_labels`, `rejects_invalid_resource_labels` |
 | ADB-C-020 | ADB | Project/location hygiene | Whitespace-only project or location values are rejected | Pass | Default and per-resource project/location tests |
 | ADB-C-021 | ADB | Operations Insights enum | Unsupported `operations_insights_state` values are rejected | Pass | `rejects_invalid_operations_insights_state` |
@@ -133,7 +133,7 @@ Use `modules/adb/examples/existing-odb-network` with local ignored
 | ID | Area | Command / Action | Expected Result | Actual Result | Status | Evidence / Notes |
 | --- | --- | --- | --- | --- | --- | --- |
 | ADB-G-001 | ADB Existing ODB Network | Configure dependency file paths to real networking outputs | ODB Network key `primary` and subnet key `client` resolve to real resources | Plan resolved `dgc-odb-network` and `dgc-odb-client` from JSON handoff | Pass | Uses existing ODB networking test stack |
-| ADB-G-002 | ADB Existing ODB Network | `terraform plan -no-color -refresh=false -lock=false` | Plan creates one ADB and validation data only | Plan creates `dgc-adb` plus two `terraform_data` validation resources; 3 add, 0 change, 0 destroy | Pass | Plan-only; no `tfplan` written by Codex |
+| ADB-G-002 | ADB Existing ODB Network | `terraform plan -no-color -refresh=false -lock=false` | Plan creates one ADB and wrapper validation data only | Plan creates `dgc-adb` plus wrapper dependency validation; module-level uniqueness `terraform_data` has been removed | Pass | Plan-only; no `tfplan` written by Codex |
 | ADB-G-003 | ADB Existing ODB Network | Confirm plan labels and IDs | All created resources use `dgc` prefix and tracking labels | `dgc-adb` and required labels present | Pass | Admin password shown only as sensitive |
 
 ## Negative Plan Matrix
@@ -182,13 +182,14 @@ Use `modules/adb/examples/existing-odb-network` with local ignored
 | 2026-05-19 19:51:43 CEST | Codex | ADB-D-003 | Attempted post-change real no-drift plan from the current example state | Not Used | Current `terraform.tfstate` is empty and planned creates; backup state was inspected read-only but not restored. Codex did not apply or mutate state |
 | 2026-05-19 21:09:59 CEST | User | ADB-D-007 | User-run cleanup of ADB test resource | Pass | ADB resource destruction completed after 6m14s; wrapper `terraform_data.validate_dependency_sources` destruction completed after 0s |
 | 2026-05-19 21:15:40 CEST | Codex | ADB-C-017..ADB-C-023 | Added provider-field validation tests and implementation | Pass | Red/green cycle completed; `terraform test -no-color` reported 40 passed, 0 failed |
+| 2026-05-19 21:55:57 CEST | Codex | ADB-C-009, ADB-C-018, ADB-L-004..ADB-L-007 | Removed standalone uniqueness `terraform_data` to align with OCI module style | Pass | ADB `validate`, `terraform test` 38/38, and both ADB examples `init -backend=false` plus `validate` passed |
 | 2026-05-19 21:16:44 CEST | Codex | ADB-L-004..ADB-L-007 | Final local verification after provider-field validations | Pass | `terraform fmt -check -recursive modules`, ADB `validate`, ADB `test` 40/40, both example `init -backend=false` and `validate`, and `git diff --check` passed |
 
 ## Publication Checklist
 
 | Item | Required Result | Status | Evidence / Notes |
 | --- | --- | --- | --- |
-| ADB local validation passes | `ADB-L-004` and `ADB-L-005` are `Pass` | Pass | `validate` passed; `terraform test` reported 40 passed, 0 failed |
+| ADB local validation passes | `ADB-L-004` and `ADB-L-005` are `Pass` | Pass | `validate` passed; `terraform test` reported 38 passed, 0 failed |
 | ADB examples validate | `ADB-L-006` and `ADB-L-007` are `Pass` | Pass | Existing ODB Network and vision examples initialized and validated |
 | ADB provider schema checked | `ADB-L-002` and `ADB-L-003` are `Pass` | Pass | Google provider `7.32.0`; schema inspected from `/tmp/adb-provider-schema.json` |
 | ADB existing ODB Network plan passes | `ADB-G-001` through `ADB-G-003` are `Pass` | Pass | Plan creates one ADB using real ODB networking JSON |

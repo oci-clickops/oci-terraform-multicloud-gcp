@@ -37,10 +37,13 @@ module "oracle_autonomous_database_at_gcp" {
 
   depends_on = [terraform_data.validate_dependency_sources]
 
+  module_name                 = var.module_name
+  enable_output               = var.enable_output
   default_project_id          = var.project_id
   default_location            = var.location
   default_deletion_protection = var.default_deletion_protection
   default_labels              = var.default_labels
+  output_path                 = var.output_path
 
   gcp_odb_networks_dependency = local.gcp_odb_networks_dependency
   gcp_odb_subnets_dependency  = local.gcp_odb_subnets_dependency

@@ -16,6 +16,26 @@ variable "gcp_autonomous_databases_admin_passwords" {
   default     = {}
 }
 
+variable "odb_networking_module_name" {
+  type    = string
+  default = "oracle-database-networking-at-gcp"
+}
+
+variable "odb_networking_enable_output" {
+  type    = bool
+  default = true
+}
+
+variable "adb_module_name" {
+  type    = string
+  default = "oracle-autonomous-database-at-gcp"
+}
+
+variable "adb_enable_output" {
+  type    = bool
+  default = true
+}
+
 variable "default_labels" {
   type    = any
   default = {}

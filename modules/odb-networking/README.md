@@ -59,7 +59,7 @@ module "odb_networking" {
 
 Downstream modules should consume `module.odb_networking.gcp_odb_networks` and `module.odb_networking.gcp_odb_subnets` directly when they are composed in the same root module.
 
-The module validates provider-sensitive inputs at plan time: project, location, and GCP Oracle zone defaults cannot be whitespace-only; labels must use Google Cloud label-compatible syntax; subnet CIDRs and purposes are checked before any Google Cloud API call; and resource IDs must be unique within their provider scope.
+The module validates provider-sensitive inputs at plan time: project, location, and GCP Oracle zone defaults cannot be whitespace-only; labels must use Google Cloud label-compatible syntax; and subnet CIDRs and purposes are checked before any Google Cloud API call. Duplicate resource IDs are left to the Google provider/API, matching the OCI module style.
 
 ## JSON Handoff
 

@@ -57,7 +57,7 @@ After the vision example works in your environment, use [../odb-networking/examp
 
 Every cross-resource reference accepts two interchangeable forms. Pick whichever fits the way the upstream resource was managed:
 
-* **`*_key` form** — a logical name resolved against `*_configuration` for Exadata Infrastructure or a `*_dependency` map for externally managed resources such as ODB Network/Subnet. Exadata Infrastructure keys must be unique across local configuration and dependency maps.
+* **`*_key` form** — a logical name resolved against `*_configuration` for Exadata Infrastructure or a `*_dependency` map for externally managed resources such as ODB Network/Subnet. Use distinct, meaningful keys for local configuration and dependency maps so references remain obvious.
 * **direct form** — the literal full GCP resource name, useful for one-off references to externally managed infrastructure that is not modeled in any dependency map.
 
 The two forms are mutually exclusive on the same field pair: set exactly one of `exadata_infrastructure` or `exadata_infrastructure_key`, exactly one of `odb_network` or `odb_network_key`, and so on.
@@ -180,5 +180,5 @@ Licensed under the Universal Permissive License v 1.0 as shown at https://oss.or
 
 1. Oracle Database@Google Cloud resources can take a long time to provision. If a creation or update operation is interrupted, rerun Terraform from the same working directory so it can continue from the current state.
 2. VM cluster creation requires valid networking inputs. When using ODB subnets, provide both client and backup subnet references through direct values or module keys.
-3. Some VM cluster configurations require explicit DB server placement. Use `db_server_ocids` directly. To discover available DB server OCIDs, run `gcloud oracle-database cloud-exadata-infrastructures db-servers list --location=<LOCATION> --cloud-exadata-infrastructure=<NAME>`.
+3. Use explicit `db_server_ocids` for VM Cluster placement. The Google provider schema allows omitting them, but real VM Cluster creation can fail at API time without explicit DB server placement. To discover available DB server OCIDs, run the read-only command `gcloud oracle-database cloud-exadata-infrastructures db-servers list --location=<LOCATION> --cloud-exadata-infrastructure=<NAME>`.
 4. Some resource attributes are service-managed and appear only after provisioning completes. Downstream stacks should consume outputs only after the producing stack has completed successfully.

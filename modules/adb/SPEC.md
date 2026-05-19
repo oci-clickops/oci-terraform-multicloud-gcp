@@ -62,7 +62,7 @@ The module accepts these input variables.
 Each map value has these attributes:
 
 * `autonomous_database_id`: Required. The Autonomous Database ID. Must start with a lowercase letter, end with a lowercase letter or number, contain only lowercase letters, numbers, and hyphens, and be 1–63 characters long.
-* `database`: Optional. Database name. If set, it must begin with a letter, contain only alphanumeric characters, be at most 30 characters long, and be unique within the Google Cloud project.
+* `database`: Optional. Database name. If set, it must begin with a letter, contain only alphanumeric characters, and be at most 30 characters long. Provider/API uniqueness rules still apply at create time.
 * `display_name`: Optional. Human-readable display name. Defaults to `autonomous_database_id` when omitted.
 * `location`: Optional. The Google Cloud region. Overrides `default_location`. If set, it must be non-empty.
 * `project_id`: Optional. The Google Cloud project ID. Overrides `default_project_id`. If set, it must be non-empty.
@@ -132,8 +132,7 @@ The module enforces these checks at `terraform plan`, not at apply, to avoid lat
 * **Geographic coherence** — `odb_subnet` (literal or resolved through `odb_subnet_key`) must belong to the selected `odb_network` and share the same project, location, and parent ODB Network segment.
 * **Subnet purpose** — when `odb_subnet_key` resolves through `gcp_odb_subnets_dependency`, the referenced subnet must have `purpose = "CLIENT_SUBNET"`. Backup subnets are rejected.
 * **Admin password policy** — each supplied admin password must satisfy the Oracle Autonomous Database password policy enforced by the module: length 12–30, at least one uppercase letter, one lowercase letter, one number, no double quotes, and no `admin` substring in any casing.
-* **Internal ID uniqueness** — `autonomous_database_id` must be unique within each `(project, location)` tuple across all entries in `gcp_autonomous_databases_configuration`. Duplicates fail the plan with a listing of the colliding keys.
-* **Database name format and uniqueness** — `database`, when set, must match the Google provider rule: starts with a letter, contains only alphanumeric characters, is at most 30 characters long, and is unique within the project.
+* **Database name format** — `database`, when set, must match the Google provider rule: starts with a letter, contains only alphanumeric characters, and is at most 30 characters long. Duplicate resource or database names are left to the Google provider/API, matching the OCI module style.
 * **Google label syntax** — `default_labels` and per-resource `labels` are validated for Google Cloud label-compatible keys and values before planning resources.
 * **Project and location hygiene** — `default_project_id`, `default_location`, per-resource `project_id`, and per-resource `location` can be omitted, but cannot be whitespace-only strings.
 * **Provider enum coverage** — `operations_insights_state` is restricted to the values exposed by the Google provider schema.

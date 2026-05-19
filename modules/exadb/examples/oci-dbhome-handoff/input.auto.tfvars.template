@@ -1,22 +1,23 @@
 #-------------------------------------------------------------------------------------------------------------------------------------------
 # 1. Rename this file to <project-name>.auto.tfvars, where <project-name> is a name of your choice.
 # 2. Run this example only after the GCP VM Cluster stack has completed successfully.
-# 3. Replace placeholder values. Do not commit real passwords or private key paths.
+# 3. Replace <REPLACE-BY-*> placeholders with actual values.
+# 4. Do not commit real passwords, private key paths, OCIDs, or generated dependency files.
 #-------------------------------------------------------------------------------------------------------------------------------------------
 
 #---------------------------------------
 # OCI Connectivity Variables
 #---------------------------------------
 
-tenancy_ocid         = "<REPLACE-WITH-TENANCY-OCID>"
-user_ocid            = "<REPLACE-WITH-USER-OCID>"
-fingerprint          = "<REPLACE-WITH-FINGERPRINT>"
-private_key_path     = "<REPLACE-WITH-PRIVATE-KEY-PATH>"
+tenancy_ocid         = "<REPLACE-BY-TENANCY-OCID>"
+user_ocid            = "<REPLACE-BY-USER-OCID>"
+fingerprint          = "<REPLACE-BY-FINGERPRINT>"
+private_key_path     = "<REPLACE-BY-PRIVATE-KEY-PATH>"
 private_key_password = ""
 
 # Use the OCI region of the VM Cluster OCID, not the Google Cloud region.
 # For an OCID like ocid1.cloudvmcluster.oc1.uk-london-1..., use uk-london-1.
-region = "<REPLACE-WITH-OCI-REGION>"
+region = "<REPLACE-BY-OCI-REGION>"
 
 #---------------------------------------
 # GCP VM Cluster Handoff
@@ -28,8 +29,20 @@ gcp_cloud_vm_clusters_dependency_file_path = "../cluster/output/gcp_cloud_vm_clu
 # Inline map alternative. Do not set this together with the file path above.
 # gcp_cloud_vm_clusters_dependency = {
 #   primary = {
+#     id    = "projects/<project>/locations/<region>/cloudVmClusters/<cluster>"
+#     name  = "projects/<project>/locations/<region>/cloudVmClusters/<cluster>"
 #     ocid  = "ocid1.cloudvmcluster.oc1.<region>.<id>"
 #     state = "AVAILABLE"
+#   }
+# }
+
+# Wrapped map alternative, matching the producer JSON output shape:
+# gcp_cloud_vm_clusters_dependency = {
+#   gcp_cloud_vm_clusters = {
+#     primary = {
+#       ocid  = "ocid1.cloudvmcluster.oc1.<region>.<id>"
+#       state = "AVAILABLE"
+#     }
 #   }
 # }
 
@@ -39,15 +52,23 @@ gcp_cloud_vm_clusters_dependency_file_path = "../cluster/output/gcp_cloud_vm_clu
 
 compartments_dependency = {
   CMP-1 = {
-    id = "<REPLACE-WITH-DB-COMPARTMENT-OCID>"
+    id = "<REPLACE-BY-DB-COMPARTMENT-OCID>"
   }
 }
 
+# Optional pass-through dependencies accepted by the upstream OCI Exadata module.
+subscription_dependency = null
+network_dependency      = null
+
 default_compartment_id = "CMP-1"
+
+default_defined_tags = {}
+
 default_freeform_tags = {
   managed_by = "terraform"
+  workload   = "oracle_database_at_gcp"
+  component  = "oci_dbhome_handoff"
 }
-default_defined_tags = {}
 
 #---------------------------------------
 # OCI DB Homes
@@ -58,7 +79,10 @@ cloud_db_homes_configuration = {
     # Wrapper-only field. It resolves to gcp_cloud_vm_clusters.primary.ocid.
     vm_cluster_key = "primary"
 
-    display_name = "dgc-dbhome1"
+    # Direct OCID alternative. Use direct values only when not using vm_cluster_key.
+    # vm_cluster_id = "ocid1.cloudvmcluster.oc1.<region>.<id>"
+
+    display_name = "primary-dbhome1"
     db_version   = "19.0.0.0"
     source       = "VM_CLUSTER_NEW"
 
@@ -69,9 +93,10 @@ cloud_db_homes_configuration = {
     db_system_id                = null
     kms_key_id                  = null
     kms_key_version_id          = null
-    defined_tags                = {}
+
+    defined_tags = {}
     freeform_tags = {
-      workload = "dgc"
+      role = "dbhome"
     }
   }
 }
@@ -84,21 +109,35 @@ databases_configuration = {
   CDB1 = {
     source     = "NONE"
     db_home_id = "dbhome1"
-    database = {
-      admin_password = "<REPLACE-WITH-STRONG-CDB-PASSWORD>"
-      db_name        = "DGCDB1"
 
-      character_set       = "AL32UTF8"
-      ncharacter_set      = "AL16UTF16"
-      pdb_name            = "DGCPDB1"
-      sid_prefix          = "dgcdb1"
-      db_workload         = "OLTP"
-      tde_wallet_password = "<REPLACE-WITH-STRONG-TDE-WALLET-PASSWORD>"
+    database = {
+      admin_password = "<REPLACE-BY-STRONG-CDB-PASSWORD>"
+      db_name        = "CDB1"
+
+      character_set  = "AL32UTF8"
+      ncharacter_set = "AL16UTF16"
+      pdb_name       = "PDB1"
+      sid_prefix     = "cdb1"
+      db_workload    = "OLTP"
+
+      tde_wallet_password = "<REPLACE-BY-STRONG-TDE-WALLET-PASSWORD>"
 
       db_backup_config = null
-      defined_tags     = {}
+
+      # Example backup configuration:
+      # db_backup_config = {
+      #   auto_backup_enabled     = true
+      #   auto_backup_window      = "SLOT_ONE"
+      #   auto_full_backup_day    = "SUNDAY"
+      #   auto_full_backup_window = "SLOT_TWO"
+      #   backup_deletion_policy  = "DELETE_AFTER_RETENTION_PERIOD"
+      #   recovery_window_in_days = 35
+      #   run_immediate_full_backup = false
+      # }
+
+      defined_tags = {}
       freeform_tags = {
-        workload = "dgc"
+        role = "cdb"
       }
     }
   }
@@ -109,17 +148,18 @@ databases_configuration = {
 #---------------------------------------
 
 pluggable_databases_configuration = {
-  DGCPDB2 = {
+  PDB2 = {
     container_database_id = "CDB1"
-    pdb_name              = "DGCPDB2"
-    pdb_admin_password    = "<REPLACE-WITH-STRONG-PDB-PASSWORD>"
-    tde_wallet_password   = "<REPLACE-WITH-STRONG-TDE-WALLET-PASSWORD>"
+    pdb_name              = "PDB2"
+    pdb_admin_password    = "<REPLACE-BY-STRONG-PDB-PASSWORD>"
+    tde_wallet_password   = "<REPLACE-BY-STRONG-TDE-WALLET-PASSWORD>"
 
     should_create_pdb_backup           = false
     should_pdb_admin_account_be_locked = false
-    defined_tags                       = {}
+
+    defined_tags = {}
     freeform_tags = {
-      workload = "dgc"
+      role = "pdb"
     }
   }
 }

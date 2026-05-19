@@ -4,6 +4,8 @@
 module "odb_networking" {
   source = "../.."
 
+  module_name                 = var.module_name
+  enable_output               = var.enable_output
   default_project_id          = var.project_id
   default_location            = var.location
   default_gcp_oracle_zone     = var.gcp_oracle_zone

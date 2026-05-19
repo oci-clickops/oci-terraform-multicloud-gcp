@@ -66,8 +66,7 @@ Provider resource: `google_oracle_database_odb_subnet`.
 * ODB Network resources must set `gcp_oracle_zone` or `default_gcp_oracle_zone`.
 * Project, location, and GCP Oracle zone defaults and overrides can be omitted when another value supplies the setting, but cannot be whitespace-only strings.
 * `default_labels`, ODB Network `labels`, and ODB Subnet `labels` must use Google Cloud label-compatible syntax.
-* ODB Network IDs are unique within each `(project, location)`.
-* ODB Subnet IDs are unique within each `(project, location, parent_odb_network)`.
+* ODB Network and ODB Subnet ID uniqueness is enforced by the Google provider/API at create time.
 
 ## Operational Drift Policy
 

@@ -85,7 +85,7 @@ default_labels = {
 | ODB-L-002 | Repository | `terraform fmt -check -recursive modules` | Exit code `0` | Exit code `0` | Pass | Re-run after hardening changes |
 | ODB-L-003 | Repository | `git diff --check` | Exit code `0` | Exit code `0` | Pass | Re-run before final handoff |
 | ODB-L-004 | ODB Networking | `cd modules/odb-networking && terraform validate -no-color` | Configuration is valid | Configuration is valid | Pass | Terraform reported `Success! The configuration is valid.` |
-| ODB-L-005 | ODB Networking | `cd modules/odb-networking && terraform test -no-color` | All local tests pass | 19 passed, 0 failed | Pass | Expanded from 12 tests to cover labels, non-empty defaults/overrides, and required GCP Oracle zone |
+| ODB-L-005 | ODB Networking | `cd modules/odb-networking && terraform test -no-color` | All local tests pass | 17 passed, 0 failed | Pass | Duplicate-ID tests removed to align with OCI-style provider/API uniqueness |
 | ODB-L-006 | ODB Networking Example | `cd modules/odb-networking/examples/basic && terraform init -backend=false && terraform validate -no-color` | Init and validation pass | Init and validation pass | Pass | Reused installed `hashicorp/google` `7.32.0` and `hashicorp/local` `2.9.0` |
 
 ## Local Contract Coverage
@@ -98,7 +98,7 @@ default_labels = {
 | ODB-C-004 | Subnet purpose | Only `CLIENT_SUBNET` and `BACKUP_SUBNET` are accepted | Pass | `creates_network_and_subnets_with_keyed_outputs`; `rejects_invalid_subnet_purpose` |
 | ODB-C-005 | Parent reference mutex | Each subnet sets exactly one of `odbnetwork` or `odb_network_key` | Pass | `rejects_subnet_without_exactly_one_parent_reference`; `rejects_subnet_with_two_parent_references` |
 | ODB-C-006 | Parent key resolution | Invalid `odb_network_key` fails at plan time | Pass | `rejects_missing_parent_odb_network_key` |
-| ODB-C-007 | Resource uniqueness | Duplicate IDs fail within the provider scope | Pass | `rejects_duplicate_odb_network_ids`; `rejects_duplicate_odb_subnet_ids` |
+| ODB-C-007 | Provider/API uniqueness | Duplicate ODB Network/Subnet IDs are left to the Google provider/API | Pass | OCI-style scope decision; no standalone `terraform_data` uniqueness resource |
 | ODB-C-008 | JSON handoff | `output_path` writes wrapped network and subnet JSON | Pass | `plans_dependency_output_files_when_output_path_is_set` |
 | ODB-C-009 | Default hygiene | Whitespace-only project, location, and GCP Oracle zone defaults are rejected | Pass | `rejects_empty_default_project_location_and_zone` |
 | ODB-C-010 | Google label syntax | Invalid default, ODB Network, and ODB Subnet labels fail at plan time | Pass | `rejects_invalid_default_labels`; `rejects_invalid_network_labels`; `rejects_invalid_subnet_labels` |
@@ -112,7 +112,7 @@ test resources.
 
 | ID | Area | Command / Action | Expected Result | Actual Result | Status | Evidence / Notes |
 | --- | --- | --- | --- | --- | --- | --- |
-| ODB-G-001 | ODB Networking | `terraform plan -no-color -refresh=false -lock=false` from the basic example | Plan creates one ODB Network, one client subnet, and one backup subnet | Plan creates `dgc-odb-network`, `dgc-odb-client`, `dgc-odb-backup`, two output JSON `local_file` resources, and validation data; 6 add, 0 change, 0 destroy | Pass | Plan intentionally did not use `-out`; no `tfplan` written by Codex |
+| ODB-G-001 | ODB Networking | `terraform plan -no-color -refresh=false -lock=false` from the basic example | Plan creates one ODB Network, one client subnet, and one backup subnet | Plan creates `dgc-odb-network`, `dgc-odb-client`, `dgc-odb-backup`, and two output JSON `local_file` resources; module-level uniqueness validation data has been removed | Pass | Plan intentionally did not use `-out`; no `tfplan` written by Codex |
 | ODB-G-002 | ODB Networking | User-only manual apply of the reviewed basic-example `tfplan` | Apply completes successfully | User reported `Apply complete! Resources: 6 added, 0 changed, 0 destroyed.` | Pass | Codex did not execute apply |
 | ODB-G-003 | ODB Networking | `terraform output gcp_odb_networks` | Output contains key `primary` with a full ODB Network resource name | `primary.id` is `projects/omcpmpoc2/locations/europe-west2/odbNetworks/dgc-odb-network`; state `AVAILABLE` | Pass | Verified with `terraform output -json` |
 | ODB-G-004 | ODB Networking | `terraform output gcp_odb_subnets` | Output contains keys `client` and `backup` with correct purposes | `client` is `CLIENT_SUBNET`; `backup` is `BACKUP_SUBNET`; both state `AVAILABLE` | Pass | Verified with `terraform output -json` |
@@ -142,7 +142,7 @@ test resources.
 | --- | --- | --- | --- | --- | --- |
 | 2026-05-19 12:52:28 CEST | Codex | ODB-L-004 | `terraform validate -no-color` in `modules/odb-networking` | Pass | Configuration is valid |
 | 2026-05-19 12:52:28 CEST | Codex | ODB-L-006 | Init and validate `modules/odb-networking/examples/basic` | Pass | Init succeeded; validation reported configuration is valid |
-| 2026-05-19 12:54:56 CEST | Codex | ODB-C-001..ODB-C-008 | Expanded local ignored `.tftest.hcl` coverage | Pass | Added local coverage for invalid IDs, CIDR, parent keys, duplicate IDs, and output JSON |
+| 2026-05-19 12:54:56 CEST | Codex | ODB-C-001..ODB-C-008 | Expanded local ignored `.tftest.hcl` coverage | Pass | Added local coverage for invalid IDs, CIDR, parent keys, and output JSON; duplicate ID checks are now delegated to provider/API |
 | 2026-05-19 12:54:56 CEST | Codex | ODB-L-005 | `terraform test -no-color` in `modules/odb-networking` | Pass | 12 passed, 0 failed |
 | 2026-05-19 12:57:51 CEST | Codex | ODB-L-005 | `terraform test -no-color` in `modules/odb-networking` | Pass | Fresh rerun: 12 passed, 0 failed |
 | 2026-05-19 13:16:41 CEST | Codex | ODB-G-001 | Created ignored `modules/odb-networking/examples/basic/dgc.auto.tfvars` and ran `terraform plan -no-color -refresh=false -lock=false` | Pass | 6 add, 0 change, 0 destroy; dgc resource IDs, labels, VPC, and non-overlapping CIDRs present |
@@ -155,13 +155,14 @@ test resources.
 | 2026-05-19 21:26:31 CEST | Codex | ODB-C-009..ODB-C-011 | Added ODB Networking hardening tests and implementation | Pass | Red/green cycle completed; `terraform test -no-color` reported 19 passed, 0 failed |
 | 2026-05-19 21:26:31 CEST | Codex | ODB-D-001 | Ran ODB Networking label-only drift probe before and after adding `labels` to `ignore_changes` | Pass | Before lifecycle change, label-only plan proposed replacing ODB Network and both ODB Subnets; after lifecycle change, Terraform reported no changes |
 | 2026-05-19 21:28:16 CEST | Codex | ODB-L-002..ODB-L-006, ODB-D-001 | Final ODB Networking verification after hardening | Pass | `terraform fmt -check -recursive modules`, ODB Networking `validate`, ODB Networking `test` 19/19, basic example `init -backend=false` and `validate`, and label-only plan all passed |
+| 2026-05-19 21:55:57 CEST | Codex | ODB-C-007, ODB-L-002..ODB-L-006 | Removed standalone uniqueness `terraform_data` to align with OCI module style | Pass | ODB Networking `validate`, `terraform test` 17/17, and basic example `init -backend=false` plus `validate` passed |
 
 ## Publication Checklist
 
 | Item | Required Result | Status | Evidence / Notes |
 | --- | --- | --- | --- |
 | Local formatting and diff checks pass | `ODB-L-001` through `ODB-L-003` are `Pass` | Pass | No generated Terraform artifacts are introduced as tracked files; fmt and diff checks returned exit code `0` |
-| ODB Networking local validation passes | `ODB-L-004` and `ODB-L-005` are `Pass` | Pass | `validate` passed; `terraform test` reported 19 passed, 0 failed |
+| ODB Networking local validation passes | `ODB-L-004` and `ODB-L-005` are `Pass` | Pass | `validate` passed; `terraform test` reported 17 passed, 0 failed |
 | ODB Networking example validates | `ODB-L-006` is `Pass` | Pass | Basic example initialized and validated |
 | ODB Networking user-run real apply passes | `ODB-G-001` through `ODB-G-007` are `Pass` | Pass | User-run apply passed; outputs, JSON handoff, and no-drift check passed |
 | Consumer handoff validates | `ODB-H-001` through `ODB-H-003` are `Pass` | Pass | Real networking JSON output files decode into ExaDB and ADB consumer examples |

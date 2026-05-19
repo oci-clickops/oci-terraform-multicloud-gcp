@@ -3,6 +3,17 @@
 
 variable "project_id" { description = "GCP project ID enabled for Oracle Database@Google Cloud." }
 variable "location" { description = "GCP region for Oracle Database@Google Cloud resources." }
+
+variable "module_name" {
+  type    = string
+  default = "oracle-database-networking-at-gcp"
+}
+
+variable "enable_output" {
+  type    = bool
+  default = true
+}
+
 variable "output_path" { default = null }
 
 variable "gcp_oracle_zone" {

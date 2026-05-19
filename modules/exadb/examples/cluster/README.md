@@ -23,7 +23,7 @@ Before running it, confirm that:
 * The existing Cloud Exadata Infrastructure is in the target region.
 * Google provider authentication is configured (e.g., Application Default Credentials via `gcloud auth application-default login`).
 * The caller has permissions to create Oracle Database@Google Cloud VM clusters.
-* If `db_server_ocids = null`, the caller also has permissions to read DB servers from the existing Cloud Exadata Infrastructure.
+* DB server OCIDs have been selected from the existing Cloud Exadata Infrastructure, with one OCID per VM node.
 
 ## Usage
 
@@ -46,7 +46,7 @@ gcp_cloud_exadata_infrastructures_dependency = {
 
 For standalone stacks without external orchestration, uncomment the `*_dependency_file_path` variables at the bottom of the template. Do not set an inline map and file path for the same dependency at the same time.
 
-4. Set `db_server_ocids` to one validated DB server OCID per VM for controlled placement. Set `db_server_ocids = null` only when the target project, API, and existing Cloud Exadata Infrastructure are real and Terraform may discover `AVAILABLE` DB servers.
+4. Set `db_server_ocids` to one validated DB server OCID per VM node. The provider schema allows `db_server_ocids = null`, but real VM Cluster creation can fail at API time without explicit placement, so keep `null` only for environments where server-side placement has already been validated.
 
 5. Run the standard Terraform commands:
 

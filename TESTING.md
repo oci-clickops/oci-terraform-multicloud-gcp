@@ -125,6 +125,7 @@ default_labels = {
 | EXA-C-009 | DB server placement | `db_server_ocids` format and minimum count are validated | Pass | `cluster_example_decodes_dependency_file_paths`; `rejects_invalid_db_server_ocid`; `rejects_too_few_db_server_ocids_for_node_count` |
 | EXA-C-010 | Output JSON | Exadata and VM Cluster output JSON is wrapped under expected top-level keys | Pass | `plans_dependency_output_files_when_output_path_is_set`; `plans_vm_cluster_dependency_output_file_when_output_path_is_set` |
 | EXA-C-011 | Grid Infrastructure version | VM Cluster `properties.gi_version` is required before provider apply | Pass | `rejects_vm_cluster_without_gi_version`; added after API rejected `giVersion = null` |
+| EXA-C-012 | DB server placement guidance | Provider schema permits `db_server_ocids = null`, but release examples recommend explicit DB server OCIDs | Pass | Google provider `7.32.0` schema marks `db_server_ocids` optional+computed; real VM Cluster creation is certified with explicit OCIDs |
 
 ## GCP VM Cluster Matrix
 
@@ -138,11 +139,11 @@ the wrapper. Provide the existing infrastructure through
 | EXA-G-001 | ExaDB VM Cluster | Configure ODB dependencies from certified networking outputs | Networking output key `primary`, and subnet keys `client` and `backup`, resolve to real resources | Ignored cluster tfvars consume real networking JSON output files and use `odb_network_key = "primary"` | Pass | ODB Networking certification is tracked in `TESTING_ODBNETWORKING.md` |
 | EXA-G-002 | ExaDB VM Cluster | Configure existing infra under dependency key `infra` | `infra` key resolves to existing Cloud Exadata Infrastructure | `infra` points to existing `demoinfra2` in `omcpmpoc2/europe-west2` | Pass | Existing infra was discovered by read-only `gcloud` inventory |
 | EXA-G-003 | ExaDB VM Cluster | Configure explicit `db_server_ocids` for each VM node | Plan does not depend on implicit DB server discovery | Two DB server OCIDs configured in ignored tfvars for `node_count = 2` | Pass | OCIDs intentionally not repeated in this artifact |
-| EXA-G-004 | ExaDB VM Cluster | `terraform plan -no-color -refresh=false -lock=false` from the cluster example | Plan creates VM Cluster only, not Exadata Infrastructure | Plan creates `dgc-vm-cluster`, one output JSON `local_file`, and validation data; 4 add, 0 change, 0 destroy | Pass | Re-run after switching ignored tfvars to JSON handoff; no Exadata Infrastructure creation planned |
+| EXA-G-004 | ExaDB VM Cluster | `terraform plan -no-color -refresh=false -lock=false` from the cluster example | Plan creates VM Cluster only, not Exadata Infrastructure | Plan creates `dgc-vm-cluster`, one output JSON `local_file`, and wrapper dependency validation; module-level uniqueness validation data has been removed | Pass | Re-run after switching ignored tfvars to JSON handoff; no Exadata Infrastructure creation planned |
 | EXA-G-005 | ExaDB VM Cluster | User-only manual apply of the reviewed post-fix cluster-example `tfplan` | VM Cluster apply completes successfully | User reported `Apply complete! Resources: 2 added, 0 changed, 0 destroyed.` after setting `gi_version = "19.0.0.0"` | Pass | Codex did not execute apply; first failed attempt is retained in the execution log |
 | EXA-G-006 | ExaDB VM Cluster | `terraform output gcp_cloud_vm_clusters` | Output contains the VM Cluster keyed by input key | Output contains key `primary`; `state` is `AVAILABLE`; OCI VM Cluster OCID is present | Pass | Verified with `terraform output -json`; OCID intentionally not repeated in this artifact |
 | EXA-G-007 | ExaDB VM Cluster | `terraform plan -detailed-exitcode` | Exit code `0`, no drift | Exit code `0`; Terraform reported `No changes. Your infrastructure matches the configuration.` | Pass | No `tfplan` was written |
-| EXA-G-008 | ExaDB VM Cluster | Post-fix `terraform plan -no-color -refresh=false -lock=false` from the cluster example | Plan includes non-null `gi_version` and creates only remaining resources after failed apply | Plan creates VM Cluster and output JSON only; 2 add, 0 change, 0 destroy; `gi_version = "19.0.0.0"` | Pass | The failed apply already created the two `terraform_data` validation resources in state |
+| EXA-G-008 | ExaDB VM Cluster | Post-fix `terraform plan -no-color -refresh=false -lock=false` from the cluster example | Plan includes non-null `gi_version` and creates only remaining real/output resources after failed apply | Plan creates VM Cluster and output JSON only; `gi_version = "19.0.0.0"` | Pass | Standalone module uniqueness `terraform_data` has since been removed to align with OCI module style |
 
 ## JSON Handoff Matrix
 
@@ -167,7 +168,7 @@ Cloud Exadata Infrastructure.
 
 | ID | Area | Command / Action | Expected Result | Actual Result | Status | Evidence / Notes |
 | --- | --- | --- | --- | --- | --- | --- |
-| EXA-S-001 | ExaDB Vision | Configure `gcp_cloud_exadata_infrastructures_configuration.primary` and VM Cluster `exadata_infrastructure_key = "primary"` | Plan resolves VM Cluster Exadata reference from the local Exadata Infrastructure configuration, not from an external dependency map | Plan creates ODB Network, client subnet, backup subnet, Cloud Exadata Infrastructure, VM Cluster, and validation data; 7 add, 0 change, 0 destroy | Pass | Plan-only; no apply; no `tfplan` written |
+| EXA-S-001 | ExaDB Vision | Configure `gcp_cloud_exadata_infrastructures_configuration.primary` and VM Cluster `exadata_infrastructure_key = "primary"` | Plan resolves VM Cluster Exadata reference from the local Exadata Infrastructure configuration, not from an external dependency map | Plan creates ODB Network, client subnet, backup subnet, Cloud Exadata Infrastructure, and VM Cluster; module-level uniqueness validation data has been removed | Pass | Plan-only; no apply; no `tfplan` written |
 
 ## Negative Test Matrix
 
@@ -209,7 +210,7 @@ Run these as plan-only checks. Do not apply negative scenarios.
 | 2026-05-19 13:33:04 CEST | Codex | EXA-N-001..EXA-N-003 | Negative ExaDB subnet purpose and network coherence plans | Pass | Each plan failed before provider apply with the expected precondition message |
 | 2026-05-19 13:33:04 CEST | Codex | EXA-N-004..EXA-N-006 | Negative wrapper inline-map plus file-path conflict plans | Pass | Each plan failed in `terraform_data.validate_dependency_sources` with the expected conflict message |
 | 2026-05-19 13:33:04 CEST | Codex | EXA-N-007 | Negative malformed Cloud Exadata dependency ID plan | Pass | Plan failed variable validation for required full resource name format |
-| 2026-05-19 14:06:55 CEST | Codex | EXA-G-001..EXA-G-004 | Updated ignored cluster tfvars to use real networking JSON handoff and ran `terraform plan -no-color -refresh=false -lock=false` | Pass | Plan creates only `dgc-vm-cluster`, output JSON, and validation data; 4 add, 0 change, 0 destroy |
+| 2026-05-19 14:06:55 CEST | Codex | EXA-G-001..EXA-G-004 | Updated ignored cluster tfvars to use real networking JSON handoff and ran `terraform plan -no-color -refresh=false -lock=false` | Pass | Plan created only `dgc-vm-cluster`, output JSON, and validation data at the time; module-level uniqueness validation has since been removed |
 | 2026-05-19 14:22:11 CEST | Codex | EXA-S-001 | Created ignored `modules/exadb/examples/vision/dgc.auto.tfvars` and ran `terraform plan -no-color -refresh=false -lock=false` | Pass | Single-stack customer path creates ODB networking, Cloud Exadata Infrastructure, and VM Cluster in one state; 7 add, 0 change, 0 destroy; no apply; no `tfplan` written |
 | 2026-05-19 14:29:38 CEST | User | EXA-G-005 | User-run `terraform apply tfplan` in `modules/exadb/examples/cluster` | Fail | Google API rejected VM Cluster creation because `giVersion` was null; `terraform_data` validation resources were created before the failure |
 | 2026-05-19 14:29:38 CEST | Codex | EXA-C-011 | Added module validation and test coverage for required VM Cluster `gi_version` | Pass | `terraform test -no-color` in `modules/exadb`: 20 passed, 0 failed |
@@ -230,6 +231,9 @@ Run these as plan-only checks. Do not apply negative scenarios.
 | 2026-05-19 18:35:13 CEST | Codex | EXA-L-006 | `terraform validate -no-color` in `modules/exadb/examples/cluster` | Pass | Configuration is valid |
 | 2026-05-19 18:35:13 CEST | Codex | EXA-G-007 | Restored ignored cluster tfvars and reran `terraform plan -detailed-exitcode -no-color` | Pass | Exit code `0`; Terraform reported no changes |
 | 2026-05-19 18:35:13 CEST | Codex | EXA-L-003 | `git diff --check` | Pass | Exit code `0` |
+| 2026-05-19 21:48:09 CEST | Codex | EXA-C-012 | Reviewed Google provider schema for VM Cluster `properties.db_server_ocids` | Pass | Schema marks the field optional+computed, so plan can accept `null`; examples/docs now recommend explicit OCIDs because real create can fail without placement |
+| 2026-05-19 21:48:09 CEST | Codex | EXA-L-002..EXA-L-007 | Re-ran ExaDB formatting, module validation/tests, and cluster/vision example validation | Pass | `terraform fmt -check -recursive modules`; `terraform validate`; `terraform test` 20 passed; cluster and vision examples validated; `git diff --check` passed |
+| 2026-05-19 21:55:57 CEST | Codex | EXA-L-002..EXA-L-007 | Removed standalone uniqueness `terraform_data` to align with OCI module style | Pass | ExaDB `validate`, `terraform test` 20/20, and cluster/vision examples `init -backend=false` plus `validate` passed |
 
 ## Publication Checklist
 
@@ -238,7 +242,7 @@ Run these as plan-only checks. Do not apply negative scenarios.
 | Local formatting and diff checks pass | `EXA-L-001` through `EXA-L-003` are `Pass` | Pass | No generated Terraform artifacts are introduced as tracked files; fmt and diff checks returned exit code `0` |
 | ExaDB local validation passes | `EXA-L-004` and `EXA-L-005` are `Pass` | Pass | `validate` passed; `terraform test` reported 20 passed, 0 failed |
 | Examples validate | `EXA-L-006` through `EXA-L-008` are `Pass` | Pass | Cluster, vision, and OCI DB Home handoff examples initialized and validated |
-| VM Cluster user-run real apply passes | `EXA-G-001` through `EXA-G-008` are `Pass` | Pass | First user-run apply failed because `gi_version` was missing; post-fix user-run apply, output check, and no-drift check now pass |
+| VM Cluster user-run real apply passes | `EXA-G-001` through `EXA-G-008` and `EXA-C-012` are `Pass` | Pass | First user-run apply failed because `gi_version` was missing; post-fix user-run apply, output check, and no-drift check now pass with explicit DB server OCIDs |
 | JSON handoff path validates | `EXA-H-001` through `EXA-H-003` are `Pass` | Pass | Real networking JSON output files decode into ExaDB plan when consumer keys match producer output keys |
 | ExaDB single-stack customer path validates | `EXA-S-001` is `Pass` | Pass | Plan-only coverage for local Exadata Infrastructure plus VM Cluster key resolution; no Cloud Exadata Infrastructure apply |
 | Negative plan checks fail as expected | `EXA-N-001` through `EXA-N-007` are `Pass` | Pass | Purpose, network coherence, wrapper conflict, and malformed dependency checks fail before apply |
@@ -252,6 +256,9 @@ Run these as plan-only checks. Do not apply negative scenarios.
   Cloud apply in this release test plan.
 - VM Cluster creation depends on regional capacity, entitlement, IAM, DB server
   availability, and the health of the existing Cloud Exadata Infrastructure.
+- `db_server_ocids = null` is provider-schema-valid but is not the certified
+  release path for VM Cluster creation. Use explicit DB server OCIDs unless a
+  target environment has already validated server-side placement.
 - ODB Networking dependencies are assumed certified through
   `TESTING_ODBNETWORKING.md`.
 - The current Google provider marks Cloud VM Cluster label changes as
