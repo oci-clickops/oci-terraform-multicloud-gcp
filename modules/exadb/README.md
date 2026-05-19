@@ -148,6 +148,7 @@ Available examples:
 * [examples/vision](./examples/vision): recommended first deployment path — complete end-to-end example with a ready-to-rename `input.auto.tfvars.template`.
 * [../odb-networking/examples/basic](../odb-networking/examples/basic): networking-only deployment (Network team Stack 1) — creates an ODB Network and client/backup ODB Subnets on an existing VPC, without Exadata Infrastructure or VM Clusters. Set `output_path` to write dependency files for `examples/cluster`.
 * [examples/cluster](./examples/cluster): VM Cluster deployment — receives ODB networking and Cloud Exadata Infrastructure outputs from upstream stacks via inline maps or, for local file handoff, example-level `*_dependency_file_path` variables. To use an existing Exadata Infrastructure without a dependency map, pass its resource name directly in `exadata_infrastructure` instead of using a key.
+* [examples/oci-dbhome-handoff](./examples/oci-dbhome-handoff): downstream OCI wrapper — reads `gcp_cloud_vm_clusters_output.json`, extracts the VM Cluster OCI OCID, and passes it to the OCI Exadata module for DB Homes, CDBs, and PDBs.
 
 Each example includes an `input.auto.tfvars.template` file. Rename it to `<project-name>.auto.tfvars` and Terraform will load it automatically — no `terraform.tfvars` copy needed.
 

@@ -119,6 +119,7 @@ Run from a clean worktree before any user-run real GCP apply.
 | L-008 | ODB Networking Example | Init and validate `modules/odb-networking/examples/basic` | Init and validation pass | Init and validation pass | Pass | Reused installed `hashicorp/google` `7.32.0` and `hashicorp/local` `2.9.0` |
 | L-009 | ExaDB Cluster Example | `cd modules/exadb/examples/cluster && terraform init -backend=false && terraform validate -no-color` | Init and validation pass | Init and validation pass | Pass | Reused installed `hashicorp/google` `7.32.0` and `hashicorp/local` `2.9.0` |
 | L-010 | ExaDB Vision Example | `cd modules/exadb/examples/vision && terraform init -backend=false && terraform validate -no-color` | Init and validation pass | Init and validation pass | Pass | Reused installed `hashicorp/google` `7.32.0` and `hashicorp/local` `2.9.0` |
+| L-011 | ExaDB OCI DB Home Handoff Example | `cd modules/exadb/examples/oci-dbhome-handoff && terraform init -backend=false && terraform validate -no-color` | Init and validation pass | Init and validation pass | Pass | Downloaded upstream `terraform-oci-modules-exadata//exadata-database` and `oracle/oci` provider; no plan/apply |
 
 ## Local Contract Coverage
 
@@ -268,6 +269,7 @@ Append one row per meaningful command execution or manual verification.
 | 2026-05-19 14:29:38 CEST | User | G-105 | User-run `terraform apply tfplan` in `modules/exadb/examples/cluster` | Fail | Google API rejected VM Cluster creation because `giVersion` was null; `terraform_data` validation resources were created before the failure |
 | 2026-05-19 14:29:38 CEST | Codex | C-019 | Added module validation and test coverage for required VM Cluster `gi_version` | Pass | `terraform test -no-color` in `modules/exadb`: 20 passed, 0 failed |
 | 2026-05-19 14:29:38 CEST | Codex | G-108 | Post-fix `terraform plan -no-color -refresh=false -lock=false` in `modules/exadb/examples/cluster` | Pass | 2 add, 0 change, 0 destroy; remaining resources are VM Cluster and output JSON; `gi_version = "19.0.0.0"` |
+| 2026-05-19 17:23:35 CEST | Codex | L-011 | Added and validated `modules/exadb/examples/oci-dbhome-handoff` | Pass | Example reads `gcp_cloud_vm_clusters_output.json`, validates `ocid`/`AVAILABLE`, and passes OCI OCID to upstream OCI Exadata DB Home module |
 
 ## Publication Checklist
 
@@ -275,8 +277,8 @@ Append one row per meaningful command execution or manual verification.
 | --- | --- | --- | --- |
 | Local formatting and diff checks pass | `L-001` through `L-003` are `Pass` | Pass | No unexpected tracked changes; fmt and diff checks returned exit code `0` |
 | ODB Networking local validation passes | `L-004` and `L-005` are `Pass` | Pass | `validate` passed; `terraform test` reported 12 passed, 0 failed |
-| ExaDB local validation passes | `L-006` and `L-007` are `Pass` | Pass | `validate` passed; `terraform test` reported 19 passed, 0 failed |
-| Examples validate | `L-008` through `L-010` are `Pass` | Pass | Basic, cluster, and vision examples initialized and validated |
+| ExaDB local validation passes | `L-006` and `L-007` are `Pass` | Pass | `validate` passed; `terraform test` reported 20 passed, 0 failed |
+| Examples validate | `L-008` through `L-011` are `Pass` | Pass | Basic, cluster, vision, and OCI DB Home handoff examples initialized and validated |
 | ODB Networking user-run real apply passes | `G-001` through `G-007` are `Pass` | Pass | User-run apply passed; outputs, JSON handoff, and no-drift check passed |
 | VM Cluster user-run real apply passes | `G-101` through `G-108` are `Pass` | In Progress | `G-105` failed once due missing `gi_version`; post-fix plan `G-108` passes; rerun user apply/output/drift checks are still required |
 | JSON handoff path validates | `G-201` through `G-203` are `Pass` | Pass | Real networking JSON output files decode into ExaDB plan when consumer keys match producer output keys |
