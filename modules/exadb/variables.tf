@@ -445,6 +445,14 @@ variable "gcp_cloud_vm_clusters_configuration" {
   validation {
     condition = alltrue([
       for cluster in var.gcp_cloud_vm_clusters_configuration :
+      cluster.properties.gi_version != null && trimspace(cluster.properties.gi_version) != ""
+    ])
+    error_message = "Cloud VM cluster gi_version is required by the Oracle Database@Google Cloud API and must be a non-empty Grid Infrastructure version, for example 19.0.0.0."
+  }
+
+  validation {
+    condition = alltrue([
+      for cluster in var.gcp_cloud_vm_clusters_configuration :
       cluster.properties.cpu_core_count >= 4 &&
       (cluster.properties.node_count == null ? true : cluster.properties.node_count >= 2) &&
       (cluster.properties.ocpu_count == null ? true : cluster.properties.ocpu_count >= 0.1) &&

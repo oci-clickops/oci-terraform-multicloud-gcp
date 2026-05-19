@@ -81,7 +81,7 @@ gcp_cloud_vm_clusters_configuration = {
     odb_network_key            = "prod-net"     # resolves from gcp_odb_networks_dependency
     odb_subnet_key             = "prod-client"
     backup_odb_subnet_key      = "prod-backup"
-    properties = { license_type = "BRING_YOUR_OWN_LICENSE", cpu_core_count = 8 }
+    properties = { license_type = "BRING_YOUR_OWN_LICENSE", gi_version = "19.0.0.0", cpu_core_count = 8 }
   }
 }
 ```
@@ -96,7 +96,7 @@ gcp_cloud_vm_clusters_configuration = {
     odb_network            = "projects/my-project/locations/us-east4/odbNetworks/prod-net"
     odb_subnet             = "projects/my-project/locations/us-east4/odbNetworks/prod-net/odbSubnets/prod-client"
     backup_odb_subnet      = "projects/my-project/locations/us-east4/odbNetworks/prod-net/odbSubnets/prod-backup"
-    properties = { license_type = "BRING_YOUR_OWN_LICENSE", cpu_core_count = 8 }
+    properties = { license_type = "BRING_YOUR_OWN_LICENSE", gi_version = "19.0.0.0", cpu_core_count = 8 }
   }
 }
 ```
@@ -112,6 +112,8 @@ Common defaults such as project, location, GCP Oracle zone, labels, deletion pro
 When `display_name` is omitted, Cloud Exadata Infrastructure and Cloud VM Cluster resources use their resource ID as the display name. `module_name` is also validated so the generated module label remains compatible with Google Cloud label rules.
 
 VM Cluster SSH public keys can be supplied directly with `properties.ssh_public_keys` or centrally with `ssh_public_keys_file_path`. When the file path is set, the module reads one RSA OpenSSH public key per non-empty line and injects the resulting list into every VM Cluster configuration.
+
+VM Cluster `properties.gi_version` is required by the Oracle Database@Google Cloud API during creation, even though the Google provider schema marks it optional. Choose a version available in the target Google Cloud location.
 
 ### Multi-Stack Handoff
 

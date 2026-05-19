@@ -175,7 +175,7 @@ The `properties` object has these attributes:
 
 * `license_type`: Required. License type of the VM cluster.
 * `cpu_core_count`: Required. CPU core count of the VM cluster. Must be at least 4.
-* `gi_version`: Optional. Grid Infrastructure version.
+* `gi_version`: Required. Grid Infrastructure version. The Google provider schema marks this field optional, but the Oracle Database@Google Cloud API rejects VM Cluster creation when it is omitted.
 * `ssh_public_keys`: Optional. RSA SSH public keys for the VM cluster in OpenSSH format, for example `ssh-rsa <base64> user@example.com`.
 * `node_count`: Optional. Node count of the VM cluster. Must be at least 2 when set.
 * `ocpu_count`: Optional. OCPU count of the VM cluster.

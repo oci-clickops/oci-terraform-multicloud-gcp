@@ -94,7 +94,7 @@ gcp_cloud_vm_clusters_configuration = {
       local_backup_enabled     = false
       sparse_diskgroup_enabled = false
       cluster_name             = "<REPLACE-BY-CLUSTER-NAME>"
-      gi_version               = "23.0.0.0"
+      gi_version               = "19.0.0.0"
       hostname_prefix          = "exa"
       # Set one explicit DB server OCID per VM for controlled placement and offline planning.
       # Set null only when the target project/API are real and Terraform may discover AVAILABLE DB servers.
