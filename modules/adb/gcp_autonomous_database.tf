@@ -54,14 +54,29 @@ locals {
 
   gcp_autonomous_databases_output = {
     for key, adb in google_oracle_database_autonomous_database.these : key => {
-      id                 = adb.id
-      name               = adb.name
-      location           = adb.location
-      project            = adb.project
-      ocid               = try(adb.properties[0].ocid, null)
-      state              = try(adb.properties[0].state, null)
-      oci_url            = try(adb.properties[0].oci_url, null)
-      connection_strings = try(adb.properties[0].connection_strings, null)
+      id                                    = adb.id
+      name                                  = adb.name
+      location                              = adb.location
+      project                               = adb.project
+      ocid                                  = try(adb.properties[0].ocid, null)
+      state                                 = try(adb.properties[0].state, null)
+      oci_url                               = try(adb.properties[0].oci_url, null)
+      oci_region                            = try(regex("region=([^?&/]+)", adb.properties[0].oci_url)[0], null)
+      oci_tenant                            = try(regex("tenant=([^?&/]+)", adb.properties[0].oci_url)[0], null)
+      oci_compartment_id                    = try(regex("compartmentId=([^?&/]+)", adb.properties[0].oci_url)[0], null)
+      connection_strings                    = try(adb.properties[0].connection_strings, null)
+      connection_urls                       = try(adb.properties[0].connection_urls, null)
+      private_endpoint                      = try(adb.properties[0].private_endpoint, null)
+      private_endpoint_ip                   = try(adb.properties[0].private_endpoint_ip, null)
+      private_endpoint_label                = try(adb.properties[0].private_endpoint_label, null)
+      sql_web_developer_url                 = try(adb.properties[0].sql_web_developer_url, null)
+      role                                  = try(adb.properties[0].role, null)
+      peer_db_ids                           = try(adb.properties[0].peer_db_ids, null)
+      permission_level                      = try(adb.properties[0].permission_level, null)
+      is_local_data_guard_enabled           = try(adb.properties[0].is_local_data_guard_enabled, null)
+      local_disaster_recovery_type          = try(adb.properties[0].local_disaster_recovery_type, null)
+      local_standby_db                      = try(adb.properties[0].local_standby_db, null)
+      disaster_recovery_supported_locations = try(adb.disaster_recovery_supported_locations, null)
     }
   }
 }
@@ -126,6 +141,7 @@ resource "google_oracle_database_autonomous_database" "these" {
 
   lifecycle {
     ignore_changes = [
+      labels,
       admin_password,
       properties[0].compute_count,
       properties[0].cpu_core_count,

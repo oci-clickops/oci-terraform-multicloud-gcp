@@ -135,11 +135,11 @@ The module intentionally does not expose the Google provider's legacy VM Cluster
 
 Oracle Database@Google Cloud can be operated through both Google and OCI control planes. This dual control-plane model is useful operationally, but it also means some fields can drift outside Terraform. The module uses a narrow `ignore_changes` policy for fields that are expected to drift during Oracle-managed maintenance or OCI-side operations.
 
-For Cloud Exadata Infrastructure, the policy covers capacity and storage fields that may change outside Terraform. For Cloud VM Clusters, it covers Grid Infrastructure patch level, server placement, capacity, storage, backup, and disk redundancy fields.
+For Cloud Exadata Infrastructure, the policy covers capacity and storage fields that may change outside Terraform. For Cloud VM Clusters, it covers Grid Infrastructure patch level, server placement, capacity, storage, backup, disk redundancy fields, and labels.
 
-The policy is intentionally limited. Labels, maintenance windows, customer contacts, networking topology, and computed-only system attributes remain visible to Terraform. ODB Network and ODB Subnet drift belongs to the networking module or the stack that owns those resources.
+The policy is intentionally limited. VM Cluster labels are treated as creation-time metadata because the current Google provider plans a replacement for label changes. Exadata Infrastructure labels, maintenance windows, customer contacts, networking topology, and computed-only system attributes remain visible to Terraform. ODB Network and ODB Subnet drift belongs to the networking module or the stack that owns those resources.
 
-The exact ignored fields and rationale are documented in [SPEC.md](./SPEC.md).
+The exact ignored fields, rationale, and Oracle documentation references are documented in [SPEC.md](./SPEC.md).
 
 ## <a name="examples">Examples</a>
 

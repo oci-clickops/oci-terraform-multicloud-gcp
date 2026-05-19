@@ -118,6 +118,8 @@ The `maintenance_window` object has these attributes:
 
 The module intentionally ignores Terraform drift for selected Cloud Exadata Infrastructure capacity fields. These values can change after Oracle-managed maintenance or after operations performed through the OCI control plane in dual control-plane deployments. Ignoring them prevents a later Google provider plan from rolling back capacity or storage changes made outside this module.
 
+This policy follows Oracle's published Terraform guidance for [modifying an Exadata Infrastructure](https://docs.oracle.com/en-us/iaas/Content/database-at-gcp/gcpmd-modify-exadata-infrastructure.html#terraform) in Oracle Database@Google Cloud.
+
 Ignored Cloud Exadata Infrastructure fields:
 
 * `properties[0].compute_count`
@@ -155,8 +157,11 @@ Each VM cluster must set exactly one Exadata reference: `exadata_infrastructure`
 
 The module intentionally ignores Terraform drift for selected VM cluster fields that can change during Oracle-managed maintenance or during operations performed through the OCI control plane in dual control-plane deployments. This prevents a later Google provider plan from trying to roll back patch, shape, capacity, storage, backup, or database server placement changes made outside this module.
 
+This policy follows Oracle's published Terraform guidance for [modifying an Exadata VM Cluster](https://docs.oracle.com/en-us/iaas/Content/database-at-gcp/gcpmd-modify-exadata-vm-cluster.html#terraform) in Oracle Database@Google Cloud.
+
 Ignored VM cluster fields:
 
+* `labels`
 * `properties[0].gi_version`
 * `properties[0].db_server_ocids`
 * `properties[0].cpu_core_count`
@@ -169,7 +174,7 @@ Ignored VM cluster fields:
 * `properties[0].sparse_diskgroup_enabled`
 * `properties[0].disk_redundancy`
 
-The policy is deliberately limited to operational fields that are likely to drift when Google and OCI control planes are both used. Labels remain managed by Terraform. Computed-only system attributes such as `system_version`, `scan_listener_port_tcp`, and `scan_listener_port_tcp_ssl` are also not ignored because they are not Terraform inputs.
+The policy is deliberately limited to operational fields that are likely to drift when Google and OCI control planes are both used. VM Cluster labels are also ignored after creation because the current Google provider marks label changes as replacement. Treat VM Cluster labels as creation-time metadata. Computed-only system attributes such as `system_version`, `scan_listener_port_tcp`, and `scan_listener_port_tcp_ssl` are not ignored because they are not Terraform inputs.
 
 The `properties` object has these attributes:
 

@@ -38,9 +38,18 @@ resource "google_oracle_database_odb_network" "these" {
   }
 
   lifecycle {
+    ignore_changes = [
+      labels,
+    ]
+
     precondition {
       condition     = each.value.location != null || var.default_location != null
       error_message = "Each ODB network must set location or default_location."
+    }
+
+    precondition {
+      condition     = each.value.gcp_oracle_zone != null || var.default_gcp_oracle_zone != null
+      error_message = "Each ODB network must set gcp_oracle_zone or default_gcp_oracle_zone."
     }
   }
 }

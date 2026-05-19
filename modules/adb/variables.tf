@@ -35,12 +35,22 @@ variable "default_project_id" {
   description = "Default Google Cloud project ID used by resources when project_id is not set on the resource."
   type        = string
   default     = null
+
+  validation {
+    condition     = var.default_project_id == null ? true : trimspace(var.default_project_id) != ""
+    error_message = "default_project_id must be null or a non-empty Google Cloud project ID."
+  }
 }
 
 variable "default_location" {
   description = "Default Google Cloud region used by resources when location is not set on the resource."
   type        = string
   default     = null
+
+  validation {
+    condition     = var.default_location == null ? true : trimspace(var.default_location) != ""
+    error_message = "default_location must be null or a non-empty Google Cloud region."
+  }
 }
 
 variable "default_labels" {
@@ -48,6 +58,15 @@ variable "default_labels" {
   type        = map(string)
   default     = {}
   nullable    = false
+
+  validation {
+    condition = alltrue([
+      for key, value in var.default_labels :
+      can(regex("^[a-z][a-z0-9_-]{0,62}$", key)) &&
+      (value == null ? false : (value == "" ? true : can(regex("^[a-z0-9][a-z0-9_-]{0,62}$", value))))
+    ])
+    error_message = "default_labels keys must be 1-63 characters, start with a lowercase letter, and contain only lowercase letters, numbers, underscores, or hyphens. Values must be empty or 1-63 characters containing only lowercase letters, numbers, underscores, or hyphens."
+  }
 }
 
 variable "default_deletion_protection" {
@@ -182,6 +201,41 @@ variable "gcp_autonomous_databases_configuration" {
   validation {
     condition = alltrue([
       for adb in var.gcp_autonomous_databases_configuration :
+      adb.database == null ? true : can(regex("^[A-Za-z][A-Za-z0-9]{0,29}$", adb.database))
+    ])
+    error_message = "Autonomous database database names must begin with a letter, contain only alphanumeric characters, and be at most 30 characters long when set."
+  }
+
+  validation {
+    condition = alltrue(flatten([
+      for adb in var.gcp_autonomous_databases_configuration : [
+        for key, value in adb.labels :
+        can(regex("^[a-z][a-z0-9_-]{0,62}$", key)) &&
+        (value == null ? false : (value == "" ? true : can(regex("^[a-z0-9][a-z0-9_-]{0,62}$", value))))
+      ]
+    ]))
+    error_message = "Autonomous database labels keys must be 1-63 characters, start with a lowercase letter, and contain only lowercase letters, numbers, underscores, or hyphens. Values must be empty or 1-63 characters containing only lowercase letters, numbers, underscores, or hyphens."
+  }
+
+  validation {
+    condition = alltrue([
+      for adb in var.gcp_autonomous_databases_configuration :
+      adb.project_id == null ? true : trimspace(adb.project_id) != ""
+    ])
+    error_message = "Autonomous database project_id values must be null or non-empty strings."
+  }
+
+  validation {
+    condition = alltrue([
+      for adb in var.gcp_autonomous_databases_configuration :
+      adb.location == null ? true : trimspace(adb.location) != ""
+    ])
+    error_message = "Autonomous database location values must be null or non-empty strings."
+  }
+
+  validation {
+    condition = alltrue([
+      for adb in var.gcp_autonomous_databases_configuration :
       (adb.odb_network != null ? 1 : 0) + (adb.odb_network_key != null ? 1 : 0) == 1 &&
       (adb.odb_subnet != null ? 1 : 0) + (adb.odb_subnet_key != null ? 1 : 0) == 1
     ])
@@ -257,6 +311,44 @@ variable "gcp_autonomous_databases_configuration" {
     condition = alltrue([
       for adb in var.gcp_autonomous_databases_configuration :
       adb.properties == null ? true : (
+        adb.properties.operations_insights_state == null ? true : contains(["OPERATIONS_INSIGHTS_STATE_UNSPECIFIED", "ENABLING", "ENABLED", "DISABLING", "NOT_ENABLED", "FAILED_ENABLING", "FAILED_DISABLING"], adb.properties.operations_insights_state)
+      )
+    ])
+    error_message = "Autonomous database operations_insights_state must be OPERATIONS_INSIGHTS_STATE_UNSPECIFIED, ENABLING, ENABLED, DISABLING, NOT_ENABLED, FAILED_ENABLING, or FAILED_DISABLING when set."
+  }
+
+  validation {
+    condition = alltrue([
+      for adb in var.gcp_autonomous_databases_configuration :
+      adb.properties == null ? true : (
+        adb.properties.private_endpoint_ip == null ? true : can(regex("^(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])(\\.(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])){3}$", adb.properties.private_endpoint_ip))
+      )
+    ])
+    error_message = "Autonomous database private_endpoint_ip must be a valid IPv4 address without CIDR suffix when set."
+  }
+
+  validation {
+    condition = alltrue(flatten([
+      for adb in var.gcp_autonomous_databases_configuration :
+      adb.properties == null ? [true] : [
+        for value in [
+          adb.properties.character_set,
+          adb.properties.n_character_set,
+          adb.properties.db_version,
+          adb.properties.private_endpoint_label,
+          adb.properties.secret_id,
+          adb.properties.vault_id
+        ] :
+        value == null ? true : trimspace(value) != ""
+      ]
+    ]))
+    error_message = "Autonomous database optional string properties character_set, n_character_set, db_version, private_endpoint_label, secret_id, and vault_id must be null or non-empty strings."
+  }
+
+  validation {
+    condition = alltrue([
+      for adb in var.gcp_autonomous_databases_configuration :
+      adb.properties == null ? true : (
         adb.properties.backup_retention_period_days == null ? true : (
           adb.properties.backup_retention_period_days >= 1 && adb.properties.backup_retention_period_days <= 60
         )
@@ -285,4 +377,18 @@ variable "gcp_autonomous_databases_admin_passwords" {
   sensitive   = true
   default     = {}
   nullable    = false
+
+  validation {
+    condition = alltrue([
+      for password in values(var.gcp_autonomous_databases_admin_passwords) :
+      length(password) >= 12 &&
+      length(password) <= 30 &&
+      can(regex("[A-Z]", password)) &&
+      can(regex("[a-z]", password)) &&
+      can(regex("[0-9]", password)) &&
+      !can(regex("\"", password)) &&
+      !can(regex("admin", lower(password)))
+    ])
+    error_message = "Autonomous Database admin passwords must be between 12 and 30 characters, contain at least one uppercase letter, one lowercase letter, and one number, and must not contain double quotes or 'admin' in any casing."
+  }
 }

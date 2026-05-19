@@ -35,7 +35,7 @@ Before running Terraform against real infrastructure, make sure these pieces are
 * For this reusable module: an existing ODB Network and client ODB Subnet, created by `modules/odb-networking` or an equivalent stack.
 * Oracle Database@Google Cloud entitlement and capacity in the target project and region.
 
-The admin password is accepted as a separate sensitive input keyed by the same map key as the database. Do not store passwords in tfvars files committed to version control. Use the `TF_VAR_gcp_autonomous_databases_admin_passwords` environment variable instead.
+The admin password is accepted as a separate sensitive input keyed by the same map key as the database. Do not store passwords in tfvars files committed to version control. Use the `TF_VAR_gcp_autonomous_databases_admin_passwords` environment variable instead. Passwords are validated at plan time: they must be 12–30 characters, include at least one uppercase letter, one lowercase letter, and one number, and must not contain double quotes or `admin` in any casing.
 
 ## <a name="getting-started">Getting Started</a>
 
@@ -92,7 +92,7 @@ Set exactly one of `odb_network` or `odb_network_key`, and exactly one of `odb_s
 
 Common defaults such as project, location, labels, and deletion protection are handled by module-level inputs. Resource-specific values override the defaults. When `display_name` is omitted, Autonomous Database resources use `autonomous_database_id` as the display name. `module_name` is validated and the generated module label is sanitized for Google Cloud label rules.
 
-The module performs strict validation at `terraform plan`: ODB Network and Subnet references must be geographically consistent (same project, location, and parent ODB Network segment), dependency-provided subnets must declare `purpose = "CLIENT_SUBNET"` to be usable, and `autonomous_database_id` must be unique within each `(project, location)`. Configuration errors fail the plan with actionable messages instead of producing a late Google Cloud API error during apply. See [SPEC.md](./SPEC.md#plan-time-validations) for the full list.
+The module performs strict validation at `terraform plan`: ODB Network and Subnet references must be geographically consistent (same project, location, and parent ODB Network segment), dependency-provided subnets must declare `purpose = "CLIENT_SUBNET"` to be usable, `autonomous_database_id` must be unique within each `(project, location)`, and provider-sensitive fields such as `database`, labels, `operations_insights_state`, and `private_endpoint_ip` are checked before the Google API call. Configuration errors fail the plan with actionable messages instead of producing a late Google Cloud API error during apply. See [SPEC.md](./SPEC.md#plan-time-validations) for the full list.
 
 ## <a name="operational-drift-policy">Operational Drift Policy</a>
 
@@ -106,8 +106,9 @@ Oracle Autonomous Database can be operated through both Google and OCI control p
 * `properties[0].is_auto_scaling_enabled` and `properties[0].is_storage_auto_scaling_enabled` — may change through OCI operations.
 * `properties[0].backup_retention_period_days` — may be adjusted through OCI Day-2 operations.
 * `properties[0].operations_insights_state` — output-only in the Google Cloud Oracle Database API; the service controls it and Terraform cannot reliably reconcile it.
+* `labels` — treated as creation-time metadata because the current Google provider plans replacement for label-only changes.
 
-The policy follows Oracle's published guidance for the dual control-plane model. Labels and all other attributes remain visible to Terraform.
+The policy follows Oracle's published guidance for the dual control-plane model. All other attributes remain visible to Terraform.
 
 The exact ignored fields and rationale are documented in [SPEC.md](./SPEC.md).
 
@@ -128,7 +129,7 @@ The module returns created resources with the same keys used in the input map:
 
 * `gcp_autonomous_databases`
 
-Each output includes stable identifiers, the OCI OCID, OCI console URL, connection strings, and lifecycle state. Set `enable_output = false` to suppress outputs.
+Each output includes stable identifiers, the OCI OCID, parsed OCI region, tenant, and compartment ID, OCI console URL, connection strings and URLs, private endpoint details, SQL Web Developer URL, Data Guard/peer metadata, and lifecycle state. Set `enable_output = false` to suppress outputs.
 
 When `output_path` is set, the module writes:
 

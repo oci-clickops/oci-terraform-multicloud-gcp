@@ -17,10 +17,10 @@ This module requires Terraform `>= 1.4.0` and HashiCorp Google provider `>= 7.13
 * `module_name`: The module name. Defaults to `oracle-database-networking-at-gcp`.
 * `enable_output`: Whether Terraform should enable module outputs. Defaults to `true`.
 * `output_path`: Optional directory where dependency JSON files are written.
-* `default_project_id`: Default Google Cloud project ID used when `project_id` is not set on a resource.
-* `default_location`: Default Google Cloud region used when `location` is not set on a resource.
-* `default_gcp_oracle_zone`: Default GCP Oracle zone used when `gcp_oracle_zone` is not set on an ODB Network.
-* `default_labels`: Default labels merged into all resources.
+* `default_project_id`: Default Google Cloud project ID used when `project_id` is not set on a resource. If set, it must be non-empty.
+* `default_location`: Default Google Cloud region used when `location` is not set on a resource. If set, it must be non-empty.
+* `default_gcp_oracle_zone`: Default GCP Oracle zone used when `gcp_oracle_zone` is not set on an ODB Network. If set, it must be non-empty.
+* `default_labels`: Default labels merged into all resources. Keys and values must follow Google Cloud label syntax: lowercase letters, numbers, underscores, and hyphens; keys must start with a lowercase letter; values may be empty.
 * `default_deletion_protection`: Default deletion protection value. Defaults to `true`.
 
 ### ODB Networks
@@ -29,10 +29,10 @@ This module requires Terraform `>= 1.4.0` and HashiCorp Google provider `>= 7.13
 
 * `odb_network_id`: Required. ODB Network ID segment.
 * `network`: Required. Existing Google Cloud VPC network resource name in `projects/{project}/global/networks/{network}` format.
-* `location`: Optional. Overrides `default_location`.
-* `project_id`: Optional. Overrides `default_project_id`.
-* `gcp_oracle_zone`: Optional. Overrides `default_gcp_oracle_zone`.
-* `labels`: Optional. Resource labels.
+* `location`: Optional. Overrides `default_location`. If set, it must be non-empty.
+* `project_id`: Optional. Overrides `default_project_id`. If set, it must be non-empty.
+* `gcp_oracle_zone`: Optional. Overrides `default_gcp_oracle_zone`. If set, it must be non-empty.
+* `labels`: Optional. Resource labels. Keys and values must follow the same Google Cloud label syntax as `default_labels`.
 * `deletion_protection`: Optional. Overrides `default_deletion_protection`.
 * `timeouts`: Optional provider timeout overrides.
 
@@ -47,9 +47,9 @@ Provider resource: `google_oracle_database_odb_network`.
 * `purpose`: Required. `CLIENT_SUBNET` or `BACKUP_SUBNET`.
 * `odbnetwork`: Optional. Parent ODB Network ID segment. Mutually exclusive with `odb_network_key`.
 * `odb_network_key`: Optional. Key of an ODB Network in `gcp_odb_networks_configuration`. Mutually exclusive with `odbnetwork`.
-* `location`: Optional. Overrides `default_location`.
-* `project_id`: Optional. Overrides `default_project_id`.
-* `labels`: Optional. Resource labels.
+* `location`: Optional. Overrides `default_location`. If set, it must be non-empty.
+* `project_id`: Optional. Overrides `default_project_id`. If set, it must be non-empty.
+* `labels`: Optional. Resource labels. Keys and values must follow the same Google Cloud label syntax as `default_labels`.
 * `deletion_protection`: Optional. Overrides `default_deletion_protection`.
 * `timeouts`: Optional provider timeout overrides.
 
@@ -63,8 +63,17 @@ Provider resource: `google_oracle_database_odb_subnet`.
 * ODB Subnet purpose must be `CLIENT_SUBNET` or `BACKUP_SUBNET`.
 * Each ODB Subnet must set exactly one of `odbnetwork` or `odb_network_key`.
 * `odb_network_key` must reference an ODB Network created by this module.
+* ODB Network resources must set `gcp_oracle_zone` or `default_gcp_oracle_zone`.
+* Project, location, and GCP Oracle zone defaults and overrides can be omitted when another value supplies the setting, but cannot be whitespace-only strings.
+* `default_labels`, ODB Network `labels`, and ODB Subnet `labels` must use Google Cloud label-compatible syntax.
 * ODB Network IDs are unique within each `(project, location)`.
 * ODB Subnet IDs are unique within each `(project, location, parent_odb_network)`.
+
+## Operational Drift Policy
+
+The module intentionally ignores Terraform drift for ODB Network and ODB Subnet `labels`.
+
+The policy is intentionally narrow. The current Google provider plans replacement for label-only changes on `google_oracle_database_odb_network` and `google_oracle_database_odb_subnet`. Labels are therefore treated as creation-time tracking metadata to avoid accidental replacement of networking resources. All other ODB Networking attributes remain visible to Terraform.
 
 ## Outputs
 

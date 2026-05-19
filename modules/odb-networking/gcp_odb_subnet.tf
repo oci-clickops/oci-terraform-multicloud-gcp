@@ -72,6 +72,10 @@ resource "google_oracle_database_odb_subnet" "these" {
   }
 
   lifecycle {
+    ignore_changes = [
+      labels,
+    ]
+
     precondition {
       condition     = each.value.location != null || var.default_location != null
       error_message = "Each ODB subnet must set location or default_location."

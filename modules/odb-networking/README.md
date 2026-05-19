@@ -59,6 +59,8 @@ module "odb_networking" {
 
 Downstream modules should consume `module.odb_networking.gcp_odb_networks` and `module.odb_networking.gcp_odb_subnets` directly when they are composed in the same root module.
 
+The module validates provider-sensitive inputs at plan time: project, location, and GCP Oracle zone defaults cannot be whitespace-only; labels must use Google Cloud label-compatible syntax; subnet CIDRs and purposes are checked before any Google Cloud API call; and resource IDs must be unique within their provider scope.
+
 ## JSON Handoff
 
 The sweet path is direct dependency maps from Terraform outputs, Terragrunt dependency blocks, `terraform_remote_state`, HCP Terraform workspace outputs, CI/CD variables, or an orchestration layer.
@@ -69,6 +71,10 @@ For local development, demos, or file-based orchestration, set `output_path` to 
 * `gcp_odb_subnets_output.json`
 
 Reusable consumer modules still receive maps. Wrappers/examples are responsible for decoding files with `jsondecode(file(...))`.
+
+## Operational Drift Policy
+
+ODB Network and ODB Subnet labels are treated as creation-time tracking metadata. The current Google provider plans replacement for label-only changes on these resources, so the module ignores `labels` drift to avoid accidental replacement of networking resources. All other ODB Networking attributes remain visible to Terraform.
 
 ## Examples
 

@@ -208,6 +208,7 @@ resource "google_oracle_database_cloud_vm_cluster" "these" {
 
   lifecycle {
     ignore_changes = [
+      labels,
       properties[0].cpu_core_count,
       properties[0].data_storage_size_tb,
       properties[0].db_node_storage_size_gb,
