@@ -1,6 +1,6 @@
 # Existing ODB Network
 
-Use this example to create an Oracle Autonomous Database@Google Cloud using an existing ODB Network and ODB Subnet. It creates:
+Use this example for a multi-stack Oracle Autonomous Database@Google Cloud deployment using an existing ODB Network and ODB Subnet. It creates:
 
 * One Autonomous Database attached to an existing ODB Network and subnet
 

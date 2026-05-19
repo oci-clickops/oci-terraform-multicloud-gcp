@@ -26,7 +26,7 @@ For ODB networking, start with [modules/odb-networking/examples/basic](./modules
 
 For Cloud Exadata Infrastructure and VM Cluster deployments, start with [modules/exadb/examples/vision](./modules/exadb/examples/vision). It composes `modules/odb-networking` and `modules/exadb` to create the ODB networking layer, a Cloud Exadata Infrastructure, and a Cloud VM Cluster end to end.
 
-For Autonomous Database deployments, start with [modules/adb/examples/vision](./modules/adb/examples/vision). It creates a single Autonomous Database in ODB Network mode with a full set of properties.
+For Autonomous Database deployments, start with [modules/adb/examples/vision](./modules/adb/examples/vision). It composes `modules/odb-networking` and `modules/adb` to create the ODB networking layer and a single Autonomous Database end to end.
 
 Each example includes an `input.auto.tfvars.template` file. Rename it to `<project-name>.auto.tfvars` and Terraform will load it automatically.
 

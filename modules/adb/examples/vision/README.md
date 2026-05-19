@@ -1,10 +1,12 @@
 # Vision
 
-Use this example for a complete Oracle Autonomous Database@Google Cloud deployment in ODB Network mode. It creates:
+Use this example for a complete end-to-end Oracle Autonomous Database@Google Cloud deployment in ODB Network mode. It creates:
 
-* One Autonomous Database connected to an existing ODB Network and client ODB Subnet
+* One ODB network
+* One client ODB subnet
+* One Autonomous Database
 
-The example uses module defaults for project and region, references existing ODB networking directly, and shows the full set of commonly used properties.
+The example composes `modules/odb-networking` and `modules/adb` in the same root module. ODB Network/Subnet outputs are passed directly as dependency maps, so the Autonomous Database uses module keys (`primary`, `client`) without copying resource names.
 
 ## Prerequisites
 
@@ -12,9 +14,9 @@ Before running it, confirm that:
 
 * The Google Cloud project is enabled for Oracle Database@Google Cloud.
 * The target region has the required entitlement and capacity.
-* The ODB Network and client ODB Subnet already exist. In production, these are usually supplied by an ExaDB networking stack or equivalent platform networking stack.
+* The target VPC network already exists. In production, this is usually supplied by the Google Cloud landing zone or platform networking stack, often as a Shared VPC.
 * Google provider authentication is configured, for example Application Default Credentials via `gcloud auth application-default login`.
-* The caller has permissions to manage Oracle Database@Google Cloud resources and reference the ODB Network and ODB Subnet.
+* The caller has permissions to manage Oracle Database@Google Cloud resources and reference the VPC network.
 
 ## Usage
 

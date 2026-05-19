@@ -2,6 +2,7 @@
 **/*.tfplan
 **/tfplan
 **/*.tftest.hcl
+AGENTS.md
 **/*.bak
 **/*.out
 **/.terraform/*

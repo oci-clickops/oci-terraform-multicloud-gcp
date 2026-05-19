@@ -2,6 +2,7 @@
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl.
 
 module "odb_networking" {
+  # Local source for repository examples. In production wrappers, replace with a pinned Git or registry source.
   source = "../../../odb-networking"
 
   default_project_id          = var.project_id

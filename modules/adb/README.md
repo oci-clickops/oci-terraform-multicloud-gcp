@@ -32,16 +32,16 @@ Before running Terraform against real infrastructure, make sure these pieces are
 * Google provider authentication for the Terraform caller.
 * IAM permissions to manage Oracle Database@Google Cloud resources.
 * Terraform `>= 1.4.0` and HashiCorp Google provider `>= 7.13.0, < 8.0.0`.
-* An existing ODB Network and client ODB Subnet, created by `modules/odb-networking` or an equivalent stack.
+* For this reusable module: an existing ODB Network and client ODB Subnet, created by `modules/odb-networking` or an equivalent stack.
 * Oracle Database@Google Cloud entitlement and capacity in the target project and region.
 
 The admin password is accepted as a separate sensitive input keyed by the same map key as the database. Do not store passwords in tfvars files committed to version control. Use the `TF_VAR_gcp_autonomous_databases_admin_passwords` environment variable instead.
 
 ## <a name="getting-started">Getting Started</a>
 
-Start with [examples/vision](./examples/vision) for a complete ODB Network mode deployment. It creates a single Autonomous Database with a full set of properties.
+Start with [examples/vision](./examples/vision) for a complete end-to-end ODB Network mode deployment. It composes `modules/odb-networking` and this module to create an ODB Network, client ODB Subnet, and Autonomous Database in one root module.
 
-If you are using an ODB Network created by a separate networking stack, use [examples/existing-odb-network](./examples/existing-odb-network) instead.
+If you are using an ODB Network created by a separate networking stack, use [examples/existing-odb-network](./examples/existing-odb-network) instead for the multi-stack consumer pattern.
 
 ## <a name="configuration-model">Configuration Model</a>
 
@@ -115,8 +115,8 @@ The exact ignored fields and rationale are documented in [SPEC.md](./SPEC.md).
 
 Available examples:
 
-* [examples/vision](./examples/vision): recommended first deployment — complete Autonomous Database in ODB Network mode with direct resource names and a ready-to-rename `input.auto.tfvars.template`.
-* [examples/existing-odb-network](./examples/existing-odb-network): creates an Autonomous Database using an existing ODB Network and ODB Subnet, passed as dependency maps or, for local file handoff, example-level `*_dependency_file_path` variables.
+* [examples/vision](./examples/vision): recommended first deployment — complete end-to-end Autonomous Database deployment with ODB Network, client ODB Subnet, and a ready-to-rename `input.auto.tfvars.template`.
+* [examples/existing-odb-network](./examples/existing-odb-network): multi-stack consumer deployment — creates an Autonomous Database using an existing ODB Network and ODB Subnet, passed as dependency maps or, for local file handoff, example-level `*_dependency_file_path` variables.
 
 Each example includes an `input.auto.tfvars.template` file. Rename it to `<project-name>.auto.tfvars` and Terraform will load it automatically — no `terraform.tfvars` copy needed.
 
@@ -145,4 +145,4 @@ Licensed under the Universal Permissive License v 1.0 as shown at https://oss.or
 1. Oracle Autonomous Database resources can take a long time to provision. If a creation or update operation is interrupted, rerun Terraform from the same working directory so it can continue from the current state.
 2. The admin password is accepted at creation time but is not read back by the Google provider. Manage password rotation outside Terraform.
 3. Some resource attributes are service-managed and appear only after provisioning completes. Downstream stacks should consume outputs only after the producing stack has completed successfully.
-4. Both `odb_network` and `odb_subnet` references must exist before the Autonomous Database can be created. Provision the networking stack first.
+4. Both `odb_network` and `odb_subnet` references must exist before the Autonomous Database can be created. In multi-stack deployments, provision the networking stack first.
