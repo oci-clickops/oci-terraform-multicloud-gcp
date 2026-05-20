@@ -17,16 +17,10 @@ gcp_oracle_zone = "<REPLACE-BY-GCP-ORACLE-ZONE>" # E.g., europe-west2-c-r2.
 # Module Controls
 #---------------------------------------
 
-odb_networking_module_name   = "oracle-database-networking-at-gcp"
-odb_networking_enable_output = true
+odb_networking_module_name = "oracle-database-networking-at-gcp"
 
 exadb_module_name   = "oracle-database-at-gcp"
 exadb_enable_output = true
-
-# Optional with both *_enable_output flags true: write ODB Networking,
-# Cloud Exadata Infrastructure, and VM Cluster dependency JSON files.
-# Set output_path = null when orchestration consumes Terraform outputs directly.
-output_path = "./output"
 
 # SSH public key - choose one approach:
 # Option A: set ssh_public_keys directly inside the VM Cluster properties map below.

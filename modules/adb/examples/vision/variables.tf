@@ -21,11 +21,6 @@ variable "odb_networking_module_name" {
   default = "oracle-database-networking-at-gcp"
 }
 
-variable "odb_networking_enable_output" {
-  type    = bool
-  default = true
-}
-
 variable "adb_module_name" {
   type    = string
   default = "oracle-autonomous-database-at-gcp"
@@ -44,11 +39,6 @@ variable "default_labels" {
 variable "default_deletion_protection" {
   type    = any
   default = false
-}
-
-variable "output_path" {
-  type    = any
-  default = null
 }
 
 variable "gcp_odb_networks_configuration" {

@@ -33,7 +33,7 @@ The module accepts these input variables.
 
 * `module_name`: The module name. Defaults to `oracle-autonomous-database-at-gcp`. It must be compatible with Google Cloud label value syntax because it is included in the module label.
 * `enable_output`: Whether Terraform should enable module outputs and JSON handoff file creation. Defaults to `true`.
-* `output_path`: Optional producer-side directory where dependency JSON files are written for downstream stacks when outputs are enabled and matching resources exist.
+* `output_path`: Optional producer-side local directory where dependency JSON files are written for wrapper-level handoff when outputs are enabled and matching resources exist.
 * `default_project_id`: Default Google Cloud project ID used by resources when `project_id` is not set on the resource. If set, it must be non-empty.
 * `default_location`: Default Google Cloud region used by resources when `location` is not set on the resource. If set, it must be non-empty.
 * `default_labels`: Default labels merged into all resources. Resource-specific labels win on key collisions. Keys and values must follow Google Cloud label syntax: lowercase letters, numbers, underscores, and hyphens; keys must start with a lowercase letter; values may be empty.

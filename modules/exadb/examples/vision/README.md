@@ -10,8 +10,6 @@ Use this example for a complete end-to-end Oracle Database@Google Cloud deployme
 
 The example composes `modules/odb-networking` and `modules/exadb` in the same root module. ODB Network/Subnet outputs are passed directly as dependency maps, so the VM Cluster uses module keys (`primary`, `client`, `backup`) without copying resource names. It also sets a default maintenance window and explicit timeouts for long-running operations.
 
-The shared `output_path` is optional. When the relevant `*_enable_output` flags are `true`, it writes ODB Networking, Cloud Exadata Infrastructure, and VM Cluster JSON handoff files for downstream stacks. If a flag is `false`, that module's Terraform outputs are `null` and its JSON files are not written.
-
 ## Prerequisites
 
 Before running it, confirm that:

@@ -20,10 +20,10 @@ location   = "<REPLACE-BY-GCP-REGION>" # E.g., europe-west2.
 module_name   = "oracle-autonomous-database-at-gcp"
 enable_output = true
 
-# Optional with enable_output = true: write gcp_autonomous_databases_output.json
-# for downstream tooling. Set output_path = null when orchestration consumes
-# Terraform outputs directly.
-output_path = "./output"
+# Keep output_path null when orchestration consumes Terraform outputs directly.
+output_path = null
+# Local file handoff alternative for downstream standalone tooling:
+# output_path = "./output"
 
 #---------------------------------------
 # Module Defaults

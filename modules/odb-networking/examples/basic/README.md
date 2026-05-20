@@ -8,7 +8,7 @@ Use this example to create only the Oracle Database@Google Cloud networking laye
 
 This example does not create Cloud Exadata Infrastructure or Cloud VM Clusters. Use it when the platform or landing zone owns the VPC and you want to validate Oracle Database@Google Cloud networking without consuming Exadata capacity.
 
-It is also useful as a separate Terraform state boundary. One state can own the ODB Network and ODB Subnets, keep `enable_output = true`, set `output_path`, and publish dependency JSON files for a later Exadata/VM Cluster or Autonomous Database state. This mirrors the common split between platform networking and database infrastructure. See `../../../exadb/examples/cluster` and `../../../adb/examples/existing-odb-network` for consumer-side examples of this pattern.
+It is also useful as a separate Terraform state boundary. One state can own the ODB Network and ODB Subnets, keep `enable_output = true`, and expose dependency maps for a later Exadata/VM Cluster or Autonomous Database state. This mirrors the common split between platform networking and database infrastructure. If standalone local file handoff is required, set `output_path` explicitly to publish dependency JSON files. See `../../../exadb/examples/cluster` and `../../../adb/examples/existing-odb-network` for consumer-side examples of this pattern.
 
 ## Prerequisites
 

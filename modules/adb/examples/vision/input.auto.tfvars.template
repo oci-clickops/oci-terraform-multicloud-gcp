@@ -18,16 +18,10 @@ gcp_oracle_zone = "<REPLACE-BY-GCP-ORACLE-ZONE>" # E.g., europe-west2-c-r2.
 # Module Controls
 #---------------------------------------
 
-odb_networking_module_name   = "oracle-database-networking-at-gcp"
-odb_networking_enable_output = true
+odb_networking_module_name = "oracle-database-networking-at-gcp"
 
 adb_module_name   = "oracle-autonomous-database-at-gcp"
 adb_enable_output = true
-
-# Optional with both *_enable_output flags true: write ODB Networking and ADB
-# dependency JSON files. Set output_path = null when orchestration consumes
-# Terraform outputs directly.
-output_path = "./output"
 
 #---------------------------------------
 # Module Defaults

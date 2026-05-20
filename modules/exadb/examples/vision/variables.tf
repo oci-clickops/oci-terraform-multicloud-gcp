@@ -14,11 +14,6 @@ variable "odb_networking_module_name" {
   default = "oracle-database-networking-at-gcp"
 }
 
-variable "odb_networking_enable_output" {
-  type    = bool
-  default = true
-}
-
 variable "exadb_module_name" {
   type    = string
   default = "oracle-database-at-gcp"
@@ -38,8 +33,6 @@ variable "default_deletion_protection" {
   type    = any
   default = false
 }
-
-variable "output_path" { default = null }
 
 variable "ssh_public_keys_file_path" {
   description = "Path to SSH public key file for VM cluster access."

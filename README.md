@@ -30,6 +30,18 @@ For Autonomous Database deployments, start with [modules/adb/examples/vision](./
 
 Each example includes an `input.auto.tfvars.template` file. Rename it to `<project-name>.auto.tfvars` and Terraform will load it automatically.
 
+## Help
+
+Open an [issue](https://github.com/oci-clickops/oci-terraform-multicloud-gcp/issues) for bugs or enhancement requests.
+
+## Contributing
+
+Before submitting a pull request, review the [contribution guide](./CONTRIBUTING.md).
+
+## Security
+
+Do not open GitHub issues for security vulnerabilities. Follow the [security vulnerability reporting process](./SECURITY.md).
+
 ## License
 
 Copyright (c) 2026, Oracle and/or its affiliates.

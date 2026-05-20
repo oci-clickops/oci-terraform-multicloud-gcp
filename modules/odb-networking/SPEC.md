@@ -16,7 +16,7 @@ This module requires Terraform `>= 1.4.0` and HashiCorp Google provider `>= 7.13
 
 * `module_name`: The module name. Defaults to `oracle-database-networking-at-gcp`.
 * `enable_output`: Whether Terraform should enable module outputs and JSON handoff file creation. Defaults to `true`.
-* `output_path`: Optional producer-side directory where dependency JSON files are written when outputs are enabled and matching resources exist.
+* `output_path`: Optional producer-side local directory where dependency JSON files are written for wrapper-level handoff when outputs are enabled and matching resources exist.
 * `default_project_id`: Default Google Cloud project ID used when `project_id` is not set on a resource. If set, it must be non-empty.
 * `default_location`: Default Google Cloud region used when `location` is not set on a resource. If set, it must be non-empty.
 * `default_gcp_oracle_zone`: Default GCP Oracle zone used when `gcp_oracle_zone` is not set on an ODB Network. If set, it must be non-empty.

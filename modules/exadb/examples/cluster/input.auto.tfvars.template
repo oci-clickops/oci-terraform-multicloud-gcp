@@ -19,11 +19,11 @@ location   = "<REPLACE-BY-GCP-REGION>" # E.g., europe-west2.
 module_name   = "oracle-database-at-gcp"
 enable_output = true
 
-# Optional with enable_output = true: write JSON handoff files for resources
-# created by this stack.
-# gcp_cloud_vm_clusters_output.json is used by the OCI DB Home handoff wrapper.
-# Set output_path = null when orchestration consumes Terraform outputs directly.
-output_path = "./output"
+# Keep output_path null when orchestration consumes Terraform outputs directly.
+output_path = null
+# Local file handoff alternative. gcp_cloud_vm_clusters_output.json can be used
+# by the OCI DB Home handoff wrapper in standalone local deployments.
+# output_path = "./output"
 
 # SSH public key - choose one approach:
 # Option A: set ssh_public_keys directly inside the VM Cluster properties map below.

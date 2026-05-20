@@ -21,7 +21,7 @@ variable "enable_output" {
 }
 
 variable "output_path" {
-  description = "Optional directory where OCI-style dependency JSON files are written for downstream stacks."
+  description = "Optional local directory where OCI-style dependency JSON files are written for wrapper-level handoff."
   type        = string
   default     = null
 

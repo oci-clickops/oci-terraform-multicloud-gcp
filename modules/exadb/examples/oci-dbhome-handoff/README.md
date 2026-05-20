@@ -3,9 +3,11 @@
 This wrapper shows the Day-2 handoff from Oracle Database@Google Cloud to the
 OCI Exadata Database module.
 
-The GCP VM Cluster stack produces `gcp_cloud_vm_clusters_output.json`. This
-example reads that file, extracts the OCI VM Cluster OCID from
-`gcp_cloud_vm_clusters.<key>.ocid`, and passes it to the OCI module as
+The sweet path is to pass the GCP VM Cluster dependency map from orchestration.
+For standalone local handoff, the GCP VM Cluster stack can produce
+`gcp_cloud_vm_clusters_output.json`. In that mode, this example reads the file,
+extracts the OCI VM Cluster OCID from `gcp_cloud_vm_clusters.<key>.ocid`, and
+passes it to the OCI module as
 `cloud_db_homes_configuration.<dbhome>.vm_cluster_id`.
 
 The reusable GCP module does not call the OCI provider. The JSON file read is
@@ -14,12 +16,15 @@ kept in this wrapper so the module stays backend-agnostic.
 ## Flow
 
 1. Deploy the GCP VM Cluster stack, for example `../cluster`, with
-   `enable_output = true` and `output_path = "./output"`.
-2. Wait until the VM Cluster output has `state = "AVAILABLE"` and `ocid` is not
+   `enable_output = true`.
+2. Pass the `gcp_cloud_vm_clusters` dependency map from orchestration outputs.
+   For standalone local file handoff, also set `output_path = "./output"` in
+   the GCP VM Cluster stack.
+3. Wait until the VM Cluster output has `state = "AVAILABLE"` and `ocid` is not
    null.
-3. Rename `input.auto.tfvars.template` to `<name>.auto.tfvars`.
-4. Set OCI authentication values, the OCI region, and DB/CDB/PDB settings.
-5. Run the normal Terraform workflow from this directory.
+4. Rename `input.auto.tfvars.template` to `<name>.auto.tfvars`.
+5. Set OCI authentication values, the OCI region, and DB/CDB/PDB settings.
+6. Run the normal Terraform workflow from this directory.
 
 Use the OCI region embedded in the VM Cluster OCID, not the Google Cloud region.
 For example, if the OCID starts with `ocid1.cloudvmcluster.oc1.uk-london-1`,
@@ -27,7 +32,18 @@ set `region = "uk-london-1"`.
 
 ## Handoff Contract
 
-The recommended file handoff is:
+The orchestration dependency map form is:
+
+```hcl
+gcp_cloud_vm_clusters_dependency = {
+  primary = {
+    ocid  = "ocid1.cloudvmcluster.oc1.<region>.<id>"
+    state = "AVAILABLE"
+  }
+}
+```
+
+The local file handoff form is:
 
 ```hcl
 gcp_cloud_vm_clusters_dependency_file_path = "../cluster/output/gcp_cloud_vm_clusters_output.json"

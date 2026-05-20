@@ -40,7 +40,7 @@ The module accepts these input variables.
 * `default_labels`: Default labels merged into all resources. Resource-specific labels win on key collisions. Keys and values must satisfy the module label validation.
 * `default_deletion_protection`: Default deletion protection value for resources that support `deletion_protection`. Defaults to `true`.
 * `default_cloud_exadata_maintenance_window`: Default Cloud Exadata Infrastructure maintenance window used when a resource does not set `properties.maintenance_window`.
-* `output_path`: Optional producer-side directory where dependency JSON files are written for downstream stacks when outputs are enabled and matching resources exist.
+* `output_path`: Optional producer-side local directory where dependency JSON files are written for wrapper-level handoff when outputs are enabled and matching resources exist.
 * `gcp_odb_networks_dependency`: Externally managed ODB Networks that this module may consume by key. Accepts a map or a map wrapped under `gcp_odb_networks`.
 * `gcp_odb_subnets_dependency`: Externally managed ODB Subnets that this module may consume by key. Accepts a map or a map wrapped under `gcp_odb_subnets`.
 * `gcp_cloud_exadata_infrastructures_dependency`: Externally managed Cloud Exadata Infrastructures that this module may consume by key. Accepts a map or a map wrapped under `gcp_cloud_exadata_infrastructures`.
